@@ -1,0 +1,54 @@
+# Politica de dependencias para cargo-deny.
+#
+#   cargo deny --manifest-path apps/api/Cargo.toml check
+#
+# Falla si aparece un aviso de seguridad, una licencia no aprobada, una fuente
+# que no sea crates.io o una dependencia baneada.
+
+[graph]
+all-features = true
+
+[advisories]
+version = 2
+yanked = "deny"
+ignore = []
+
+[licenses]
+version = 2
+confidence-threshold = 0.9
+allow = [
+  "Apache-2.0",
+  "Apache-2.0 WITH LLVM-exception",
+  "BSD-2-Clause",
+  "BSD-3-Clause",
+  "BSL-1.0",
+  "CC0-1.0",
+  # webpki-roots: la lista de CAs de Mozilla se publica con esta licencia.
+  "CDLA-Permissive-2.0",
+  "ISC",
+  "MIT",
+  "MIT-0",
+  "MPL-2.0",
+  "Unicode-3.0",
+  "Unlicense",
+  "Zlib",
+]
+
+[bans]
+multiple-versions = "warn"
+wildcards = "deny"
+highlight = "all"
+# Nada de crates que dupliquen lo que ya trae el stack elegido.
+deny = [
+  { name = "openssl" },
+  { name = "openssl-sys" },
+  { name = "actix-web" },
+  { name = "axum" },
+  { name = "rocket" },
+]
+skip = []
+
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"
+allow-registry = ["https://github.com/rust-lang/crates.io-index"]

@@ -1,0 +1,32 @@
+{
+  "name": "gastonomo",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Monorepo de Gastonomo: API en Rust, web en React y app nativa de Android.",
+  "packageManager": "pnpm@11.18.0",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "check:file-size": "node tools/checks/file-size.mjs",
+    "check:focused-tests": "node tools/checks/no-focused-tests.mjs",
+    "check:todos": "node tools/checks/todo-without-ticket.mjs",
+    "check:quality": "pnpm run check:file-size && pnpm run check:focused-tests && pnpm run check:todos",
+    "check:tools-test": "node --test \"tools/checks/*.test.mjs\"",
+    "lint": "eslint . --max-warnings 0",
+    "lint:fix": "eslint . --fix --max-warnings 0"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "21.2.3",
+    "@commitlint/config-conventional": "21.2.3",
+    "@eslint/js": "10.0.1",
+    "@gastonomo/eslint-config": "workspace:*",
+    "eslint": "10.11.0",
+    "globals": "17.12.0",
+    "lefthook": "2.1.14",
+    "prettier": "3.9.9"
+  }
+}

@@ -1,0 +1,148 @@
+# API en Rust: formato, guards, clippy estricto, tests, cobertura con umbral,
+# auditoria de dependencias, build de release e imagen de produccion.
+name: api
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+  RUSTFLAGS: -D warnings
+
+defaults:
+  run:
+    working-directory: apps/api
+
+jobs:
+  verify:
+    name: verificacion
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_USER: gastonomo
+          POSTGRES_PASSWORD: gastonomo
+          POSTGRES_DB: gastonomo
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U gastonomo -d gastonomo"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v5
+
+      # rust-toolchain.toml fija el canal y los componentes; aqui solo se
+      # asegura que rustup los tiene antes del primer cargo.
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy, llvm-tools-preview
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: apps/api
+
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-llvm-cov,cargo-deny
+
+      - name: Formato
+        run: cargo fmt --all --check
+
+      - name: Guards (tamano de fichero, TODO sin ticket, tests apagados)
+        run: ./scripts/guards.sh
+
+      - name: Clippy
+        run: cargo clippy --all-targets --all-features -- -D warnings
+
+      - name: Tests
+        run: cargo test --workspace
+
+      # GASTONOMO_TEST_REQUIRE_DATABASE prohibe el salto: sin una base de datos de
+      # verdad estos tests fallan en vez de quedarse verdes sin haber probado nada.
+      # El paso 'Tests' de arriba no la lleva a proposito, ahi el salto es correcto.
+      - name: Tests de integracion contra PostgreSQL
+        env:
+          GASTONOMO_TEST_DATABASE_URL: postgres://gastonomo:gastonomo@localhost:5432/gastonomo
+          GASTONOMO_TEST_REQUIRE_DATABASE: '1'
+        run: cargo test -p gastonomo-infrastructure --test postgres_integration
+
+      - name: Cobertura del nucleo (minimo 80%)
+        run: >-
+          cargo llvm-cov --package gastonomo-domain --package gastonomo-application
+          --summary-only --fail-under-lines 80
+
+      - name: Cobertura global (minimo 60%)
+        run: cargo llvm-cov --workspace --lcov --output-path lcov.info --fail-under-lines 60
+
+      - name: Auditoria de dependencias
+        run: cargo deny check
+
+      - name: Build de release
+        run: cargo build --release
+
+      - name: Subir informe de cobertura
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-coverage
+          path: apps/api/lcov.info
+          if-no-files-found: ignore
+
+  image:
+    name: imagen docker
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Construir la imagen de produccion
+        uses: docker/build-push-action@v6
+        with:
+          context: apps/api
+          push: false
+          # load: true deja la imagen en el docker local para poder arrancarla.
+          load: true
+          tags: gastonomo-api:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # Construir no prueba nada. Aqui se arranca la imagen y se comprueba el
+      # contrato. Se apunta a una base de datos inalcanzable a proposito: asi el
+      # binario tiene que arrancar igual y /health/ready tiene que dar 503
+      # degraded. El camino con Postgres de verdad lo cubre el job de
+      # verificacion con los tests de integracion.
+      - name: Arrancar el contenedor
+        run: >-
+          docker run -d --name gastonomo-api-ci -p 8080:8080
+          -e GASTONOMO__DATABASE__URL=postgres://gastonomo:gastonomo@127.0.0.1:5432/gastonomo
+          gastonomo-api:ci
+
+      - name: Liveness responde 200 ok
+        run: |
+          body="$(curl --retry 15 --retry-all-errors --retry-delay 1 -fsS \
+            http://127.0.0.1:8080/health/live)"
+          echo "${body}"
+          echo "${body}" | grep -q '"status":"ok"'
+
+      - name: Readiness responde 503 degraded sin base de datos
+        run: |
+          code="$(curl -sS -o body.json -w '%{http_code}' http://127.0.0.1:8080/health/ready)"
+          cat body.json
+          test "${code}" = "503"
+          grep -q '"status":"degraded"' body.json
+          grep -q '"name":"database"' body.json
+
+      - name: Logs del contenedor
+        if: failure()
+        run: docker logs gastonomo-api-ci
+
+      - name: Parar el contenedor
+        if: always()
+        run: docker rm -f gastonomo-api-ci

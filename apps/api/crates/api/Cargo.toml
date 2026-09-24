@@ -1,0 +1,25 @@
+[package]
+name = "gastonomo-api"
+description = "Composition root: monta los adaptadores concretos y arranca el servidor."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[[bin]]
+name = "gastonomo-api"
+path = "src/main.rs"
+
+[dependencies]
+gastonomo-application = { workspace = true }
+gastonomo-domain = { workspace = true }
+gastonomo-http = { workspace = true }
+gastonomo-infrastructure = { workspace = true }
+salvo = { workspace = true }
+thiserror = { workspace = true }
+tokio = { workspace = true }
+tracing = { workspace = true }
+
+[lints]
+workspace = true

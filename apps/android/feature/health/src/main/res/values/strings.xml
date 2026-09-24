@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="health_title">Estado del servicio</string>
+    <string name="health_loading">Comprobando el servicio</string>
+    <string name="health_status_ok">Todo correcto</string>
+    <string name="health_status_degraded">Servicio degradado</string>
+    <string name="health_error_unreachable">No se puede contactar con la API</string>
+    <string name="health_error_unexpected">La API ha respondido algo inesperado</string>
+    <string name="health_refresh">Reintentar</string>
+    <string name="health_version">Version %1$s</string>
+    <string name="health_component">%1$s: %2$s (%3$d ms)</string>
+</resources>

@@ -1,0 +1,91 @@
+# Hooks de git del monorepo. Bloquean el commit: lo que no cumple, no entra.
+#
+#   pnpm exec lefthook install     (lo hace `just setup`)
+#   LEFTHOOK=0 git commit ...      (saltarselos; solo para emergencias)
+#
+# pre-commit mira SOLO lo que esta en el index y tiene que ser rapido.
+# Lo caro (clippy, tests, cobertura) vive en pre-push y en CI.
+
+min_version: 1.10.0
+
+pre-commit:
+  parallel: true
+  jobs:
+    # Formatea lo que prettier entiende y vuelve a anadirlo al index.
+    # .prettierignore ya deja fuera apps/api y apps/android.
+    - name: prettier
+      run: pnpm exec prettier --write --ignore-unknown {staged_files}
+      stage_fixed: true
+
+    # ESLint con autofix sobre los ts/tsx de la web (capas, complejidad, hooks).
+    - name: eslint
+      root: 'apps/web/'
+      glob: '*.{ts,tsx}'
+      # --no-warn-ignored: lefthook pasa los ficheros por glob, asi que puede colar
+      # alguno que el propio eslint.config ignora (los *.d.ts, por ejemplo). Sin esta
+      # bandera ese aviso cuenta contra --max-warnings 0 y bloquea el commit sin motivo.
+      run: pnpm exec eslint --fix --max-warnings 0 --no-warn-ignored {staged_files}
+      stage_fixed: true
+
+    # ESLint sobre la configuracion compartida y los scripts del monorepo.
+    - name: eslint-tools
+      glob: '{packages,tools}/**/*.{js,mjs,cjs}'
+      # --no-warn-ignored: lefthook pasa los ficheros por glob, asi que puede colar
+      # alguno que el propio eslint.config ignora (los *.d.ts, por ejemplo). Sin esta
+      # bandera ese aviso cuenta contra --max-warnings 0 y bloquea el commit sin motivo.
+      run: pnpm exec eslint --fix --max-warnings 0 --no-warn-ignored {staged_files}
+      stage_fixed: true
+
+    # rustfmt formatea el workspace y se re-anaden los .rs que iban en el commit.
+    - name: rustfmt
+      root: 'apps/api/'
+      glob: '*.rs'
+      run: cargo fmt --all
+      stage_fixed: true
+
+    # Kotlin: detekt con detekt-formatting, que son las reglas de ktlint.
+    # No se usa ktlint suelto porque seria una herramienta mas que instalar y
+    # mantener para las mismas reglas. Con el daemon caliente tarda ~1s; en frio
+    # unos 30s, y solo se ejecuta si el commit toca Kotlin.
+    - name: detekt
+      glob: '*.{kt,kts}'
+      run: bash tools/scripts/gradle.sh --quiet detekt
+
+    # Las tres reglas comunes a los tres lenguajes.
+    - name: file-size
+      run: node tools/checks/file-size.mjs --staged
+
+    - name: focused-tests
+      run: node tools/checks/no-focused-tests.mjs --staged
+
+    - name: todo-without-ticket
+      run: node tools/checks/todo-without-ticket.mjs --staged
+
+    # Secretos, .env y ficheros enormes.
+    - name: scan-staged
+      run: bash tools/scripts/scan-staged.sh {staged_files}
+
+commit-msg:
+  jobs:
+    - name: commitlint
+      run: pnpm exec commitlint --edit {1}
+
+pre-push:
+  parallel: true
+  jobs:
+    - name: api
+      root: 'apps/api/'
+      glob: '*.{rs,toml}'
+      run: cargo clippy --all-targets --all-features -- -D warnings && cargo test --workspace
+
+    - name: web
+      glob: '{apps/web,packages}/**'
+      run: pnpm --filter @gastonomo/web typecheck && pnpm --filter @gastonomo/web test --run
+
+    - name: android
+      glob: '*.{kt,kts}'
+      run: bash tools/scripts/gradle.sh --quiet detekt test testDebugUnitTest
+
+    - name: tools
+      glob: 'tools/**'
+      run: pnpm run check:tools-test

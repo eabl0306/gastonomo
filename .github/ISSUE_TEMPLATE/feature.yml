@@ -1,0 +1,24 @@
+name: Propuesta
+description: Algo que deberia existir y no existe.
+labels: [enhancement]
+body:
+  - type: dropdown
+    id: area
+    attributes:
+      label: Donde
+      options: [api, web, android, monorepo, ci]
+    validations:
+      required: true
+  - type: textarea
+    id: problema
+    attributes:
+      label: Que problema resuelve
+      description: El problema primero. La solucion despues.
+    validations:
+      required: true
+  - type: textarea
+    id: propuesta
+    attributes:
+      label: Que propones
+    validations:
+      required: true

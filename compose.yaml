@@ -1,0 +1,115 @@
+# Pila de DESARROLLO. Codigo montado, recarga en caliente y puertos abiertos.
+#
+#   just up       (docker compose up -d --build)
+#   just logs
+#   just down
+#
+# Las variables salen de .env (copia .env.example). Todas tienen valor por defecto.
+
+name: gastonomo
+
+services:
+  db:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-gastonomo}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-gastonomo}
+      POSTGRES_DB: ${POSTGRES_DB:-gastonomo}
+    ports:
+      - '${POSTGRES_PORT:-5432}:5432'
+    volumes:
+      # postgres:18 guarda los datos en un subdirectorio por version mayor: el
+      # volumen va en /var/lib/postgresql, no en /var/lib/postgresql/data.
+      - postgres-data:/var/lib/postgresql
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-gastonomo} -d ${POSTGRES_DB:-gastonomo}']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 10s
+
+  api:
+    build:
+      context: ./apps/api
+      dockerfile: Dockerfile.dev
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      GASTONOMO__SERVER__HOST: 0.0.0.0
+      GASTONOMO__SERVER__PORT: '8080'
+      GASTONOMO__DATABASE__URL: postgres://${POSTGRES_USER:-gastonomo}:${POSTGRES_PASSWORD:-gastonomo}@db:5432/${POSTGRES_DB:-gastonomo}
+      GASTONOMO__TELEMETRY__LOG_LEVEL: ${GASTONOMO__TELEMETRY__LOG_LEVEL:-debug}
+      # Fuera de /app a proposito, pisando el valor del Dockerfile. Si el
+      # directorio de compilacion cuelga del bind mount, docker lo crea en el
+      # repositorio del host como root cada vez que se levanta la pila, y ahi
+      # se queda: git lo ve, los guards lo recorren y no se puede borrar sin
+      # sudo. En una ruta suya solo existe dentro del contenedor.
+      CARGO_TARGET_DIR: /cargo-target
+    ports:
+      - '${API_PORT:-8080}:8080'
+    volumes:
+      # El codigo en caliente. El target vive en un volumen para no pelearse
+      # con el target del host ni perder la cache entre reinicios.
+      - ./apps/api:/app
+      - api-cargo-registry:/usr/local/cargo/registry
+      - api-target:/cargo-target
+    healthcheck:
+      test: ['CMD-SHELL', 'curl --fail --silent http://127.0.0.1:8080/health/live || exit 1']
+      interval: 10s
+      timeout: 3s
+      retries: 30
+      start_period: 300s
+
+  web:
+    build:
+      # Contexto en la raiz: el lockfile de pnpm vive aqui.
+      context: .
+      dockerfile: apps/web/Dockerfile.dev
+    depends_on:
+      api:
+        condition: service_started
+    environment:
+      # La lee el navegador, no el contenedor. Apunta al gateway, que sirve la
+      # web y la API bajo el mismo origen y evita el problema de CORS. Usa su
+      # propia variable a proposito: el VITE_API_URL de .env apunta a la API
+      # suelta y aqui romperia las llamadas del navegador.
+      VITE_API_URL: ${WEB_API_URL:-http://localhost:${GATEWAY_PORT:-8090}}
+    ports:
+      - '${WEB_PORT:-5173}:5173'
+    volumes:
+      # Solo el codigo fuente. node_modules se queda el del contenedor.
+      - ./apps/web/src:/repo/apps/web/src
+      - ./apps/web/index.html:/repo/apps/web/index.html
+    healthcheck:
+      test: ['CMD-SHELL', 'wget --quiet --tries=1 --spider http://127.0.0.1:5173/ || exit 1']
+      interval: 10s
+      timeout: 3s
+      retries: 20
+      start_period: 20s
+
+  # Un solo origen para la web y la API. Es por donde hay que entrar:
+  # http://localhost:8090 sirve la web y reenvia /health a la API.
+  gateway:
+    image: nginx:alpine
+    depends_on:
+      api:
+        condition: service_started
+      web:
+        condition: service_started
+    ports:
+      - '${GATEWAY_PORT:-8090}:8080'
+    volumes:
+      - ./docker/gateway.dev.conf:/etc/nginx/conf.d/default.conf:ro
+    healthcheck:
+      test:
+        ['CMD-SHELL', 'wget --quiet --tries=1 --spider http://127.0.0.1:8080/health/live || exit 1']
+      interval: 10s
+      timeout: 3s
+      retries: 20
+      start_period: 10s
+
+volumes:
+  postgres-data:
+  api-cargo-registry:
+  api-target:

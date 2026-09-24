@@ -1,0 +1,13 @@
+# Prettier no formatea Rust ni Kotlin: cada app usa su formateador nativo
+# (rustfmt y el del toolchain de Android). Aqui solo se ignora lo que no le toca.
+apps/api/
+apps/android/
+pnpm-lock.yaml
+# pnpm reescribe este fichero por su cuenta: que no peleen los dos.
+pnpm-workspace.yaml
+*.min.js
+*.min.css
+coverage/
+dist/
+playwright-report/
+test-results/

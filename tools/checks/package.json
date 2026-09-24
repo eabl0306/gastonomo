@@ -1,0 +1,15 @@
+{
+  "name": "@gastonomo/checks",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Comprobaciones de calidad que comparten los tres apps del monorepo. Node puro, sin dependencias.",
+  "bin": {
+    "check-file-size": "./file-size.mjs",
+    "check-focused-tests": "./no-focused-tests.mjs",
+    "check-todos": "./todo-without-ticket.mjs"
+  },
+  "scripts": {
+    "test": "node --test ."
+  }
+}

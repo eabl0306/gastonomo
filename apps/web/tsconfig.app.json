@@ -1,0 +1,9 @@
+{
+  "extends": "@gastonomo/tsconfig/react.json",
+  "compilerOptions": {
+    "composite": true,
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
+    "types": ["vite/client"]
+  },
+  "include": ["src"]
+}

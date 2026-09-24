@@ -1,0 +1,15 @@
+packages:
+  - "apps/web"
+  - "packages/*"
+  - "tools/*"
+allowBuilds:
+  lefthook: true
+  unrs-resolver: true
+minimumReleaseAgeExclude:
+  - knip@6.38.0
+  - prettier@3.9.9
+peerDependencyRules:
+  allowedVersions:
+    # jsx-a11y 6.10.2 aun no declara ESLint 10 en sus peers, pero sus reglas
+    # funcionan (comprobado con jsx-a11y/alt-text). Se acepta explicitamente.
+    eslint-plugin-jsx-a11y>eslint: "10"

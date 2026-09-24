@@ -1,0 +1,105 @@
+# Unico punto de entrada de la CI. Mira que ha cambiado, llama a los workflows
+# que hagan falta y deja un check final, "all-green", que es el que se marca
+# como required en la proteccion de rama.
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  changes:
+    name: que ha cambiado
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      api: ${{ steps.filter.outputs.api }}
+      web: ${{ steps.filter.outputs.web }}
+      android: ${{ steps.filter.outputs.android }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            api:
+              - 'apps/api/**'
+              - '.github/workflows/api.yml'
+              - '.github/workflows/ci.yml'
+            web:
+              - 'apps/web/**'
+              - 'packages/**'
+              - 'tools/**'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - 'pnpm-workspace.yaml'
+              - '.github/workflows/web.yml'
+              - '.github/workflows/ci.yml'
+            android:
+              - 'apps/android/**'
+              - '.github/workflows/android.yml'
+              - '.github/workflows/ci.yml'
+
+  quality:
+    name: calidad
+    uses: ./.github/workflows/quality.yml
+    permissions:
+      contents: read
+    # Un workflow reutilizable no ve los secretos del que lo llama si no se le
+    # pasan. Sin esta linea, GITLEAKS_LICENSE llegaba siempre vacia.
+    secrets:
+      GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
+
+  api:
+    name: api
+    needs: changes
+    if: needs.changes.outputs.api == 'true'
+    uses: ./.github/workflows/api.yml
+    permissions:
+      contents: read
+
+  web:
+    name: web
+    needs: changes
+    if: needs.changes.outputs.web == 'true'
+    uses: ./.github/workflows/web.yml
+    permissions:
+      contents: read
+
+  android:
+    name: android
+    needs: changes
+    if: needs.changes.outputs.android == 'true'
+    uses: ./.github/workflows/android.yml
+    permissions:
+      contents: read
+      security-events: write
+
+  all-green:
+    name: all-green
+    if: always()
+    needs: [changes, quality, api, web, android]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Comprobar que nada ha fallado
+        run: |
+          set -euo pipefail
+          results='${{ join(needs.*.result, ' ') }}'
+          echo "resultados: ${results}"
+          for result in ${results}; do
+            if [ "${result}" != "success" ] && [ "${result}" != "skipped" ]; then
+              echo "::error::un job requerido termino en '${result}'"
+              exit 1
+            fi
+          done
+          echo "todo en verde"

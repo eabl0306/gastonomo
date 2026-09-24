@@ -1,0 +1,72 @@
+# Reglas que valen para todo el repo, sin importar el lenguaje: formato,
+# mensajes de commit, tamano de fichero, tests apagados, TODO sin ticket y
+# secretos. Corre siempre, en cualquier cambio.
+name: quality
+
+on:
+  workflow_call:
+    secrets:
+      # Solo hace falta en organizaciones. En repos personales llega vacia y
+      # gitleaks funciona igual, por eso no es required.
+      GITLEAKS_LICENSE:
+        required: false
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    name: formato y reglas comunes
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.18.0
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Instalar dependencias
+        run: pnpm install --frozen-lockfile
+
+      - name: Formato (prettier)
+        run: pnpm format:check
+
+      - name: Reglas comunes (tamano, tests enfocados, TODO sin ticket)
+        run: pnpm run check:quality
+
+      # ESLint de la raiz: packages/ y tools/, que son JavaScript puro. La web
+      # tiene su propio lint en el workflow web.yml.
+      - name: Lint de la configuracion compartida y los scripts
+        run: pnpm run lint
+
+      - name: Tests de los propios scripts de calidad
+        run: pnpm run check:tools-test
+
+      - name: Mensajes de commit del PR
+        if: github.event_name == 'pull_request'
+        run: >-
+          pnpm exec commitlint --verbose
+          --from ${{ github.event.pull_request.base.sha }}
+          --to ${{ github.event.pull_request.head.sha }}
+
+  secrets:
+    name: secretos
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Solo hace falta en organizaciones. En repos personales se ignora.
+          GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}

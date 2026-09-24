@@ -1,0 +1,22 @@
+# BuildKit usa este fichero cuando el build apunta a apps/web/Dockerfile,
+# aunque el contexto sea la raiz del repo.
+.git
+.github
+.idea
+.vscode
+**/node_modules
+**/dist
+**/build
+**/coverage
+**/target
+**/.gradle
+**/.vite
+**/playwright-report
+**/test-results
+**/*.tsbuildinfo
+apps/android
+docs
+*.md
+.env
+.env.*
+!.env.example

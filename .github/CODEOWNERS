@@ -1,0 +1,16 @@
+# Quien revisa que. La ultima regla que encaja es la que manda.
+*                     @eabl0306
+
+/apps/api/            @eabl0306
+/apps/web/            @eabl0306
+/apps/android/        @eabl0306
+/packages/            @eabl0306
+/tools/               @eabl0306
+
+# El pegamento del monorepo: tocarlo afecta a los tres apps.
+/justfile             @eabl0306
+/lefthook.yml         @eabl0306
+/compose.yaml         @eabl0306
+/compose.prod.yaml    @eabl0306
+/.github/             @eabl0306
+/docs/                @eabl0306

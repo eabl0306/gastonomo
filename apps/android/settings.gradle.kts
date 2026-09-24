@@ -1,4 +1,5 @@
 pluginManagement {
+    includeBuild("build-logic")
     repositories {
         google {
             content {
@@ -23,4 +24,10 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "Gastonomo"
+
 include(":app")
+include(":core:common")
+include(":core:domain")
+include(":core:application")
+include(":data:health")
+include(":feature:health")

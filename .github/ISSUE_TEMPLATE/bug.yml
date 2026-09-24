@@ -1,0 +1,34 @@
+name: Fallo
+description: Algo no funciona como deberia.
+labels: [bug]
+body:
+  - type: dropdown
+    id: area
+    attributes:
+      label: Donde pasa
+      options: [api, web, android, monorepo, ci]
+    validations:
+      required: true
+  - type: textarea
+    id: que-pasa
+    attributes:
+      label: Que pasa
+      description: Que esperabas y que ocurre en su lugar.
+    validations:
+      required: true
+  - type: textarea
+    id: como-reproducir
+    attributes:
+      label: Como reproducirlo
+      placeholder: |
+        1. just up
+        2. curl http://localhost:8080/health/ready
+        3. devuelve 500 en vez de 200
+    validations:
+      required: true
+  - type: textarea
+    id: entorno
+    attributes:
+      label: Entorno
+      description: Salida de `just doctor`, si la tienes a mano.
+      render: shell

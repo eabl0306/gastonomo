@@ -1,0 +1,9 @@
+# Se aplica cuando se construye con contexto apps/web.
+# El build real usa el contexto de la raiz y Dockerfile.dockerignore.
+node_modules
+dist
+coverage
+playwright-report
+test-results
+.vite
+*.tsbuildinfo

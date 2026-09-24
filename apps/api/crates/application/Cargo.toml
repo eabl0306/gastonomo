@@ -1,0 +1,21 @@
+[package]
+name = "gastonomo-application"
+description = "Casos de uso y puertos. Sin framework, sin HTTP, sin SQL."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[features]
+# Expone dobles de test (fakes in-memory) para los adaptadores. Nunca se activa
+# en el binario de produccion: solo lo encienden las dev-dependencies.
+testing = []
+
+[dependencies]
+async-trait = { workspace = true }
+gastonomo-domain = { workspace = true }
+thiserror = { workspace = true }
+
+[lints]
+workspace = true

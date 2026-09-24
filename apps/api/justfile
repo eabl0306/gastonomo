@@ -1,0 +1,71 @@
+# Atajos de la API. Requiere `just` (https://just.systems).
+#
+#   just --justfile apps/api/justfile check
+
+set shell := ["bash", "-euo", "pipefail", "-c"]
+
+database_url := env_var_or_default("GASTONOMO_TEST_DATABASE_URL", "postgres://gastonomo:gastonomo@localhost:5432/gastonomo")
+
+# Todo lo que CI ejecuta, en el mismo orden.
+check: fmt-check lint guards test coverage-core coverage
+
+# Formatea el workspace.
+fmt:
+    cargo fmt --all
+
+# Falla si algo no esta formateado.
+fmt-check:
+    cargo fmt --all --check
+
+# Clippy en modo estricto: cualquier aviso es un error.
+lint:
+    cargo clippy --all-targets --all-features -- -D warnings
+
+# Lo que clippy no ve: TODOs sin ticket, tests apagados y ficheros gigantes.
+guards:
+    ./scripts/guards.sh
+
+# Tests unitarios y de integracion que no necesitan base de datos.
+test:
+    cargo test --workspace
+
+# Tests contra un PostgreSQL de verdad, sin permitir que se salten solos.
+test-db:
+    # GASTONOMO_TEST_REQUIRE_DATABASE convierte el salto en fallo: si la base
+    # no esta, esto se pone en rojo en vez de pasar sin ejecutar nada.
+    GASTONOMO_TEST_DATABASE_URL={{database_url}} \
+    GASTONOMO_TEST_REQUIRE_DATABASE=1 \
+      cargo test -p gastonomo-infrastructure --test postgres_integration -- --nocapture
+
+# Cobertura global: minimo 60% de lineas.
+coverage:
+    cargo llvm-cov --workspace --summary-only --fail-under-lines 60
+
+# Cobertura del nucleo hexagonal: minimo 80% de lineas.
+coverage-core:
+    cargo llvm-cov --package gastonomo-domain --package gastonomo-application \
+      --summary-only --fail-under-lines 80
+
+# Informe de cobertura en HTML.
+coverage-html:
+    cargo llvm-cov --workspace --html
+
+# Auditoria de dependencias.
+deny:
+    cargo deny check
+
+# Levanta PostgreSQL en local y espera a que este sano.
+db-up:
+    docker compose -f docker-compose.yml up -d --wait postgres
+
+# Para PostgreSQL.
+db-down:
+    docker compose -f docker-compose.yml down
+
+# Arranca la API en local contra el PostgreSQL de docker compose.
+run:
+    GASTONOMO__DATABASE__URL={{database_url}} cargo run --bin gastonomo-api
+
+# Construye la imagen de produccion.
+docker-build:
+    docker build -t gastonomo-api:local .

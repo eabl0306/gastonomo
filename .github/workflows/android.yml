@@ -1,0 +1,92 @@
+# App nativa de Android: detekt, sourceGuard, Android Lint, tests unitarios,
+# cobertura con Kover y APK de debug. `./gradlew check` encadena casi todo.
+name: android
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    working-directory: apps/android
+
+jobs:
+  verify:
+    name: verificacion
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 25
+
+      - uses: android-actions/setup-android@v3
+        with:
+          packages: platforms;android-37 build-tools;36.0.0
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-read-only: ${{ github.ref != 'refs/heads/main' }}
+          # La cache tiene que invalidarse cuando cambian el catalogo de
+          # versiones, el wrapper o los convention plugins.
+          gradle-home-cache-includes: |
+            caches
+            notifications
+            wrapper
+
+      # check = detekt + sourceGuard + lint + tests + koverVerify en los seis
+      # modulos y en la raiz. El XML de cobertura hay que pedirlo aparte.
+      #
+      # assembleDebugAndroidTest no es decorativo: 'check' no compila las fuentes
+      # de androidTest, asi que sin el un test instrumentado roto pasaba la CI
+      # entera (detekt solo mira estilo, no tipa). Ejecutarlos necesita emulador
+      # y eso se hace fuera de la CI, pero al menos tienen que compilar.
+      - name: Verificar y compilar
+        run: >-
+          ./gradlew --no-daemon check assembleDebug assembleDebugAndroidTest koverXmlReport
+
+      - name: Reunir los informes SARIF de detekt
+        if: always()
+        run: |
+          set -euo pipefail
+          mkdir -p build/sarif
+          find . -path '*/build/reports/detekt/detekt.sarif' -print0 |
+            while IFS= read -r -d '' file; do
+              module="$(echo "${file}" | sed 's|^\./||; s|/build/reports/detekt/detekt.sarif$||; s|/|-|g')"
+              cp "${file}" "build/sarif/detekt-${module}.sarif"
+            done
+          ls -la build/sarif || true
+
+      - name: Subir detekt a Code Scanning
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: apps/android/build/sarif
+          category: detekt
+
+      - name: Subir informes
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-reports
+          path: |
+            apps/android/**/build/reports/detekt/detekt.html
+            apps/android/**/build/reports/lint-results-*.html
+            apps/android/**/build/reports/lint-results-*.sarif
+            apps/android/**/build/test-results/**/TEST-*.xml
+            apps/android/build/reports/kover/report.xml
+          if-no-files-found: ignore
+
+      - name: Subir el APK de debug
+        uses: actions/upload-artifact@v4
+        with:
+          name: gastonomo-debug-apk
+          path: apps/android/app/build/outputs/apk/debug/*.apk
+          if-no-files-found: ignore

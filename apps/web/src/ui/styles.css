@@ -1,0 +1,57 @@
+:root {
+  color-scheme: light dark;
+  font-family: system-ui, sans-serif;
+  line-height: 1.5;
+}
+
+body {
+  margin: 0;
+  display: grid;
+  place-items: start center;
+  min-height: 100vh;
+}
+
+.health-panel {
+  max-width: 40rem;
+  padding: 2rem 1.5rem;
+}
+
+.health-panel__status {
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.health-panel__status[data-tone='ok'] {
+  color: #10793f;
+}
+
+.health-panel__status[data-tone='degraded'],
+.health-panel__status[data-tone='unreachable'] {
+  color: #b42318;
+}
+
+.health-checks {
+  list-style: none;
+  margin: 0 0 1.5rem;
+  padding: 0;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.health-checks li {
+  display: flex;
+  gap: 1rem;
+  align-items: baseline;
+  border: 1px solid currentcolor;
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.75rem;
+}
+
+.health-check__name {
+  font-weight: 600;
+}
+
+.health-check__latency {
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+}

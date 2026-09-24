@@ -1,0 +1,16 @@
+{
+  "recommendations": [
+    "rust-lang.rust-analyzer",
+    "tamasfe.even-better-toml",
+    "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode",
+    "vitest.explorer",
+    "fwcd.kotlin",
+    "mathiasfrohlich.kotlin",
+    "vscjava.vscode-gradle",
+    "ms-azuretools.vscode-docker",
+    "editorconfig.editorconfig",
+    "nefrob.vscode-just-syntax",
+    "github.vscode-github-actions"
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "name": "@gastonomo/tsconfig",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Configuraciones base de TypeScript compartidas por el monorepo.",
+  "type": "module",
+  "files": [
+    "base.json",
+    "react.json"
+  ],
+  "exports": {
+    "./base.json": "./base.json",
+    "./react.json": "./react.json"
+  }
+}
