@@ -1,0 +1,17 @@
+# Falsos positivos de gitleaks, uno por linea, con su huella exacta.
+#
+# La huella es commit:fichero:regla:linea, asi que cada entrada tapa UN hallazgo
+# concreto y no puede esconder un secreto futuro. Si vuelve a aparecer algo en
+# ese mismo fichero, salta igual.
+#
+# Antes de anadir una linea aqui: un secreto de verdad NO se silencia, se rota y
+# se saca del historial.
+
+# El workflow de la prueba de humo traia el valor literal
+# "ci-smoke-secret-0123456789abcdef" como secreto de firma de la pila de prueba.
+# Nunca fue un secreto: se invento para que arrancara un contenedor efimero en
+# la CI y murio con el job. Aun asi era mal patron, porque un valor con pinta de
+# secreto en un workflow no se distingue de uno de verdad, asi que el fichero ya
+# no lo lleva: ahora se genera con openssl en un paso previo. Esta entrada solo
+# cubre el commit donde estuvo.
+08af78338bfb4edcab37bdbe65070b132ddf0955:.github/workflows/stack.yml:generic-api-key:26

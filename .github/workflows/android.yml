@@ -27,9 +27,14 @@ jobs:
           distribution: temurin
           java-version: 25
 
+      # El identificador del paquete lleva la revision: es "android-37.0", no
+      # "android-37". Con el nombre corto sdkmanager no encuentra nada y el paso
+      # muere despues de volcar todas las licencias, que es un log enorme donde
+      # el error de verdad no se ve. Los ids reales se consultan en
+      # https://dl.google.com/android/repository/repository2-3.xml
       - uses: android-actions/setup-android@v3
         with:
-          packages: platforms;android-37 build-tools;36.0.0
+          packages: platforms;android-37.0 build-tools;36.0.0
 
       - uses: gradle/actions/setup-gradle@v4
         with:
@@ -68,8 +73,14 @@ jobs:
             done
           ls -la build/sarif || true
 
+      # Code Scanning necesita GitHub Advanced Security en los repositorios
+      # privados, asi que aqui puede devolver 403. No se deja romper la CI: los
+      # avisos de detekt ya rompen el build por su cuenta (maxIssues: 0) y los
+      # informes se suben igualmente como artefacto en el paso siguiente. Esto
+      # es presentacion, no una barrera de calidad.
       - name: Subir detekt a Code Scanning
         if: always()
+        continue-on-error: true
         uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: apps/android/build/sarif

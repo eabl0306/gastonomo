@@ -19,11 +19,22 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
+      # Las credenciales de la pila de prueba se generan aqui y mueren con el
+      # job. Escritas como literal en el fichero hacian saltar a gitleaks, con
+      # razon: un valor con pinta de secreto en un workflow no se distingue de
+      # uno de verdad, y el dia que alguien copie la linea a un despliegue real
+      # nadie lo notara.
+      - name: Generar credenciales efimeras
+        run: |
+          set -euo pipefail
+          {
+            echo "POSTGRES_PASSWORD=$(openssl rand -hex 24)"
+            echo "GASTONOMO__AUTH__ACCESS_TOKEN_SECRET=$(openssl rand -hex 32)"
+          } >> "$GITHUB_ENV"
+
       - name: Levantar la pila de produccion
         env:
           PUBLIC_PORT: '8080'
-          POSTGRES_PASSWORD: ci-smoke-password
-          GASTONOMO__AUTH__ACCESS_TOKEN_SECRET: ci-smoke-secret-0123456789abcdef
           # Sin esto el arranque sale a api.frankfurter.dev en cada ejecucion.
           GASTONOMO__EXCHANGE_RATES__ENABLED: 'false'
         run: docker compose -f compose.prod.yaml up -d --build --wait
