@@ -1,0 +1,40 @@
+# Prueba de humo de la pila compuesta. Existe por un fallo real: el gateway
+# enrutaba /health, /openapi.json y la web, pero no /v1, asi que las 24 rutas de
+# la API acababan en el nginx de la SPA. Los jobs de api.yml y web.yml pasaban
+# igual, porque cada uno prueba su imagen por separado y ninguno miraba como
+# encajan. Este job levanta la pila de produccion entera y entra por la puerta.
+name: stack
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    name: prueba de humo de la pila
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Levantar la pila de produccion
+        env:
+          PUBLIC_PORT: '8080'
+          POSTGRES_PASSWORD: ci-smoke-password
+          GASTONOMO__AUTH__ACCESS_TOKEN_SECRET: ci-smoke-secret-0123456789abcdef
+          # Sin esto el arranque sale a api.frankfurter.dev en cada ejecucion.
+          GASTONOMO__EXCHANGE_RATES__ENABLED: 'false'
+        run: docker compose -f compose.prod.yaml up -d --build --wait
+
+      - name: Prueba de humo por el gateway
+        run: bash tools/scripts/smoke-stack.sh http://127.0.0.1:8080
+
+      - name: Logs si algo fallo
+        if: failure()
+        run: docker compose -f compose.prod.yaml logs --tail 200
+
+      - name: Tumbar la pila
+        if: always()
+        run: docker compose -f compose.prod.yaml down -v

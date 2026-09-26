@@ -26,6 +26,7 @@ jobs:
       api: ${{ steps.filter.outputs.api }}
       web: ${{ steps.filter.outputs.web }}
       android: ${{ steps.filter.outputs.android }}
+      stack: ${{ steps.filter.outputs.stack }}
     steps:
       - uses: actions/checkout@v5
       - uses: dorny/paths-filter@v3
@@ -44,6 +45,13 @@ jobs:
               - 'pnpm-lock.yaml'
               - 'pnpm-workspace.yaml'
               - '.github/workflows/web.yml'
+              - '.github/workflows/ci.yml'
+            stack:
+              - 'compose.yaml'
+              - 'compose.prod.yaml'
+              - 'docker/**'
+              - 'tools/scripts/smoke-stack.sh'
+              - '.github/workflows/stack.yml'
               - '.github/workflows/ci.yml'
             android:
               - 'apps/android/**'
@@ -85,10 +93,20 @@ jobs:
       contents: read
       security-events: write
 
+  stack:
+    name: pila
+    needs: changes
+    # La composicion se prueba si cambia cualquiera de las tres piezas que la
+    # forman: la API, la web o los ficheros de compose y del gateway.
+    if: needs.changes.outputs.api == 'true' || needs.changes.outputs.web == 'true' || needs.changes.outputs.stack == 'true'
+    uses: ./.github/workflows/stack.yml
+    permissions:
+      contents: read
+
   all-green:
     name: all-green
     if: always()
-    needs: [changes, quality, api, web, android]
+    needs: [changes, quality, api, web, android, stack]
     runs-on: ubuntu-latest
     steps:
       - name: Comprobar que nada ha fallado

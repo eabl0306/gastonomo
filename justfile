@@ -42,7 +42,7 @@ check: guard root-lint fmt-check tools-test api-check web-check android-check
 
 # Lo mismo que check mas lo que la CI corre aparte: e2e, auditoria y builds.
 [group('monorepo')]
-ci: check api-deny e2e build
+ci: check api-deny e2e build stack-smoke
 
 # Formatea los tres lenguajes.
 [group('monorepo')]
@@ -72,6 +72,14 @@ cov: api-cov web-cov android-cov
 # E2E: Playwright en la web y los tests de integracion de la API contra Postgres.
 [group('monorepo')]
 e2e: web-e2e api-test-db
+
+# Levanta la pila de produccion, le pasa la prueba de humo y la tumba siempre.
+stack-smoke:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    trap '{{compose_prod}} down -v >/dev/null 2>&1 || true' EXIT
+    {{compose_prod}} up -d --build --wait
+    bash tools/scripts/smoke-stack.sh "http://127.0.0.1:${PUBLIC_PORT:-8080}"
 
 # E2E contra la pila entera: navegador, web, API y PostgreSQL, sin mockear nada.
 #
@@ -274,6 +282,20 @@ android-gradle +args:
 [group('docker')]
 up:
     {{compose}} up -d --build
+
+# Existe por un fallo real: el gateway enrutaba solo /health y la web, asi que
+# las 24 rutas de /v1 acababan en el nginx de la SPA. Los tests de cada imagen
+# por separado pasaban igual, porque ninguno miraba la composicion.
+[group('docker')]
+[doc('Comprueba que por el gateway se llega a la API y a la web')]
+smoke url="":
+    bash tools/scripts/smoke-stack.sh {{ if url == "" { "http://127.0.0.1:${GATEWAY_PORT:-8090}" } else { url } }}
+
+# Levanta la pila de desarrollo, la prueba de punta a punta y la deja en pie.
+[group('docker')]
+up-smoke: up
+    {{compose}} up -d --wait
+    just smoke
 
 # Para la pila y borra los volumenes.
 [group('docker')]
