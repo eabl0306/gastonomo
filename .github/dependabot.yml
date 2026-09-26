@@ -1,7 +1,19 @@
 # Actualizaciones automaticas. Agrupadas para no abrir veinte PR a la semana.
+#
+# Dos decisiones que explican como esta montado esto:
+#
+#   - Cada ecosistema llega un dia distinto. Cuando todos caian el lunes salian seis
+#     PR de golpe, competian por los mismos runners y no los revisaba nadie.
+#   - Los mayores tambien van agrupados, uno por ecosistema. Antes se salian del grupo
+#     y llegaban sueltos, y de ahi vinieron los cuatro PR que hubo que consolidar
+#     a mano en chore/dependencias-consolidadas.
+#
+# Las reglas `ignore` de abajo son rechazos razonados, no pereza. Cada una dice por que
+# se rechaza y que tiene que pasar para poder borrarla. Si cumples la condicion, borrala.
 version: 2
 
 updates:
+  # --------------------------------------------------------------------- API (Rust)
   - package-ecosystem: cargo
     directory: /apps/api
     schedule:
@@ -14,12 +26,40 @@ updates:
       rust:
         patterns: ['*']
         update-types: [minor, patch]
+      rust-major:
+        patterns: ['*']
+        update-types: [major]
+    ignore:
+      # salvo mayor: la 1.0 no es una subida, es migrar el framework HTTP entero.
+      # Toca el router, los handlers, los extractores y el TestClient de las 7 suites
+      # de integracion, o sea todo crates/http. Metido en un PR de dependencias es
+      # imposible saber que rompio que.
+      # Para borrar esta regla: cuando se abra un PR dedicado a migrar crates/http y
+      # sus tests de integracion. No entra por la actualizacion semanal.
+      - dependency-name: 'salvo'
+        update-types: ['version-update:semver-major']
 
+  # Version del compilador, en apps/api/rust-toolchain.toml.
+  # OJO: apps/api/Dockerfile fija la misma version en `ARG RUST_VERSION` y dependabot
+  # no lo toca, porque no es una imagen sino un argumento. Las dos tienen que subir
+  # juntas, o la imagen compila con un rustc distinto al de la maquina y la CI.
+  - package-ecosystem: rust-toolchain
+    directory: /apps/api
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 2
+    commit-message:
+      prefix: 'chore(deps)'
+
+  # ------------------------------------------------------------- Web y raiz (npm)
+  # Una sola entrada para todo el workspace de pnpm: dependabot lee pnpm-lock.yaml
+  # y actualiza los package.json de la raiz, apps/web, packages/* y tools/*.
   - package-ecosystem: npm
     directory: /
     schedule:
       interval: weekly
-      day: monday
+      day: tuesday
     open-pull-requests-limit: 5
     commit-message:
       prefix: 'chore(deps)'
@@ -27,12 +67,41 @@ updates:
       js:
         patterns: ['*']
         update-types: [minor, patch]
+      js-major:
+        patterns: ['*']
+        update-types: [major]
+    ignore:
+      # typescript: el techo no es el mayor, es la 6.1.
+      # typescript-eslint 8.70.1, que es la ultima publicada, declara
+      # peer typescript ">=4.8.4 <6.1.0". Por encima de eso se apaga el linting
+      # type-aware de la web, que es la mitad de las reglas que nos protegen, y se
+      # apaga en silencio: eslint sigue pasando en verde y ya no comprueba tipos.
+      # Para borrar esta regla: que typescript-eslint publique una version cuyo peer
+      # admita la linea a la que quieras subir. Se comprueba con
+      #   npm view typescript-eslint peerDependencies
+      # y hay que actualizar tambien el peer de packages/eslint-config/package.json.
+      - dependency-name: 'typescript'
+        versions: ['>=6.1.0']
 
+      # @types/node: los tipos van detras del runtime, nunca delante.
+      # La maquina de desarrollo y la CI corren Node 24.18.1. Nos quedamos en 24.13.6,
+      # que es la ultima 24.x que no describe APIs mas nuevas que ese runtime
+      # (DefinitelyTyped salta de 24.13.6 a 24.19.0, sin 24.18.x). Si los tipos se
+      # adelantan, el typecheck aprueba llamadas que en ejecucion no existen, y eso
+      # no se ve hasta produccion.
+      # Para borrar esta regla: subir Node. Cuando lo hagas, deja la minor de los tipos
+      # igual o por debajo de la del runtime nuevo, o quita el techo del todo si pasas
+      # de mayor. Va junto con `engines.node` de package.json y las imagenes node de
+      # apps/web (ver la regla de la imagen node mas abajo).
+      - dependency-name: '@types/node'
+        versions: ['>=24.19.0']
+
+  # ----------------------------------------------------------------- Android (Gradle)
   - package-ecosystem: gradle
     directory: /apps/android
     schedule:
       interval: weekly
-      day: monday
+      day: wednesday
     open-pull-requests-limit: 5
     commit-message:
       prefix: 'chore(deps)'
@@ -40,24 +109,97 @@ updates:
       android:
         patterns: ['*']
         update-types: [minor, patch]
+      android-major:
+        patterns: ['*']
+        update-types: [major]
 
+  # --------------------------------------------------------------------- GitHub Actions
+  # Sin filtro de update-types a proposito: los mayores de las actions son casi siempre
+  # el bump de la runtime de Node del runner, y conviene que vayan en el mismo PR.
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: weekly
-      day: monday
+      day: thursday
+    open-pull-requests-limit: 5
     commit-message:
       prefix: 'chore(ci)'
     groups:
       actions:
         patterns: ['*']
+    ignore:
+      # gradle/actions mayor: nos quedamos en la v5. La v6.0.0 movio la cache a
+      # 'gradle-actions-caching', un componente propietario que ya no es MIT y cuyo uso
+      # obliga a aceptar https://gradle.com/legal/terms-of-use/, y ademas quito el
+      # soporte de configuration cache, que este proyecto tiene encendido en
+      # apps/android/gradle.properties. Aceptar una licencia comercial no se decide en
+      # un PR automatico. El porque largo esta junto al `uses:` de android.yml.
+      # Para borrar esta regla: aceptar esos terminos de forma explicita, o pasar a la
+      # v6 con el 'cache-provider: basic' que anadio la v6.1.0, sabiendo que no limpia
+      # ni deduplica la cache y que deja sin efecto el gradle-home-cache-includes.
+      - dependency-name: 'gradle/actions'
+        update-types: ['version-update:semver-major']
 
+  # ------------------------------------------------------------ Imagenes de los Dockerfile
   - package-ecosystem: docker
     directories:
       - /apps/api
       - /apps/web
     schedule:
       interval: weekly
-      day: monday
+      day: friday
+    open-pull-requests-limit: 5
     commit-message:
       prefix: 'chore(deps)'
+    groups:
+      images:
+        patterns: ['*']
+        update-types: [minor, patch]
+      images-major:
+        patterns: ['*']
+        update-types: [major]
+    ignore:
+      # Imagen node de apps/web (Dockerfile y Dockerfile.dev): va con la maquina de
+      # desarrollo, que esta en Node 24. Construir la web sobre node:26 mientras se
+      # desarrolla y se testea en 24 es justo como se cuela el fallo que solo aparece
+      # en produccion.
+      # Para borrar esta regla: que el equipo pase a Node 26. Ese dia se mueven a la vez
+      # `engines.node` de package.json, los @types/node y estas dos imagenes.
+      - dependency-name: 'node'
+        update-types: ['version-update:semver-major']
+
+  # -------------------------------------------------------------- Imagenes de compose
+  # El ecosistema docker solo mira Dockerfile, asi que las pilas de compose se quedaban
+  # sin cubrir: compose.yaml, compose.prod.yaml y apps/api/docker-compose.yml.
+  # nginx:alpine y axllent/mailpit:latest son etiquetas flotantes, asi que ahi no hay
+  # nada que subir; en la practica esta entrada existe por postgres.
+  - package-ecosystem: docker-compose
+    directories:
+      - /
+      - /apps/api
+    schedule:
+      interval: weekly
+      day: friday
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: 'chore(deps)'
+    groups:
+      compose:
+        patterns: ['*']
+        update-types: [minor, patch]
+      # Hoy no llega nada por aqui: el unico image con version fija es postgres, y sus
+      # mayores estan ignorados abajo. El grupo existe para que el dia que alguien fije
+      # nginx o mailpit su mayor no salga como PR suelto, que es justo lo que se
+      # arreglo en el resto de los ecosistemas.
+      compose-major:
+        patterns: ['*']
+        update-types: [major]
+    ignore:
+      # postgres mayor: no es cambiar un numero. PostgreSQL guarda los datos en un
+      # subdirectorio por version y el volumen se monta en /var/lib/postgresql, no en
+      # /var/lib/postgresql/data (esta explicado en CLAUDE.md). Un salto de mayor pide
+      # migrar el volumen a mano y tocar las tres pilas a la vez.
+      # Para borrar esta regla: cuando alguien planee la migracion de verdad. No debe
+      # entrar por un PR automatico semanal.
+      - dependency-name: 'postgres'
+        update-types: ['version-update:semver-major']

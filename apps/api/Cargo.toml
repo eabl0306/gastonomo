@@ -66,7 +66,7 @@ thiserror = "2"
 tokio = { version = "1.53", features = ["macros", "rt-multi-thread", "signal", "time"] }
 tracing = "0.1.44"
 tracing-subscriber = { version = "0.3.23", features = ["env-filter", "fmt"] }
-utoipa = { version = "5.5", features = ["openapi_extensions"] }
+utoipa = { version = "6.0", features = ["openapi_extensions"] }
 uuid = { version = "1.26", features = ["v4"] }
 
 [workspace.lints.rust]
