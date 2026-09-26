@@ -7,6 +7,10 @@ use figment::providers::Env;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
+use super::auth_config::AuthConfig;
+use super::exchange_rates_config::ExchangeRatesConfig;
+use super::mail_config::MailConfig;
+
 /// Prefijo de todas las variables de entorno del servicio.
 pub const ENV_PREFIX: &str = "GASTONOMO__";
 
@@ -118,6 +122,12 @@ pub struct AppConfig {
     pub database: DatabaseConfig,
     /// Telemetria.
     pub telemetry: TelemetryConfig,
+    /// Autenticacion: tokens y limites de peticiones.
+    pub auth: AuthConfig,
+    /// Correo saliente.
+    pub mail: MailConfig,
+    /// Tarea de refresco de las tasas de cambio.
+    pub exchange_rates: ExchangeRatesConfig,
 }
 
 impl AppConfig {

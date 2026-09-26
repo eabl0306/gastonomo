@@ -1,120 +1,45 @@
 //! Dobles de test para los puertos de la aplicacion.
 //!
 //! Solo se compila con la feature `testing` (o dentro de los tests de este
-//! crate). Permite ejercitar los casos de uso sin base de datos ni red.
+//! crate). Permite ejercitar los casos de uso sin base de datos, sin red y sin
+//! esperar a que caduque nada.
 
-use std::future::Future;
-use std::pin::pin;
-use std::sync::atomic::{AtomicUsize, Ordering};
-use std::task::{Context, Poll, Waker};
+mod block_on;
+mod fake_health_probe;
+mod fake_opaque_token_factory;
+mod fake_password_hasher;
+mod fake_token_issuer;
+mod fixed_clock;
+mod in_memory_category_repository;
+mod in_memory_exchange_rate_repository;
+mod in_memory_idempotency_store;
+mod in_memory_movement_repository;
+mod in_memory_password_reset_token_repository;
+mod in_memory_refresh_token_repository;
+mod in_memory_user_repository;
+mod in_memory_user_settings_repository;
+mod recording_mailer;
+mod recording_user_provisioning;
+mod stub_exchange_rate_provider;
+mod stub_movement_category_reader;
 
-use async_trait::async_trait;
-use gastonomo_domain::ComponentName;
-
-use crate::port::{HealthProbe, ProbeError};
-
-/// Ejecuta un futuro hasta completarlo sin depender de un runtime asincrono.
-///
-/// Los dobles de test terminan en el primer `poll`, asi que un bucle simple es
-/// suficiente y mantiene el nucleo libre de Tokio.
-///
-/// # Panics
-///
-/// No entra en panico: si el futuro devuelve `Pending` cede el hilo y reintenta.
-pub fn block_on<F: Future>(future: F) -> F::Output {
-    let mut future = pin!(future);
-    let mut context = Context::from_waker(Waker::noop());
-    loop {
-        match future.as_mut().poll(&mut context) {
-            Poll::Ready(value) => return value,
-            Poll::Pending => std::thread::yield_now(),
-        }
-    }
-}
-
-/// Doble in-memory del puerto [`HealthProbe`].
-#[derive(Debug)]
-pub struct FakeHealthProbe {
-    name: ComponentName,
-    failure: Option<String>,
-    calls: AtomicUsize,
-}
-
-impl FakeHealthProbe {
-    /// Crea un probe que siempre responde bien.
-    ///
-    /// # Panics
-    ///
-    /// Entra en panico si `name` no es un nombre de componente valido; en un
-    /// doble de test eso es siempre un error del propio test.
-    #[must_use]
-    pub fn healthy(name: &str) -> Self {
-        Self::build(name, None)
-    }
-
-    /// Crea un probe que siempre falla con el motivo indicado.
-    ///
-    /// # Panics
-    ///
-    /// Entra en panico si `name` no es un nombre de componente valido.
-    #[must_use]
-    pub fn failing(name: &str, reason: &str) -> Self {
-        Self::build(name, Some(reason.to_owned()))
-    }
-
-    /// Numero de veces que se ha invocado [`HealthProbe::check`].
-    #[must_use]
-    pub fn calls(&self) -> usize {
-        self.calls.load(Ordering::Relaxed)
-    }
-
-    fn build(name: &str, failure: Option<String>) -> Self {
-        let name = match ComponentName::parse(name) {
-            Ok(name) => name,
-            Err(error) => unreachable!("invalid fixture component name {name:?}: {error}"),
-        };
-        Self {
-            name,
-            failure,
-            calls: AtomicUsize::new(0),
-        }
-    }
-}
-
-#[async_trait]
-impl HealthProbe for FakeHealthProbe {
-    fn name(&self) -> &ComponentName {
-        &self.name
-    }
-
-    async fn check(&self) -> Result<(), ProbeError> {
-        self.calls.fetch_add(1, Ordering::Relaxed);
-        self.failure
-            .as_ref()
-            .map_or(Ok(()), |reason| Err(ProbeError::new(reason.clone())))
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::{FakeHealthProbe, block_on};
-    use crate::port::HealthProbe;
-
-    #[test]
-    fn a_healthy_fake_reports_success_and_counts_calls() {
-        let probe = FakeHealthProbe::healthy("database");
-        assert!(block_on(probe.check()).is_ok());
-        assert_eq!(probe.calls(), 1);
-        assert_eq!(probe.name().as_str(), "database");
-    }
-
-    #[test]
-    fn a_failing_fake_reports_the_configured_reason() {
-        let probe = FakeHealthProbe::failing("database", "boom");
-        let error = block_on(probe.check());
-        assert_eq!(
-            error.map_err(|e| e.message().to_owned()),
-            Err("boom".into())
-        );
-    }
-}
+pub use block_on::block_on;
+pub use fake_health_probe::FakeHealthProbe;
+pub use fake_opaque_token_factory::FakeOpaqueTokenFactory;
+pub use fake_password_hasher::FakePasswordHasher;
+pub use fake_token_issuer::FakeTokenIssuer;
+pub use fixed_clock::FixedClock;
+pub use in_memory_category_repository::InMemoryCategoryRepository;
+pub use in_memory_exchange_rate_repository::InMemoryExchangeRateRepository;
+pub use in_memory_idempotency_store::InMemoryIdempotencyStore;
+pub use in_memory_movement_repository::InMemoryMovementRepository;
+pub use in_memory_password_reset_token_repository::InMemoryPasswordResetTokenRepository;
+pub use in_memory_refresh_token_repository::InMemoryRefreshTokenRepository;
+pub use in_memory_user_repository::InMemoryUserRepository;
+pub use in_memory_user_settings_repository::{
+    FakeDisplayCurrencyCatalog, InMemoryUserSettingsRepository,
+};
+pub use recording_mailer::RecordingMailer;
+pub use recording_user_provisioning::RecordingUserProvisioning;
+pub use stub_exchange_rate_provider::StubExchangeRateProvider;
+pub use stub_movement_category_reader::StubMovementCategoryReader;

@@ -14,26 +14,19 @@
     reason = "the lint runs per target and an integration test never uses every dependency"
 )]
 
+mod support;
+
 use std::sync::Arc;
 
+use gastonomo_application::HealthProbe;
 use gastonomo_application::testing::FakeHealthProbe;
-use gastonomo_application::{CheckLiveness, CheckReadiness, HealthProbe};
-use gastonomo_domain::ServiceVersion;
-use gastonomo_http::{HealthRouterDependencies, build_router};
 use salvo::Service;
 use salvo::prelude::StatusCode;
 use salvo::test::{ResponseExt, TestClient};
-
-const VERSION: ServiceVersion = ServiceVersion::new(0, 1, 0);
+use support::Harness;
 
 fn service(probes: Vec<Arc<dyn HealthProbe>>) -> Service {
-    let router = build_router(HealthRouterDependencies {
-        version: VERSION,
-        liveness: CheckLiveness::new(VERSION),
-        readiness: Arc::new(CheckReadiness::new(VERSION, probes)),
-    })
-    .expect("router should build");
-    Service::new(router)
+    Harness::with_probes(probes).service
 }
 
 #[tokio::test]

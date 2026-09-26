@@ -1,0 +1,56 @@
+[
+  {
+    "date": "2026-09-25",
+    "base": "USD",
+    "quote": "BMD",
+    "rate": 1.0
+  },
+  {
+    "date": "2026-09-25",
+    "base": "USD",
+    "quote": "CMD",
+    "rate": 1.0
+  },
+  {
+    "date": "2026-09-25",
+    "base": "USD",
+    "quote": "COP",
+    "rate": 3316.44
+  },
+  {
+    "date": "2026-09-25",
+    "base": "USD",
+    "quote": "EUR",
+    "rate": 0.87732
+  },
+  {
+    "date": "2026-09-25",
+    "base": "USD",
+    "quote": "JPY",
+    "rate": 158.37
+  },
+  {
+    "date": "2026-09-24",
+    "base": "USD",
+    "quote": "KPW",
+    "rate": 130.0
+  },
+  {
+    "date": "2026-09-25",
+    "base": "USD",
+    "quote": "USD",
+    "rate": 1.0
+  },
+  {
+    "date": "2026-09-25",
+    "base": "USD",
+    "quote": "XAU",
+    "rate": 0.00023
+  },
+  {
+    "date": "2026-09-25",
+    "base": "USD",
+    "quote": "XDR",
+    "rate": 0.73495
+  }
+]

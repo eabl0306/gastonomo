@@ -66,7 +66,9 @@ async fn migrated_pool() -> Option<PgPool> {
     let url = database_url()?;
     let config = DatabaseConfig {
         url,
-        ..DatabaseConfig::default()
+        max_connections: 2,
+        // Los tests en paralelo hacen cola en el advisory lock del migrador.
+        acquire_timeout_ms: 30_000,
     };
     let pool = connect_pool(&config).expect("pool should build");
     run_migrations(&pool)

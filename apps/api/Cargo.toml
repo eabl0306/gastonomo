@@ -15,8 +15,33 @@ gastonomo-application = { path = "crates/application", version = "0.1.0" }
 gastonomo-infrastructure = { path = "crates/infrastructure", version = "0.1.0" }
 gastonomo-http = { path = "crates/http", version = "0.1.0" }
 
+argon2 = "0.6"
 async-trait = "0.1.92"
+base64 = "0.23"
+chrono = { version = "0.4.45", default-features = false, features = ["std", "clock"] }
 figment = { version = "0.10.19", features = ["env"] }
+hmac = "0.13"
+# Sin backend de criptografia: `rust_crypto` arrastra `rsa`, que tiene un aviso de
+# seguridad sin parche (RUSTSEC-2023-0071) y tumbaria `cargo deny`. El proveedor
+# HS256 lo montamos con hmac y sha2 en crates/infrastructure/src/security.
+jsonwebtoken = { version = "11.1", default-features = false }
+lettre = { version = "0.11.23", default-features = false, features = [
+  "builder",
+  "hostname",
+  "pool",
+  "smtp-transport",
+  "tokio1-rustls-tls",
+] }
+rand = "0.10"
+reqwest = { version = "0.13", default-features = false, features = [
+  "charset",
+  "http2",
+  "json",
+  "rustls",
+] }
+# Sin la feature `serde`: los importes se serializan a mano como string, y asi el
+# nucleo no alcanza serde (lo comprueba crates/api/tests/architecture.rs).
+rust_decimal = { version = "1.43", default-features = false, features = ["std"] }
 salvo = { version = "0.96", default-features = false, features = [
   "server",
   "server-handle",
@@ -26,6 +51,7 @@ salvo = { version = "0.96", default-features = false, features = [
 ] }
 serde = { version = "1.0.229", features = ["derive"] }
 serde_json = "1.0"
+sha2 = "0.11"
 sqlx = { version = "0.9", default-features = false, features = [
   "runtime-tokio",
   "tls-rustls-ring",
@@ -34,6 +60,7 @@ sqlx = { version = "0.9", default-features = false, features = [
   "uuid",
   "chrono",
   "migrate",
+  "rust_decimal",
 ] }
 thiserror = "2"
 tokio = { version = "1.53", features = ["macros", "rt-multi-thread", "signal", "time"] }

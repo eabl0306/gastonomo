@@ -1,0 +1,74 @@
+[
+  {
+    "iso_code": "BMD",
+    "iso_numeric": "060",
+    "name": "Bermudian Dollar",
+    "symbol": "$",
+    "start_date": "1972-02-06",
+    "end_date": "2026-09-25"
+  },
+  {
+    "iso_code": "CMD",
+    "iso_numeric": null,
+    "name": "COMESA Dollar",
+    "symbol": null,
+    "start_date": "1998-01-01",
+    "end_date": "2026-09-25"
+  },
+  {
+    "iso_code": "COP",
+    "iso_numeric": "170",
+    "name": "Colombian Peso",
+    "symbol": "$",
+    "start_date": "1998-07-07",
+    "end_date": "2026-09-25"
+  },
+  {
+    "iso_code": "EUR",
+    "iso_numeric": "978",
+    "name": "Euro",
+    "symbol": "€",
+    "start_date": "1999-01-04",
+    "end_date": "2026-09-25"
+  },
+  {
+    "iso_code": "JPY",
+    "iso_numeric": "392",
+    "name": "Japanese Yen",
+    "symbol": "¥",
+    "start_date": "1969-12-01",
+    "end_date": "2026-09-25"
+  },
+  {
+    "iso_code": "KPW",
+    "iso_numeric": "408",
+    "name": "North Korean Won",
+    "symbol": "₩",
+    "start_date": "1999-01-04",
+    "end_date": "2026-09-24"
+  },
+  {
+    "iso_code": "USD",
+    "iso_numeric": "840",
+    "name": "United States Dollar",
+    "symbol": "$",
+    "start_date": "1948-06-21",
+    "end_date": "2026-09-25"
+  },
+  {
+    "iso_code": "XAU",
+    "iso_numeric": "959",
+    "name": "Gold (Troy Ounce)",
+    "symbol": "oz t",
+    "start_date": "1999-01-05",
+    "end_date": "2026-09-25"
+  },
+  {
+    "iso_code": "XDR",
+    "iso_numeric": "960",
+    "name": "Special Drawing Rights",
+    "symbol": "SDR",
+    "start_date": "1981-01-01",
+    "end_date": "2026-09-25"
+  }
+]

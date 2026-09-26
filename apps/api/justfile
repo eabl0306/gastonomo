@@ -4,7 +4,10 @@
 
 set shell := ["bash", "-euo", "pipefail", "-c"]
 
-database_url := env_var_or_default("GASTONOMO_TEST_DATABASE_URL", "postgres://gastonomo:gastonomo@localhost:5432/gastonomo")
+# El 5433 es el que publica docker-compose.yml de esta carpeta. El 5432 es el de
+# la pila de la raiz, y las recetas del justfile raiz pasan su URL por
+# GASTONOMO_TEST_DATABASE_URL, que manda sobre este valor.
+database_url := env_var_or_default("GASTONOMO_TEST_DATABASE_URL", "postgres://gastonomo:gastonomo@localhost:5433/gastonomo")
 
 # Todo lo que CI ejecuta, en el mismo orden.
 check: fmt-check lint guards test coverage-core coverage
@@ -35,7 +38,12 @@ test-db:
     # no esta, esto se pone en rojo en vez de pasar sin ejecutar nada.
     GASTONOMO_TEST_DATABASE_URL={{database_url}} \
     GASTONOMO_TEST_REQUIRE_DATABASE=1 \
-      cargo test -p gastonomo-infrastructure --test postgres_integration -- --nocapture
+      cargo test -p gastonomo-infrastructure --test postgres_integration \
+        --test postgres_auth \
+        --test postgres_loans \
+        --test postgres_exchange_rates --test postgres_movements \
+        --test postgres_categories_and_settings \
+        --test postgres_idempotency -- --nocapture
 
 # Cobertura global: minimo 60% de lineas.
 coverage:

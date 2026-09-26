@@ -66,11 +66,24 @@ jobs:
       # GASTONOMO_TEST_REQUIRE_DATABASE prohibe el salto: sin una base de datos de
       # verdad estos tests fallan en vez de quedarse verdes sin haber probado nada.
       # El paso 'Tests' de arriba no la lleva a proposito, ahi el salto es correcto.
+      #
+      # La lista de suites es la misma que la receta `just api-test-db`, y hay que
+      # mantener las dos a la vez. Antes aqui solo corria postgres_integration, asi
+      # que las transacciones de prestamos, la paginacion de movimientos, el
+      # aislamiento entre cuentas y el upsert de tasas no se probaban en la CI.
       - name: Tests de integracion contra PostgreSQL
         env:
           GASTONOMO_TEST_DATABASE_URL: postgres://gastonomo:gastonomo@localhost:5432/gastonomo
           GASTONOMO_TEST_REQUIRE_DATABASE: '1'
-        run: cargo test -p gastonomo-infrastructure --test postgres_integration
+        run: >-
+          cargo test -p gastonomo-infrastructure
+          --test postgres_integration
+          --test postgres_auth
+          --test postgres_loans
+          --test postgres_movements
+          --test postgres_exchange_rates
+          --test postgres_categories_and_settings
+          --test postgres_idempotency
 
       - name: Cobertura del nucleo (minimo 80%)
         run: >-
@@ -118,10 +131,15 @@ jobs:
       # binario tiene que arrancar igual y /health/ready tiene que dar 503
       # degraded. El camino con Postgres de verdad lo cubre el job de
       # verificacion con los tests de integracion.
+      # El secreto y el refresco de tasas se fijan a proposito: con el secreto por
+      # defecto el arranque deja un aviso, y con la tarea encendida el contenedor
+      # saldria a internet a por las tasas en cada ejecucion de la CI.
       - name: Arrancar el contenedor
         run: >-
           docker run -d --name gastonomo-api-ci -p 8080:8080
           -e GASTONOMO__DATABASE__URL=postgres://gastonomo:gastonomo@127.0.0.1:5432/gastonomo
+          -e GASTONOMO__AUTH__ACCESS_TOKEN_SECRET=ci-only-secret-not-for-any-deployment
+          -e GASTONOMO__EXCHANGE_RATES__ENABLED=false
           gastonomo-api:ci
 
       - name: Liveness responde 200 ok

@@ -1,7 +1,7 @@
 //! Errores de arranque del servicio.
 
 use gastonomo_domain::ServiceVersionError;
-use gastonomo_infrastructure::{ConfigError, PersistenceError};
+use gastonomo_infrastructure::{ConfigError, MailError, PersistenceError};
 use thiserror::Error;
 
 /// Motivos por los que el servicio no llega a escuchar.
@@ -16,6 +16,9 @@ pub enum StartupError {
     /// No se pudo preparar la persistencia.
     #[error(transparent)]
     Persistence(#[from] PersistenceError),
+    /// La configuracion de correo no es valida.
+    #[error(transparent)]
+    Mail(#[from] MailError),
     /// El documento OpenAPI no se pudo serializar.
     #[error("could not build the OpenAPI document: {0}")]
     OpenApi(String),

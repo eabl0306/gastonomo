@@ -19,6 +19,13 @@ use std::collections::{BTreeMap, BTreeSet, VecDeque};
 use std::path::PathBuf;
 
 /// Crates que el nucleo no puede alcanzar, ni directa ni transitivamente.
+///
+/// `serde` no esta en la lista y no es un olvido: `Cargo.lock` apunta tambien las
+/// dependencias opcionales de un paquete, activadas o no, asi que cualquier
+/// libreria con una feature `serde` (y `chrono`, `uuid` y `rust_decimal` la
+/// tienen) haria saltar el cierre transitivo sin que el nucleo importe serde. Que
+/// el nucleo no serialice nada lo garantizan los dos tests de dependencias
+/// directas de mas abajo.
 const FORBIDDEN: &[&str] = &[
     "salvo",
     "salvo_core",
@@ -31,12 +38,27 @@ const FORBIDDEN: &[&str] = &[
     "hyper",
     "figment",
     "utoipa",
-    "serde",
-    "serde_json",
+    "argon2",
+    "jsonwebtoken",
+    "lettre",
 ];
 
 /// Crates del nucleo hexagonal.
 const CORE_CRATES: &[&str] = &["gastonomo-domain", "gastonomo-application"];
+
+/// Librerias puras que el dominio puede declarar: ni IO, ni runtime, ni framework.
+const DOMAIN_ALLOWED: &[&str] = &["chrono", "rust_decimal", "thiserror", "uuid"];
+
+/// Lo que puede declarar la capa de aplicacion: el dominio, ayudas de traits y las
+/// mismas librerias puras que el dominio.
+const APPLICATION_ALLOWED: &[&str] = &[
+    "async-trait",
+    "chrono",
+    "gastonomo-domain",
+    "rust_decimal",
+    "thiserror",
+    "uuid",
+];
 
 fn lock_path() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -146,30 +168,29 @@ fn the_core_never_depends_on_infrastructure() {
     }
 }
 
-#[test]
-fn the_domain_only_depends_on_thiserror() {
+fn assert_direct_dependencies_are_allowed(crate_name: &str, allowed: &[&str]) {
     let graph = graph();
     let direct = graph
-        .get("gastonomo-domain")
-        .expect("gastonomo-domain should be in Cargo.lock");
-    assert_eq!(
-        direct.iter().map(String::as_str).collect::<Vec<_>>(),
-        vec!["thiserror"],
-        "the domain crate must stay dependency free beyond thiserror"
-    );
+        .get(crate_name)
+        .unwrap_or_else(|| unreachable!("{crate_name} should be in Cargo.lock"));
+    for dependency in direct {
+        assert!(
+            allowed.contains(&dependency.as_str()),
+            "{crate_name} declares `{dependency}`, which is not a pure library.\n\
+             Allowed: {allowed:?}. Move that code to an adapter, or justify the \
+             addition here."
+        );
+    }
 }
 
 #[test]
-fn the_application_layer_only_depends_on_the_domain_and_trait_helpers() {
-    let graph = graph();
-    let direct = graph
-        .get("gastonomo-application")
-        .expect("gastonomo-application should be in Cargo.lock");
-    assert_eq!(
-        direct.iter().map(String::as_str).collect::<Vec<_>>(),
-        vec!["async-trait", "gastonomo-domain", "thiserror"],
-        "the application layer must only declare ports, never adapters"
-    );
+fn the_domain_only_depends_on_pure_libraries() {
+    assert_direct_dependencies_are_allowed("gastonomo-domain", DOMAIN_ALLOWED);
+}
+
+#[test]
+fn the_application_layer_only_depends_on_the_domain_and_pure_libraries() {
+    assert_direct_dependencies_are_allowed("gastonomo-application", APPLICATION_ALLOWED);
 }
 
 #[test]

@@ -1,23 +1,30 @@
 //! Montaje de la aplicacion: el unico sitio que conoce adaptadores concretos.
+//!
+//! Cada contexto tiene su propio modulo con una funcion `dependencies(&Wiring)`:
+//! asi dos contextos que se cablean a la vez no se pisan en este fichero. Para
+//! anadir uno nuevo solo hay que rellenar `bootstrap/<contexto>.rs` y su linea en
+//! [`router_dependencies`].
+
+mod auth;
+mod categories;
+mod currencies;
+mod health;
+mod loans;
+mod movements;
+mod settings;
+mod wiring;
 
 use std::net::SocketAddr;
-use std::sync::Arc;
-use std::time::Duration;
 
-use gastonomo_application::{CheckLiveness, CheckReadiness, HealthProbe};
 use gastonomo_domain::ServiceVersion;
-use gastonomo_http::{HealthRouterDependencies, build_router};
-use gastonomo_infrastructure::{
-    AppConfig, PgPool, PostgresHealthProbe, connect_pool, run_migrations,
-};
+use gastonomo_http::{RouterDependencies, build_service};
+use gastonomo_infrastructure::{AppConfig, PgPool, connect_pool, run_migrations};
 use salvo::conn::Listener;
-use salvo::prelude::{Router, Server, Service, TcpListener};
+use salvo::prelude::{Server, Service, TcpListener};
 
 use crate::error::StartupError;
 use crate::shutdown;
-
-/// Tiempo maximo que se le concede a PostgreSQL para contestar al probe.
-const PROBE_TIMEOUT: Duration = Duration::from_secs(2);
+use wiring::Wiring;
 
 /// Version del servicio, leida del manifiesto del paquete.
 ///
@@ -33,11 +40,11 @@ pub fn service_version() -> Result<ServiceVersion, StartupError> {
 ///
 /// # Errors
 ///
-/// Devuelve [`StartupError`] si la persistencia, el documento OpenAPI o el
-/// puerto de escucha fallan.
+/// Devuelve [`StartupError`] si la persistencia, el correo, el documento OpenAPI o
+/// el puerto de escucha fallan.
 pub async fn serve(config: AppConfig) -> Result<(), StartupError> {
     let version = service_version()?;
-    let router = assemble(&config, version).await?;
+    let service = assemble(config.clone(), version).await?;
     let address = config.socket_addr()?;
     let acceptor = bind(address).await?;
 
@@ -45,7 +52,7 @@ pub async fn serve(config: AppConfig) -> Result<(), StartupError> {
     tokio::spawn(shutdown::wait_and_stop(server.handle()));
 
     log::listening(address, version);
-    server.serve(Service::new(router)).await;
+    server.serve(service).await;
     log::stopped();
     Ok(())
 }
@@ -60,19 +67,36 @@ async fn bind(address: SocketAddr) -> Result<salvo::conn::tcp::TcpAcceptor, Star
         })
 }
 
-async fn assemble(config: &AppConfig, version: ServiceVersion) -> Result<Router, StartupError> {
+async fn assemble(config: AppConfig, version: ServiceVersion) -> Result<Service, StartupError> {
     let pool = connect_pool(&config.database)?;
     apply_migrations(&pool).await;
+    if config.auth.uses_development_secret() {
+        log::development_secret();
+    }
 
-    let probes: Vec<Arc<dyn HealthProbe>> =
-        vec![Arc::new(PostgresHealthProbe::new(pool, PROBE_TIMEOUT))];
+    let wiring = Wiring::new(config, version, pool);
+    let dependencies = router_dependencies(&wiring)?;
+    // Adaptador driving, igual que el router: un bucle de tokio que refresca las
+    // tasas de cambio al arrancar y despues a sus horas.
+    currencies::start_refresh_task(&wiring);
+    build_service(dependencies).map_err(|error| StartupError::OpenApi(error.to_string()))
+}
 
-    build_router(HealthRouterDependencies {
-        version,
-        liveness: CheckLiveness::new(version),
-        readiness: Arc::new(CheckReadiness::new(version, probes)),
+/// Reune las dependencias de todos los contextos.
+///
+/// # Errors
+///
+/// Devuelve [`StartupError`] si el cableado de un contexto falla.
+fn router_dependencies(wiring: &Wiring) -> Result<RouterDependencies, StartupError> {
+    Ok(RouterDependencies {
+        health: health::dependencies(wiring),
+        auth: auth::dependencies(wiring)?,
+        movements: movements::dependencies(wiring),
+        loans: loans::dependencies(wiring),
+        categories: categories::dependencies(wiring),
+        settings: settings::dependencies(wiring),
+        currencies: currencies::dependencies(wiring),
     })
-    .map_err(|error| StartupError::OpenApi(error.to_string()))
 }
 
 /// Aplica las migraciones sin abortar el arranque si la base no esta lista.
@@ -112,5 +136,12 @@ mod log {
 
     pub fn migrations_failed(error: &PersistenceError) {
         tracing::warn!(%error, "could not apply migrations at startup");
+    }
+
+    pub fn development_secret() {
+        tracing::warn!(
+            "GASTONOMO__AUTH__ACCESS_TOKEN_SECRET is still the development one: \
+             anyone who reads the repository can sign an access token"
+        );
     }
 }

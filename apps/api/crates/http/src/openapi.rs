@@ -3,16 +3,25 @@
 //! Se construye a mano en vez de anotar los handlers porque los handlers son
 //! structs con dependencias inyectadas, no funciones libres. A cambio, el
 //! documento vive junto al router y se testea igual que cualquier otro codigo.
+//!
+//! Cada contexto anade sus rutas en `openapi/<contexto>_paths.rs`, con dos
+//! funciones: `paths(PathsBuilder) -> PathsBuilder` y
+//! `schemas(ComponentsBuilder) -> ComponentsBuilder`. Asi nadie se pisa aqui.
+
+mod auth_paths;
+mod category_paths;
+mod currency_paths;
+mod health_paths;
+mod idempotency_docs;
+mod loan_paths;
+mod movement_paths;
+mod settings_paths;
 
 use gastonomo_domain::ServiceVersion;
-use utoipa::openapi::path::{HttpMethod, OperationBuilder, PathItem, PathsBuilder};
-use utoipa::openapi::response::{ResponseBuilder, ResponseExt, ResponsesBuilder};
-use utoipa::openapi::{Components, InfoBuilder, OpenApi, OpenApiBuilder};
+use utoipa::openapi::path::PathsBuilder;
+use utoipa::openapi::{Components, ComponentsBuilder, InfoBuilder, OpenApi, OpenApiBuilder, Paths};
 
 use crate::dto::{ComponentCheckDto, HealthResponseDto};
-
-/// Etiqueta comun de los endpoints de salud.
-const TAG: &str = "health";
 
 /// Construye el documento OpenAPI del servicio.
 #[must_use]
@@ -23,17 +32,13 @@ pub fn document(version: ServiceVersion) -> OpenApi {
                 .title("Gastonomo API")
                 .version(version.to_string())
                 .description(Some(
-                    "Endpoints de salud del servicio. Liveness no toca dependencias; \
-                     readiness comprueba PostgreSQL a traves de un puerto.",
+                    "Endpoints de salud y de autenticacion. Los importes viajan como \
+                     string y las fechas de registro como YYYY-MM-DD. Los errores \
+                     usan application/problem+json.",
                 ))
                 .build(),
         )
-        .paths(
-            PathsBuilder::new()
-                .path("/health/live", liveness_path())
-                .path("/health/ready", readiness_path())
-                .build(),
-        )
+        .paths(paths())
         .components(Some(components()))
         .build()
 }
@@ -47,55 +52,27 @@ pub fn document_json(version: ServiceVersion) -> Result<String, serde_json::Erro
     serde_json::to_string_pretty(&document(version))
 }
 
+fn paths() -> Paths {
+    let builder = PathsBuilder::new();
+    let builder = health_paths::paths(builder);
+    let builder = auth_paths::paths(builder);
+    let builder = movement_paths::paths(builder);
+    let builder = loan_paths::paths(builder);
+    let builder = category_paths::paths(builder);
+    let builder = settings_paths::paths(builder);
+    currency_paths::paths(builder).build()
+}
+
 fn components() -> Components {
-    utoipa::openapi::ComponentsBuilder::new()
+    let builder = ComponentsBuilder::new()
         .schema_from::<HealthResponseDto>()
-        .schema_from::<ComponentCheckDto>()
-        .build()
-}
-
-fn liveness_path() -> PathItem {
-    let responses = ResponsesBuilder::new()
-        .response("200", healthy_response("El proceso esta vivo."))
-        .build();
-    PathItem::new(
-        HttpMethod::Get,
-        OperationBuilder::new()
-            .tag(TAG)
-            .operation_id(Some("checkLiveness"))
-            .summary(Some("Liveness del proceso"))
-            .description(Some(
-                "No consulta dependencias externas. Siempre responde 200 mientras el \
-                 proceso atienda peticiones.",
-            ))
-            .responses(responses)
-            .build(),
-    )
-}
-
-fn readiness_path() -> PathItem {
-    let responses = ResponsesBuilder::new()
-        .response("200", healthy_response("El servicio acepta trafico."))
-        .response("503", healthy_response("Algun componente esta degradado."))
-        .build();
-    PathItem::new(
-        HttpMethod::Get,
-        OperationBuilder::new()
-            .tag(TAG)
-            .operation_id(Some("checkReadiness"))
-            .summary(Some("Readiness del servicio"))
-            .description(Some(
-                "Comprueba cada componente registrado. Devuelve 503 en cuanto uno falla.",
-            ))
-            .responses(responses)
-            .build(),
-    )
-}
-
-fn healthy_response(description: &str) -> ResponseBuilder {
-    ResponseBuilder::new()
-        .description(description)
-        .json_schema_ref("HealthResponseDto")
+        .schema_from::<ComponentCheckDto>();
+    let builder = auth_paths::schemas(builder);
+    let builder = movement_paths::schemas(builder);
+    let builder = loan_paths::schemas(builder);
+    let builder = category_paths::schemas(builder);
+    let builder = settings_paths::schemas(builder);
+    currency_paths::schemas(builder).build()
 }
 
 #[cfg(test)]

@@ -1,27 +1,63 @@
 //! Composicion del router HTTP.
+//!
+//! El arbol es este:
+//!
+//! ```text
+//! /health/live            publico
+//! /health/ready           publico
+//! /openapi.json           publico
+//! /v1/auth/...            publico (registro, login, refresh, logout, recuperacion)
+//! /v1/...                 detras de RequireAccessToken
+//! ```
+//!
+//! Para anadir un contexto no hay que tocar este fichero: cada sub-router vive en
+//! `router/<contexto>.rs` y ya esta colgado. Lo unico que hace falta es rellenar su
+//! `router(...)` y su struct de dependencias, y cablearlo en
+//! `crates/api/src/bootstrap/<contexto>.rs`.
 
-use std::sync::Arc;
+mod auth;
+mod categories;
+mod currencies;
+mod health;
+mod loans;
+mod movements;
+mod settings;
 
-use gastonomo_application::{CheckLiveness, CheckReadiness};
-use gastonomo_domain::ServiceVersion;
 use salvo::prelude::Router;
 
-use crate::handler::{LivenessHandler, OpenApiHandler, ReadinessHandler, SwaggerUiHandler};
+pub use auth::AuthDependencies;
+pub use categories::CategoryDependencies;
+pub use currencies::CurrencyDependencies;
+pub use health::HealthDependencies;
+pub use loans::LoanDependencies;
+pub use movements::MovementDependencies;
+pub use settings::SettingsDependencies;
+
+use crate::auth_context::RequireAccessToken;
+use crate::handler::{OpenApiHandler, SwaggerUiHandler};
 use crate::middleware::RequestId;
 use crate::openapi;
 
-/// Casos de uso que el router necesita para responder.
+/// Todo lo que el adaptador HTTP necesita para responder.
 ///
-/// El adaptador HTTP no construye casos de uso ni adaptadores concretos: los
-/// recibe ya montados desde el composition root.
+/// El router no construye casos de uso ni adaptadores concretos: los recibe ya
+/// montados desde el composition root.
 #[derive(Debug, Clone)]
-pub struct HealthRouterDependencies {
-    /// Version del servicio, que viaja en cada respuesta y en el OpenAPI.
-    pub version: ServiceVersion,
-    /// Caso de uso de liveness.
-    pub liveness: CheckLiveness,
-    /// Caso de uso de readiness.
-    pub readiness: Arc<CheckReadiness>,
+pub struct RouterDependencies {
+    /// Endpoints de salud.
+    pub health: HealthDependencies,
+    /// Autenticacion.
+    pub auth: AuthDependencies,
+    /// Movimientos.
+    pub movements: MovementDependencies,
+    /// Prestamos.
+    pub loans: LoanDependencies,
+    /// Categorias.
+    pub categories: CategoryDependencies,
+    /// Ajustes.
+    pub settings: SettingsDependencies,
+    /// Monedas y tasas.
+    pub currencies: CurrencyDependencies,
 }
 
 /// Construye el router completo del servicio.
@@ -30,45 +66,32 @@ pub struct HealthRouterDependencies {
 ///
 /// Devuelve el error de `serde_json` si el documento OpenAPI no se puede
 /// serializar, lo que indicaria un fallo al describir los DTOs.
-pub fn build_router(dependencies: HealthRouterDependencies) -> Result<Router, serde_json::Error> {
-    let document = openapi::document_json(dependencies.version)?;
+pub fn build_router(dependencies: RouterDependencies) -> Result<Router, serde_json::Error> {
+    let document = openapi::document_json(dependencies.health.version)?;
     Ok(Router::new()
         .hoop(RequestId::new())
-        .push(health_router(dependencies))
+        .push(health::router(dependencies.health.clone()))
         .push(Router::with_path("openapi.json").get(OpenApiHandler::new(document)))
-        .push(Router::with_path("swagger-ui").get(SwaggerUiHandler::new())))
+        .push(Router::with_path("swagger-ui").get(SwaggerUiHandler::new()))
+        .push(v1_router(dependencies)))
 }
 
-fn health_router(dependencies: HealthRouterDependencies) -> Router {
-    Router::with_path("health")
-        .push(Router::with_path("live").get(LivenessHandler::new(dependencies.liveness)))
-        .push(Router::with_path("ready").get(ReadinessHandler::new(dependencies.readiness)))
-}
-
-#[cfg(test)]
-mod tests {
-    #![allow(
-        clippy::unwrap_used,
-        clippy::expect_used,
-        clippy::indexing_slicing,
-        reason = "tests fail loudly on purpose; a panic here is the assertion"
-    )]
-
-    use std::sync::Arc;
-
-    use gastonomo_application::{CheckLiveness, CheckReadiness};
-    use gastonomo_domain::ServiceVersion;
-
-    use super::{HealthRouterDependencies, build_router};
-
-    #[test]
-    fn builds_a_router_from_its_dependencies() {
-        let version = ServiceVersion::new(0, 1, 0);
-        let dependencies = HealthRouterDependencies {
-            version,
-            liveness: CheckLiveness::new(version),
-            readiness: Arc::new(CheckReadiness::new(version, Vec::new())),
-        };
-        assert!(build_router(dependencies).is_ok());
-    }
+/// Monta `/v1`: lo publico de autenticacion y, detras del middleware, el resto.
+fn v1_router(dependencies: RouterDependencies) -> Router {
+    let guard = RequireAccessToken::new(
+        dependencies.auth.access_tokens.clone(),
+        dependencies.auth.clock.clone(),
+    );
+    Router::with_path("v1")
+        .push(auth::public_router(&dependencies.auth))
+        .push(
+            Router::new()
+                .hoop(guard)
+                .push(auth::protected_router(&dependencies.auth))
+                .push(movements::router(dependencies.movements))
+                .push(loans::router(dependencies.loans))
+                .push(categories::router(dependencies.categories))
+                .push(settings::router(dependencies.settings))
+                .push(currencies::router(dependencies.currencies)),
+        )
 }

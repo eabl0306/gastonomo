@@ -82,16 +82,31 @@ web no hay barrera del compilador, asi que la pone ESLint: un import de `src/dom
 Cinco crates, uno por capa:
 
 ```
-crates/domain          HealthReport, ComponentHealth, ServiceVersion. Solo thiserror.
-crates/application     Puerto HealthProbe y casos de uso CheckLiveness / CheckReadiness.
-crates/infrastructure  Config (figment), pool de SQLx, PostgresHealthProbe, telemetria.
-crates/http            DTOs, handlers de Salvo, router, OpenAPI, middleware.
+crates/domain          Agregados y value objects. thiserror, chrono, rust_decimal, uuid.
+crates/application     Puertos y casos de uso. Sin framework, sin SQL, sin HTTP.
+crates/infrastructure  Adaptadores driven: config, SQLx, correo, Frankfurter, seguridad.
+crates/http            Adaptador driving: DTOs, handlers de Salvo, router, OpenAPI.
 crates/api             Composition root: el unico sitio donde se construyen adaptadores.
 ```
 
 El caso de uso `CheckReadiness` recibe un `HealthProbe` y devuelve un `HealthReport` del
 dominio. En produccion el puerto lo implementa `PostgresHealthProbe`, que hace `SELECT 1`
 con timeout. En los tests lo implementa `FakeHealthProbe`, que responde lo que le digas.
+El resto del dominio sigue el mismo molde; el contrato completo esta en
+[api-surface.md](api-surface.md).
+
+**Hay mas de un adaptador driving, y conviene verlo.** El router HTTP es el obvio, pero no
+el unico:
+
+- `ExchangeRateScheduler` es un bucle de tokio que despierta a sus horas y llama al caso de
+  uso `RefreshExchangeRates`. Es una entrada al nucleo igual que un handler, solo que la
+  dispara un reloj en vez de una peticion. Por eso el caso de uso se prueba sin red y sin
+  esperar doce horas.
+- `Idempotent` envuelve un handler y repite la respuesta de un reintento. Vive en `http`
+  porque repetir una respuesta ya emitida es transporte, no negocio; el almacen si es un
+  puerto de `application`.
+- El catcher de `problem+json` traduce los 404 y 405 que genera Salvo antes de que ninguna
+  peticion llegue a un handler.
 
 ### Web (apps/web)
 

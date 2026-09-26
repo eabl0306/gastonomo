@@ -8,7 +8,12 @@ license.workspace = true
 publish.workspace = true
 
 [dependencies]
+# Las tres son librerias puras: ni runtime, ni IO, ni framework. El test de
+# arquitectura (crates/api/tests/architecture.rs) fija esta lista exacta.
+chrono = { workspace = true }
+rust_decimal = { workspace = true }
 thiserror = { workspace = true }
+uuid = { workspace = true }
 
 [lints]
 workspace = true

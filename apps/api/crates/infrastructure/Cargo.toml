@@ -8,21 +8,37 @@ license.workspace = true
 publish.workspace = true
 
 [dependencies]
+argon2 = { workspace = true }
 async-trait = { workspace = true }
+base64 = { workspace = true }
+chrono = { workspace = true }
 figment = { workspace = true }
+hmac = { workspace = true }
+jsonwebtoken = { workspace = true }
+lettre = { workspace = true }
+rand = { workspace = true }
+reqwest = { workspace = true }
+rust_decimal = { workspace = true }
 gastonomo-application = { workspace = true }
 gastonomo-domain = { workspace = true }
 serde = { workspace = true }
+# `raw_value` deja leer el numero de una tasa como el texto literal del JSON,
+# sin que pase por un f64: serde_json parsea los numeros a f64 salvo que se le
+# pida el valor en crudo.
+serde_json = { workspace = true, features = ["raw_value"] }
+sha2 = { workspace = true }
 sqlx = { workspace = true }
 thiserror = { workspace = true }
 tokio = { workspace = true }
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
+uuid = { workspace = true }
 
 [dev-dependencies]
 figment = { workspace = true, features = ["test"] }
+gastonomo-application = { workspace = true, features = ["testing"] }
 sqlx = { workspace = true }
-tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
+tokio = { workspace = true, features = ["macros", "rt-multi-thread", "sync"] }
 
 [lints]
 workspace = true
