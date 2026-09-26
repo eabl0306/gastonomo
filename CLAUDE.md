@@ -226,6 +226,15 @@ Los hooks se saltan con `LEFTHOOK=0` y solo en emergencias.
   Android van por `tools/scripts/gradle.sh`, que busca un JDK (incluido el de Android
   Studio) antes de llamar al wrapper. Si tienes `java` en el PATH, `./gradlew` directo
   tambien vale.
+- **El id del paquete del SDK de Android lleva la revision.** El platform que usa este
+  proyecto se llama `platforms;android-37.0`, no `platforms;android-37`, y el directorio
+  local tambien (`~/Android/Sdk/platforms/android-37.0`). Con el nombre corto sdkmanager no
+  encuentra nada y falla despues de volcar las siete licencias completas, unas 900 lineas
+  donde el error de verdad no se ve. Los ids reales estan en
+  https://dl.google.com/android/repository/repository2-3.xml
+- **Code Scanning puede devolver 403** en este repositorio por ser privado sin Advanced
+  Security. El paso que sube el SARIF de detekt lleva `continue-on-error` por eso. No es una
+  barrera de calidad: detekt ya rompe el build con `maxIssues: 0`.
 - **PostgreSQL 18** guarda los datos en un subdirectorio por version. El volumen se monta
   en `/var/lib/postgresql`, no en `/var/lib/postgresql/data`, o el contenedor no arranca.
 - **La web y la API son origenes distintos** y la API no manda cabeceras CORS. Por eso la
