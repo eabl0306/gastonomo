@@ -20,9 +20,9 @@ jobs:
       contents: read
       security-events: write
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-java@v5
+      - uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: 25
@@ -32,11 +32,11 @@ jobs:
       # muere despues de volcar todas las licencias, que es un log enorme donde
       # el error de verdad no se ve. Los ids reales se consultan en
       # https://dl.google.com/android/repository/repository2-3.xml
-      - uses: android-actions/setup-android@v3
+      - uses: android-actions/setup-android@v4
         with:
           packages: platforms;android-37.0 build-tools;36.0.0
 
-      - uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v6
         with:
           cache-read-only: ${{ github.ref != 'refs/heads/main' }}
           # La cache tiene que invalidarse cuando cambian el catalogo de
@@ -88,7 +88,7 @@ jobs:
 
       - name: Subir informes
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: android-reports
           path: |
@@ -104,14 +104,14 @@ jobs:
       # bajarlas de aqui.
       - name: Subir las capturas de pantalla
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: android-screenshots
           path: apps/android/**/build/outputs/roborazzi/*.png
           if-no-files-found: ignore
 
       - name: Subir el APK de debug
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: gastonomo-debug-apk
           path: apps/android/app/build/outputs/apk/debug/*.apk
