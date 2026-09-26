@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Los textos de los componentes compartidos que anadio la tanda de Inicio y Movimientos: el
+  filtro de fechas, la caja de conversion y el campo de fecha. Estan aqui, y no en una
+  feature, porque los tres componentes viven en el sistema de diseno y los usan varias
+  pantallas.
+
+  Este es el idioma por defecto (es-CO). La traduccion esta en values-en.
+-->
+<resources>
+    <!-- Selector de mes y boton de rango -->
+    <string name="gastonomo_period_previous_month">Mes anterior</string>
+    <string name="gastonomo_period_next_month">Mes siguiente</string>
+    <string name="gastonomo_period_clear_range">Volver al mes actual</string>
+    <string name="gastonomo_period_open_range">Elegir un rango de fechas</string>
+
+    <!-- Sheet de rango -->
+    <string name="gastonomo_period_range_title">Rango de fechas</string>
+    <string name="gastonomo_period_range_subtitle">Se aplica al inicio y a movimientos.</string>
+    <string name="gastonomo_period_range_from">Desde</string>
+    <string name="gastonomo_period_range_to">Hasta</string>
+    <string name="gastonomo_period_range_apply">Aplicar rango</string>
+    <string name="gastonomo_period_preset_this_month">Este mes</string>
+    <string name="gastonomo_period_preset_last_month">Mes pasado</string>
+    <string name="gastonomo_period_preset_last_30_days">Últimos 30 días</string>
+    <string name="gastonomo_period_preset_last_3_months">Últimos 3 meses</string>
+    <string name="gastonomo_period_preset_this_year">Este año</string>
+
+    <!-- Caja de conversion -->
+    <string name="gastonomo_conversion_header">Equivale a (%1$s)</string>
+    <string name="gastonomo_conversion_use_suggested">Usar sugerida</string>
+    <string name="gastonomo_conversion_edit">Editar la equivalencia</string>
+    <string name="gastonomo_conversion_rate_suggested">Tasa sugerida por Frankfurter: 1 %1$s = %2$s %3$s. Puedes cambiarla.</string>
+    <string name="gastonomo_conversion_rate_own">Tu tasa: 1 %1$s = %2$s %3$s · sugerida %4$s</string>
+    <string name="gastonomo_conversion_rate_own_only">Tu tasa: 1 %1$s = %2$s %3$s</string>
+    <string name="gastonomo_conversion_rate_missing">No hay tasa disponible para %1$s. Escribe la equivalencia.</string>
+
+    <!-- Campo de fecha -->
+    <string name="gastonomo_date_field_open">Elegir fecha</string>
+
+    <!-- Monto de un formulario -->
+    <string name="gastonomo_amount_placeholder" translatable="false">0</string>
+</resources>

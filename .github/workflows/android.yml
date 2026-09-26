@@ -41,8 +41,12 @@ jobs:
             notifications
             wrapper
 
-      # check = detekt + sourceGuard + lint + tests + koverVerify en los seis
+      # check = detekt + sourceGuard + lint + tests + koverVerify en todos los
       # modulos y en la raiz. El XML de cobertura hay que pedirlo aparte.
+      #
+      # Los tests tambien capturan las 14 pantallas con Roborazzi, asi que las
+      # imagenes salen de este mismo paso y se suben como artefacto: no se
+      # comparan contra una referencia versionada, se miran.
       #
       # assembleDebugAndroidTest no es decorativo: 'check' no compila las fuentes
       # de androidTest, asi que sin el un test instrumentado roto pasaba la CI
@@ -82,6 +86,17 @@ jobs:
             apps/android/**/build/reports/lint-results-*.sarif
             apps/android/**/build/test-results/**/TEST-*.xml
             apps/android/build/reports/kover/report.xml
+          if-no-files-found: ignore
+
+      # Las capturas no se versionan (6 MB de PNG y el render depende de las
+      # fuentes de la maquina), asi que la unica forma de verlas en un PR es
+      # bajarlas de aqui.
+      - name: Subir las capturas de pantalla
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-screenshots
+          path: apps/android/**/build/outputs/roborazzi/*.png
           if-no-files-found: ignore
 
       - name: Subir el APK de debug

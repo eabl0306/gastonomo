@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Los textos que comparten varias pantallas. Se leen por
+  com.bahoque.gastonomo.core.designsystem.GastonomoStrings, no por su nombre de recurso,
+  para que una feature no tenga que saber en que modulo viven.
+
+  Este es el idioma por defecto (es-CO). La traduccion esta en values-en. Cada feature
+  pone sus propios textos en su propio res/values, asi que dos agentes no editan el mismo
+  fichero.
+-->
+<resources xmlns:tools="http://schemas.android.com/tools" tools:locale="es">
+    <string name="gastonomo_wordmark" translatable="false">gastonomo</string>
+    <string name="gastonomo_footer">Gastonomo %1$s · Finanzas personales</string>
+
+    <!-- Tab bar -->
+    <string name="gastonomo_tab_home">Inicio</string>
+    <string name="gastonomo_tab_movements">Movimientos</string>
+    <string name="gastonomo_tab_loans">Préstamos</string>
+    <string name="gastonomo_tab_settings">Ajustes</string>
+
+    <!-- Acciones que salen en varias pantallas -->
+    <string name="gastonomo_action_save">Guardar</string>
+    <string name="gastonomo_action_cancel">Cancelar</string>
+    <string name="gastonomo_action_back">Volver</string>
+    <string name="gastonomo_action_close">Cerrar</string>
+    <string name="gastonomo_action_retry">Reintentar</string>
+    <string name="gastonomo_action_apply">Aplicar</string>
+    <string name="gastonomo_action_delete">Eliminar</string>
+    <string name="gastonomo_action_edit">Editar</string>
+    <string name="gastonomo_action_see_all">Ver todos</string>
+
+    <!-- Sufijo de un campo que se puede dejar vacio. Va detras del label, en faint. -->
+    <string name="gastonomo_field_optional">(opcional)</string>
+
+    <!-- Tipos de movimiento y direcciones de prestamo -->
+    <string name="gastonomo_kind_income">Ingreso</string>
+    <string name="gastonomo_kind_expense">Gasto</string>
+    <string name="gastonomo_filter_all">Todos</string>
+    <string name="gastonomo_direction_owed_to_me">Me deben</string>
+    <string name="gastonomo_direction_i_owe">Debo</string>
+
+    <!-- Estados de prestamo -->
+    <string name="gastonomo_loan_status_paid">Pagado</string>
+    <string name="gastonomo_loan_status_partial">Parcial</string>
+    <string name="gastonomo_loan_status_pending">Pendiente</string>
+    <string name="gastonomo_loan_count_none">Nada pendiente</string>
+    <plurals name="gastonomo_loan_count">
+        <item quantity="one">%1$d préstamo</item>
+        <!-- El CLDR moderno pide "many" en espanol para los numeros compactos. -->
+        <item quantity="many">%1$d préstamos</item>
+        <item quantity="other">%1$d préstamos</item>
+    </plurals>
+
+    <!-- Encabezados de dia en Movimientos -->
+    <string name="gastonomo_day_today">Hoy</string>
+    <string name="gastonomo_day_yesterday">Ayer</string>
+
+    <!-- Estados de error y de espera comunes -->
+    <string name="gastonomo_error_network">No hay conexión. Inténtalo de nuevo.</string>
+    <string name="gastonomo_error_unexpected">Algo no fue bien. Inténtalo de nuevo.</string>
+    <string name="gastonomo_error_session_expired">Tu sesión caducó. Entra otra vez.</string>
+    <string name="gastonomo_error_rates_unavailable">Las tasas de cambio aún no están listas.</string>
+    <string name="gastonomo_error_in_progress">Ese guardado ya está en curso. Espera un momento y vuelve a intentarlo.</string>
+    <string name="gastonomo_error_body_changed">Cambiaste los datos. Vuelve a pulsar Guardar.</string>
+    <string name="gastonomo_amount_negative">menos %1$s</string>
+    <string name="gastonomo_amount_positive">más %1$s</string>
+    <string name="gastonomo_amount_hidden">importe oculto</string>
+    <string name="gastonomo_loading">Cargando…</string>
+
+    <!-- Dialogo del sistema para la huella -->
+    <string name="gastonomo_biometric_title">Desbloquea Gastonomo</string>
+    <string name="gastonomo_biometric_subtitle">Usa tu huella para entrar.</string>
+    <string name="gastonomo_biometric_use_pin">Usar PIN</string>
+
+    <!-- Sheet de moneda, compartido por Ajustes y por los tres formularios de dinero -->
+    <string name="gastonomo_currency_title_settings">Moneda principal</string>
+    <string name="gastonomo_currency_title_record">Moneda del registro</string>
+    <string name="gastonomo_currency_subtitle_settings">Los totales se mostrarán en esta moneda y será la moneda por defecto de tus nuevos registros. Los registros existentes no cambian.</string>
+    <string name="gastonomo_currency_subtitle_record">Por defecto se usa %1$s. Si eliges otra, guardamos también su equivalencia en %1$s.</string>
+    <string name="gastonomo_currency_search">Buscar por código o nombre</string>
+    <string name="gastonomo_currency_frequent">Frecuentes</string>
+    <string name="gastonomo_currency_all">Todas</string>
+    <string name="gastonomo_currency_empty">Sin resultados.</string>
+    <string name="gastonomo_currency_selected">Seleccionada</string>
+    <plurals name="gastonomo_currency_footer">
+        <item quantity="one">%1$d moneda · tasas de Frankfurter</item>
+        <!-- El CLDR moderno pide "many" en espanol para los numeros compactos. -->
+        <item quantity="many">%1$d monedas · tasas de Frankfurter</item>
+        <item quantity="other">%1$d monedas · tasas de Frankfurter</item>
+    </plurals>
+
+    <!-- Sheet de idioma -->
+    <string name="gastonomo_language_title">Idioma</string>
+    <string name="gastonomo_language_subtitle">Idioma de la app y formato de números y fechas.</string>
+    <string name="gastonomo_language_spanish" translatable="false">Español</string>
+    <string name="gastonomo_language_spanish_region" translatable="false">Colombia · es-CO</string>
+    <string name="gastonomo_language_english" translatable="false">English</string>
+    <string name="gastonomo_language_english_region" translatable="false">United States · en-US</string>
+</resources>

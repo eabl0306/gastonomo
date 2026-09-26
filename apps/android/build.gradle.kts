@@ -16,9 +16,23 @@ dependencies {
     kover(project(":core:common"))
     kover(project(":core:domain"))
     kover(project(":core:application"))
-    kover(project(":data:health"))
-    kover(project(":feature:health"))
+    kover(project(":core:designsystem"))
+    kover(project(":core:navigation"))
+    kover(project(":data:network"))
+    kover(project(":data:session"))
+    kover(project(":data:auth"))
+    kover(project(":data:finance"))
+    kover(project(":data:catalog"))
+    kover(project(":feature:auth"))
+    kover(project(":feature:home"))
+    kover(project(":feature:movements"))
+    kover(project(":feature:loans"))
+    kover(project(":feature:settings"))
+    kover(project(":feature:categories"))
+    kover(project(":feature:export"))
     kover(project(":app"))
+    // :core:testing y :core:screenshot quedan fuera a proposito: es codigo que solo corre desde los tests de
+    // otros modulos y contarlo aqui falsearia el agregado en los dos sentidos.
 }
 
 kover {

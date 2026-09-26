@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- English translation of the shared strings. -->
+<resources xmlns:tools="http://schemas.android.com/tools" tools:locale="en">
+    <string name="gastonomo_footer">Gastonomo %1$s · Personal finance</string>
+
+    <!-- Tab bar -->
+    <string name="gastonomo_tab_home">Home</string>
+    <string name="gastonomo_tab_movements">Movements</string>
+    <string name="gastonomo_tab_loans">Loans</string>
+    <string name="gastonomo_tab_settings">Settings</string>
+
+    <!-- Actions shared by several screens -->
+    <string name="gastonomo_action_save">Save</string>
+    <string name="gastonomo_action_cancel">Cancel</string>
+    <string name="gastonomo_action_back">Back</string>
+    <string name="gastonomo_action_close">Close</string>
+    <string name="gastonomo_action_retry">Try again</string>
+    <string name="gastonomo_action_apply">Apply</string>
+    <string name="gastonomo_action_delete">Delete</string>
+    <string name="gastonomo_action_edit">Edit</string>
+    <string name="gastonomo_action_see_all">See all</string>
+
+    <string name="gastonomo_field_optional">(optional)</string>
+
+    <!-- Movement kinds and loan directions -->
+    <string name="gastonomo_kind_income">Income</string>
+    <string name="gastonomo_kind_expense">Expense</string>
+    <string name="gastonomo_filter_all">All</string>
+    <string name="gastonomo_direction_owed_to_me">Owed to me</string>
+    <string name="gastonomo_direction_i_owe">I owe</string>
+
+    <!-- Loan statuses -->
+    <string name="gastonomo_loan_status_paid">Paid</string>
+    <string name="gastonomo_loan_status_partial">Partial</string>
+    <string name="gastonomo_loan_status_pending">Pending</string>
+    <string name="gastonomo_loan_count_none">Nothing pending</string>
+    <plurals name="gastonomo_loan_count">
+        <item quantity="one">%1$d loan</item>
+        <item quantity="other">%1$d loans</item>
+    </plurals>
+
+    <!-- Day headers in Movements -->
+    <string name="gastonomo_day_today">Today</string>
+    <string name="gastonomo_day_yesterday">Yesterday</string>
+
+    <!-- Shared error and loading states -->
+    <string name="gastonomo_error_network">No connection. Try again.</string>
+    <string name="gastonomo_error_unexpected">Something went wrong. Try again.</string>
+    <string name="gastonomo_error_session_expired">Your session expired. Sign in again.</string>
+    <string name="gastonomo_error_rates_unavailable">Exchange rates are not ready yet.</string>
+    <string name="gastonomo_error_in_progress">That save is already running. Wait a moment and try again.</string>
+    <string name="gastonomo_error_body_changed">You changed the data. Tap Save again.</string>
+    <string name="gastonomo_amount_negative">minus %1$s</string>
+    <string name="gastonomo_amount_positive">plus %1$s</string>
+    <string name="gastonomo_amount_hidden">amount hidden</string>
+    <string name="gastonomo_loading">Loading…</string>
+
+    <!-- System biometric dialog -->
+    <string name="gastonomo_biometric_title">Unlock Gastonomo</string>
+    <string name="gastonomo_biometric_subtitle">Use your fingerprint to sign in.</string>
+    <string name="gastonomo_biometric_use_pin">Use PIN</string>
+
+    <!-- Currency sheet, shared by Settings and the three money forms -->
+    <string name="gastonomo_currency_title_settings">Main currency</string>
+    <string name="gastonomo_currency_title_record">Record currency</string>
+    <string name="gastonomo_currency_subtitle_settings">Totals will be shown in this currency, and it will be the default for your new records. Existing records do not change.</string>
+    <string name="gastonomo_currency_subtitle_record">%1$s is used by default. If you pick another one, we also store its equivalent in %1$s.</string>
+    <string name="gastonomo_currency_search">Search by code or name</string>
+    <string name="gastonomo_currency_frequent">Frequent</string>
+    <string name="gastonomo_currency_all">All</string>
+    <string name="gastonomo_currency_empty">No results.</string>
+    <string name="gastonomo_currency_selected">Selected</string>
+    <plurals name="gastonomo_currency_footer">
+        <item quantity="one">%1$d currency · rates from Frankfurter</item>
+        <item quantity="other">%1$d currencies · rates from Frankfurter</item>
+    </plurals>
+
+    <!-- Language sheet -->
+    <string name="gastonomo_language_title">Language</string>
+    <string name="gastonomo_language_subtitle">App language and number and date format.</string>
+</resources>

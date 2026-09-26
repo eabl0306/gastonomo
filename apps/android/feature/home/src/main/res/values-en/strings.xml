@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Traduccion al ingles de los textos de Inicio. -->
+<resources xmlns:tools="http://schemas.android.com/tools" tools:locale="en">
+    <string name="home_greeting">Hi, %1$s</string>
+    <string name="home_greeting_anonymous">Hi</string>
+    <string name="home_balance_of_month">%1$s balance</string>
+    <string name="home_balance_of_range">Range balance</string>
+    <string name="home_hide_amounts">Hide the amounts</string>
+    <string name="home_show_amounts">Show the amounts</string>
+    <string name="home_income">Income</string>
+    <string name="home_expense">Expenses</string>
+    <string name="home_quick_loan">Loan</string>
+    <string name="home_quick_payment">Payment</string>
+    <string name="home_expenses_by_category">Expenses by category</string>
+    <string name="home_no_expenses">No expenses in this period.</string>
+    <string name="home_category_percent">%1$d%%</string>
+    <string name="home_recent_movements">Latest movements</string>
+    <string name="home_no_movements">No movements in this period.</string>
+    <string name="home_toast_income_saved">Income saved</string>
+    <string name="home_toast_expense_saved">Expense saved</string>
+</resources>

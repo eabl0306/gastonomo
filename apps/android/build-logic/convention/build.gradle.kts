@@ -41,6 +41,10 @@ gradlePlugin {
             id = "gastonomo.jvm.library"
             implementationClass = "JvmLibraryConventionPlugin"
         }
+        register("feature") {
+            id = "gastonomo.feature"
+            implementationClass = "FeatureConventionPlugin"
+        }
         register("quality") {
             id = "gastonomo.quality"
             implementationClass = "QualityConventionPlugin"

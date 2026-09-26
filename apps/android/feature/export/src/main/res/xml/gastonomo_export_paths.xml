@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Solo se comparte el subdirectorio de exportaciones de la cache, nunca la cache entera:
+  lo que sale del proceso tiene que ser exactamente lo que el usuario pidio exportar.
+-->
+<paths>
+    <cache-path name="gastonomo_exports" path="exports/" />
+</paths>

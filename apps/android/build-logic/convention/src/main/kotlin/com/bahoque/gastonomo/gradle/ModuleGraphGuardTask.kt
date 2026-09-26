@@ -49,19 +49,36 @@ abstract class ModuleGraphGuardTask : DefaultTask() {
     private companion object {
         const val FEATURE_PREFIX = ":feature:"
         const val DATA_PREFIX = ":data:"
+        const val DESIGN_SYSTEM = ":core:designsystem"
+        const val NAVIGATION = ":core:navigation"
+
+        /**
+         * Modulos de utilidades de test. Los consumen los source sets de test de cualquier
+         * capa, incluida una mas interna que la suya, asi que el rango no les aplica.
+         */
+        val TEST_SUPPORT = setOf(":core:testing", ":core:screenshot")
 
         /** Capas de dentro afuera. Nadie puede depender de una capa mas externa que la suya. */
         val LAYER_RANK = linkedMapOf(
             ":core:common" to 0,
             ":core:domain" to 1,
             ":core:application" to 2,
-            DATA_PREFIX to 3,
-            FEATURE_PREFIX to 3,
-            ":app" to 4,
+            DESIGN_SYSTEM to 3,
+            NAVIGATION to 4,
+            ":core:testing" to 5,
+            ":core:screenshot" to 5,
+            DATA_PREFIX to 6,
+            FEATURE_PREFIX to 6,
+            ":app" to 7,
         )
 
+        /** Modulos de presentacion: un adaptador driven no tiene nada que hacer con ellos. */
+        val UI_MODULES = setOf(DESIGN_SYSTEM, NAVIGATION)
+
         fun forbiddenReason(from: String, to: String): String? {
+            if (to in TEST_SUPPORT) return null
             siblingAdapterReason(from, to)?.let { return it }
+            uiFromDataReason(from, to)?.let { return it }
             val fromRank = rankOf(from) ?: return null
             val toRank = rankOf(to) ?: return null
             return if (toRank > fromRank) "an inner layer must not depend on an outer one" else null
@@ -74,6 +91,13 @@ abstract class ModuleGraphGuardTask : DefaultTask() {
                 "a driven adapter must not know a driving adapter"
             else -> null
         }
+
+        fun uiFromDataReason(from: String, to: String): String? =
+            if (from.startsWith(DATA_PREFIX) && to in UI_MODULES) {
+                "a driven adapter must not know the presentation layer"
+            } else {
+                null
+            }
 
         fun rankOf(path: String): Int? =
             LAYER_RANK.entries.firstOrNull { path == it.key || path.startsWith(it.key) }?.value

@@ -1,0 +1,44 @@
+package com.bahoque.gastonomo.core.designsystem.theme
+
+import android.annotation.SuppressLint
+import android.content.res.Configuration
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
+import com.bahoque.gastonomo.core.domain.settings.AppLanguage
+import java.util.Locale
+
+/**
+ * Pone los recursos en el idioma elegido en Ajustes, que no tiene por que ser el del
+ * telefono: el diseno ofrece Espanol e English dentro de la aplicacion.
+ *
+ * `stringResource` lee de `LocalResources`, que por defecto se calcula a partir de
+ * `LocalContext` y `LocalConfiguration`. Se proveen los tres para que ninguna pantalla tenga
+ * que enterarse: siguen llamando a `stringResource` igual.
+ *
+ * La configuracion se copia de la vigente, asi que un cambio de tamano o de densidad del
+ * sistema sigue llegando; lo unico que se sustituye es el idioma.
+ */
+// El reparto por idioma del bundle esta desactivado en app/build.gradle.kts, que es donde se
+// configura. Lint no lo ve desde aqui porque este es un modulo de libreria.
+@SuppressLint("AppBundleLocaleChanges")
+@Composable
+internal fun ProvideLocalizedResources(language: AppLanguage, content: @Composable () -> Unit) {
+    val context = LocalContext.current
+    val current = LocalConfiguration.current
+    val configuration = remember(current, language) {
+        Configuration(current).apply { setLocale(Locale.forLanguageTag(language.localeTag)) }
+    }
+    val localized = remember(context, configuration) {
+        context.createConfigurationContext(configuration)
+    }
+    CompositionLocalProvider(
+        LocalContext provides localized,
+        LocalConfiguration provides configuration,
+        LocalResources provides localized.resources,
+        content = content,
+    )
+}

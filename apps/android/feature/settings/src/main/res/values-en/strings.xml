@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- English translation of the Settings screen. -->
+<resources xmlns:tools="http://schemas.android.com/tools" tools:locale="en">
+    <string name="settings_title">Settings</string>
+
+    <!-- Groups -->
+    <string name="settings_group_account">Account</string>
+    <string name="settings_group_general">General</string>
+    <string name="settings_group_data">Data</string>
+
+    <!-- Account -->
+    <string name="settings_cloud_sync">Cloud sync</string>
+    <string name="settings_cloud_sync_ok">Up to date</string>
+    <string name="settings_cloud_sync_paused">Paused</string>
+    <string name="settings_lock">Fingerprint / PIN lock</string>
+    <string name="settings_change_password">Change password</string>
+
+    <!-- General -->
+    <string name="settings_currency">Currency</string>
+    <string name="settings_currency_value">%1$s · %2$s</string>
+    <string name="settings_language">Language</string>
+    <string name="settings_rates">Exchange rates</string>
+    <string name="settings_rates_ready">Frankfurter · %1$s</string>
+    <string name="settings_rates_offline">Offline</string>
+    <string name="settings_general_note">Every record stores its original currency and its equivalent. Changing the currency only changes how you see the figures and the default currency of new records.</string>
+
+    <!-- Data -->
+    <string name="settings_categories">Categories</string>
+    <string name="settings_export">Export data</string>
+    <string name="settings_export_value">CSV · Excel</string>
+
+    <string name="settings_sign_out">Sign out</string>
+
+    <!-- Sheet that creates the local lock PIN -->
+    <string name="settings_pin_title">Create your PIN</string>
+    <string name="settings_pin_subtitle">Four digits to unlock Gastonomo on this phone.</string>
+    <string name="settings_pin_label">PIN</string>
+    <string name="settings_pin_placeholder">••••</string>
+    <string name="settings_pin_save">Save PIN</string>
+
+    <!-- Messages -->
+    <string name="settings_toast_currency">Showing everything in %1$s</string>
+    <string name="settings_toast_lock_on">Lock turned on.</string>
+    <string name="settings_toast_lock_off">Lock turned off.</string>
+    <string name="settings_error_catalog">The currency catalogue is not ready yet. Try again.</string>
+    <string name="settings_error_save">Could not save. Try again.</string>
+</resources>

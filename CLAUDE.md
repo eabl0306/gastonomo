@@ -31,19 +31,43 @@ framework, ni HTTP, ni SQL, ni React, ni Android. Los detalles estan en
   `infrastructure`, `ui`, `app`). Lo verifica `eslint-plugin-boundaries` con denegacion
   por defecto. `src/domain` no puede importar ni siquiera un paquete de npm. La raiz de
   composicion es `src/app/composition-root.ts`.
-- **Android**: un modulo por capa. `core:domain`, `core:application` y `core:common` son
-  `kotlin("jvm")` puros, asi que el SDK de Android no esta en su classpath. `feature:*`
-  nunca depende de `data:*`. Lo vigilan dos cosas, y hacen falta las dos: ocho reglas de
-  Konsist en
+- **Android**: un modulo por capa, veinte en total. `core:domain`, `core:application` y
+  `core:common` son `kotlin("jvm")` puros, asi que el SDK de Android no esta en su classpath.
+  `feature:*` nunca depende de `data:*` ni de otra `feature:*`: las une `:app`, con un fichero
+  de cableado por feature en `app/src/main/kotlin/com/bahoque/gastonomo/wiring/`. Lo vigilan
+  dos cosas, y hacen falta las dos: las reglas de Konsist en
   `app/src/test/kotlin/com/bahoque/gastonomo/architecture/HexagonalArchitectureTest.kt`,
   que miran los imports, y la tarea `moduleGraphGuard`, que lee el grafo real de Gradle.
   Sin la segunda, declarar la dependencia prohibida en un `build.gradle.kts` y todavia no
   usarla pasaba limpio.
 
+  Las 14 pantallas del rediseno estan implementadas. Ademas de las capas hay tres modulos de
+  presentacion compartida y dos de utilidades de test: `:core:designsystem` (tokens,
+  componentes y formato de dinero y fechas), `:core:navigation` (las rutas tipadas de las 14
+  pantallas), `:core:testing` (dobles de los puertos, JVM puro) y `:core:screenshot` (captura
+  de composables a PNG desde la JVM). El detalle esta en
+  [apps/android/README.md](apps/android/README.md).
+
+  Dos reglas que rompen el build y conviene saber antes de escribir una pantalla: **un color o
+  un tamano no se escriben a mano fuera de `:core:designsystem`** (salen de
+  `GastonomoTheme.colors`, `.typography`, `.radii`, `.dimens`, `.shadows`, `.formats`), y
+  **un texto visible no se escribe en un composable**: va al `strings.xml` de su feature, o al
+  de `:core:designsystem` si lo comparten varias, y se lee por `GastonomoStrings`. Espanol en
+  `values`, ingles en `values-en`, las mismas claves en las dos salvo las `translatable="false"`.
+  Las decisiones estan en el [ADR 0013](docs/adr/0013-sistema-de-diseno-en-android.md) y el
+  [ADR 0014](docs/adr/0014-sesion-en-el-cliente-android.md).
+
 Para anadir algo nuevo: dominio, puerto, caso de uso con un fake, adaptador, adaptador
 driving y cableado en el composition root. En ese orden.
 
 ## Contrato compartido
+
+El contrato completo, endpoint por endpoint y con el porque de cada decision, esta en
+[docs/api-surface.md](docs/api-surface.md). La referencia ejecutable es
+`GET /openapi.json` del servicio en marcha, y `GET /swagger-ui` para verlo. Esto es lo
+minimo que hay que saber antes de tocar cualquiera de las tres apps.
+
+### Salud
 
 ```
 GET /health/live    200 siempre, sin tocar dependencias
@@ -54,9 +78,81 @@ GET /health/ready   200 si status=ok, 503 si status=degraded
  "version":"0.1.0"}
 ```
 
-Configuracion de la API por entorno, con `__` como separador de nivel:
-`GASTONOMO__SERVER__HOST`, `GASTONOMO__SERVER__PORT`, `GASTONOMO__DATABASE__URL`,
-`GASTONOMO__TELEMETRY__LOG_LEVEL`. Puerto 8080 por defecto.
+### El dominio, bajo `/v1`
+
+```
+POST   /v1/auth/register  login  refresh  logout
+POST   /v1/auth/password/forgot  reset  change
+GET    /v1/me
+
+GET    /v1/movements?from=&to=&kind=&cursor=&limit=
+POST   /v1/movements
+
+GET    /v1/loans?direction=          GET /v1/loans/{id}
+POST   /v1/loans                     POST /v1/loans/{id}/payments
+
+GET    /v1/categories                POST /v1/categories
+PATCH  /v1/categories/{id}           DELETE /v1/categories/{id}
+
+GET    /v1/settings                  PATCH /v1/settings
+GET    /v1/currencies                GET /v1/exchange-rates
+```
+
+Todo `/v1` exige `Authorization: Bearer {accessToken}` menos `auth/register`,
+`auth/login`, `auth/refresh`, `auth/logout`, `auth/password/forgot` y
+`auth/password/reset`.
+
+### Las siete reglas que no se pueden romper
+
+1. **El dinero es decimal exacto y viaja como string.** `NUMERIC(18,4)` en PostgreSQL,
+   `rust_decimal::Decimal` en Rust, `"amount": "186400.0000"` en JSON. Nunca un float,
+   en ninguna capa ni en ningun cliente. Ver [ADR 0009](docs/adr/0009-dinero-con-decimal.md).
+2. **Cada registro lleva cuatro campos de importe**: `amount` y `currency` (lo que el
+   usuario tecleo) mas `base` y `baseCurrency` (su equivalencia al registrar, con la
+   tasa que el usuario pudo editar). La API los guarda tal cual y no recalcula nada.
+   `base` y `baseCurrency` se pueden omitir los dos juntos, y entonces la equivalencia es
+   el propio importe. Ver [ADR 0011](docs/adr/0011-multimoneda-de-cuatro-campos.md).
+3. **Convertir para mostrar es del cliente.** La API sirve tasas, nunca importes
+   convertidos. El estado de un prestamo, su porcentaje, los intereses, el orden de la
+   lista y todos los totales y graficos los deriva el cliente.
+4. **Toda lista va envuelta en `items`**; `/v1/movements` anade `nextCursor` al lado.
+5. **Los errores son `application/problem+json`** (RFC 9457), incluidos los 404 y 405 de
+   ruta desconocida. Los mensajes de `errors[].message` van **en castellano**, listos
+   para pintar junto al campo. El `Display` de los errores de dominio se queda en ingles,
+   que es para los logs.
+6. **Un recurso de otra cuenta responde 404, nunca 403.** Un 403 confirmaria que existe.
+   Lo mismo si el identificador del camino no es un UUID.
+7. **Las fechas de registro son `DATE`** (`YYYY-MM-DD`), sin hora ni zona. Los instantes
+   tecnicos si son `timestamptz`.
+
+### Idempotencia
+
+Los tres POST que crean dinero (`/v1/movements`, `/v1/loans`, `/v1/loans/{id}/payments`)
+aceptan la cabecera `Idempotency-Key`. Es opcional, pero **los clientes deberian mandarla
+siempre**: un reintento sin ella duplica el gasto, y no hay pantalla para borrarlo. El
+reintento recibe la misma respuesta con `Idempotent-Replay: true`. La misma clave con
+otro cuerpo es 409. Ver [ADR 0012](docs/adr/0012-idempotencia-con-cabecera.md).
+
+### Tasas de cambio
+
+Los clientes **no llaman a Frankfurter**. Solo llama la API, que guarda las pasadas en
+PostgreSQL y las sirve en `/v1/exchange-rates` con base USD y un `status` de `ok` o
+`stale`. Una tarea refresca a las 06:00 y 18:00 UTC, y al arrancar si hace falta. Ver
+[ADR 0010](docs/adr/0010-cacheo-de-tasas-de-cambio.md).
+
+### Configuracion
+
+Por entorno, con el prefijo `GASTONOMO__` y `__` como separador de nivel. La lista
+completa esta en [.env.example](.env.example). Las que hay que conocer:
+
+```
+GASTONOMO__SERVER__HOST  __PORT              8080 por defecto
+GASTONOMO__DATABASE__URL
+GASTONOMO__TELEMETRY__LOG_LEVEL
+GASTONOMO__AUTH__ACCESS_TOKEN_SECRET        obligatorio de verdad al desplegar
+GASTONOMO__MAIL__DRIVER                     log o smtp
+GASTONOMO__EXCHANGE_RATES__ENABLED          false en tests y CI
+```
 
 La web lee `VITE_API_URL` (dev 5173, preview 4173). Android lee
 `BuildConfig.API_BASE_URL` (debug `http://10.0.2.2:8080`).
@@ -83,9 +179,10 @@ ESLint, `warningsAsErrors` en Android Lint, `maxIssues: 0` en detekt.
 just                # lista todas las recetas
 just check          # lint, tipos, tests y cobertura de los tres
 just ci             # check + e2e, cargo deny y builds de release: lo que corre la CI
-just api-test       # cargo test --workspace
+just api-test       # cargo test --workspace, sin base de datos
+just api-test-db    # las 7 suites de integracion contra el Postgres de compose
 just web-cov        # vitest con los umbrales de cobertura
-just android-check  # detekt + sourceGuard + lint + tests + kover
+just android-check  # detekt + sourceGuard + lint + tests (con capturas) + kover
 just up / just down # pila de Docker de desarrollo
 just guard          # tamano de fichero, tests apagados, TODO sin ticket
 just root-lint      # ESLint sobre packages/ y tools/ (la web tiene el suyo)
@@ -135,10 +232,36 @@ Los hooks se saltan con `LEFTHOOK=0` y solo en emergencias.
   pila de Docker entra por un gateway de nginx (`docker/gateway.dev.conf`) que las sirve
   bajo el mismo origen. Si arrancas la web fuera de Docker contra la API en el 8080, el
   navegador bloqueara las llamadas hasta que la API tenga CORS o Vite tenga un proxy.
+- **El gateway necesita un `location` por prefijo de la API, y el orden importa.** Los
+  bloques de `/health/`, `/openapi.json` y `/v1/` van ANTES de `location /`, que manda
+  todo lo demas a la web. Cuando `/v1/` falto, las 24 rutas de la API acababan en el nginx
+  de la SPA: los GET devolvian el `index.html` con 200 y los POST un 405 en HTML. Los jobs
+  de `api.yml` y `web.yml` pasaban igual, porque cada uno prueba su imagen por separado.
+  Por eso existe `just smoke` (y el job `stack` de la CI): levanta la pila entera y entra
+  por la puerta. Si anades un prefijo nuevo a la API, anade su `location` y su
+  comprobacion en `tools/scripts/smoke-stack.sh`.
+- **El limite de peticiones lee la ULTIMA entrada de `X-Forwarded-For`**, que es la que
+  anade nginx con `$proxy_add_x_forwarded_for`. Todo `location` que apunte a la API tiene
+  que mandar esa cabecera o todas las peticiones compartiran el cupo del gateway. Y si
+  algun dia la API se expone a internet sin proxy delante, el borde tiene que sobreescribir
+  la cabecera: sin proxy, cualquiera se salta el limite mandandola a mano.
 - **La imagen de desarrollo de la API** compila con `cargo watch`, y el directorio de
   compilacion esta excluido del watch. Si lo quitas, entra en bucle de recompilacion.
 - **Los tests de PostgreSQL de la API** se saltan solos si no hay
-  `GASTONOMO_TEST_DATABASE_URL`. Para correrlos: `just api-test-db`.
+  `GASTONOMO_TEST_DATABASE_URL`. Para correrlos: `just api-test-db`, que levanta la base y
+  exporta tambien `GASTONOMO_TEST_REQUIRE_DATABASE=1`, que convierte el salto en fallo. No
+  vacian la base entre tests: cada uno crea su propia cuenta con un correo unico, asi que
+  el Postgres de desarrollo acumula filas de prueba en cada pasada.
+- **Hay dos pilas de Docker y no hay que mezclarlas.** La de verdad es `compose.yaml` de la
+  raiz, que es la que usan todas las recetas de `just`. `apps/api/docker-compose.yml` es un
+  atajo para trabajar dentro de `apps/api` sin la web, y publica otros puertos a proposito
+  (5433, 8081, 8026 y 1026) para que levantar las dos no rompa nada. Cuando las dos usaban
+  el 5432, levantar la segunda dejaba un contenedor muerto y los tests apuntando a la base
+  equivocada.
+- **La tarea de tasas sale a internet al arrancar.** En tests y en CI va apagada con
+  `GASTONOMO__EXCHANGE_RATES__ENABLED=false`. Si la dejas encendida en un entorno sin
+  salida, la aplicacion arranca igual pero `/v1/exchange-rates` responde 503 y el catalogo
+  de monedas sale vacio.
 - **Los tests instrumentados de Android** necesitan emulador. `just android-connected`.
 
 ## CI

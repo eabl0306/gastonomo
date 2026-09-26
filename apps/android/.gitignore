@@ -3,6 +3,9 @@
 build/
 !gradle/wrapper/gradle-wrapper.jar
 
+# Logs y sesiones del Kotlin Gradle plugin
+.kotlin/
+
 # Configuracion local de la maquina
 local.properties
 *.iml

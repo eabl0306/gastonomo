@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- English translation of the four entry screens. -->
+<resources xmlns:tools="http://schemas.android.com/tools" tools:locale="en">
+
+    <!-- Fields shared by the three forms -->
+    <string name="auth_field_name">Name</string>
+    <string name="auth_field_name_placeholder">What we should call you</string>
+    <string name="auth_field_email">Email</string>
+    <string name="auth_field_email_placeholder">you@email.com</string>
+    <string name="auth_field_password">Password</string>
+    <string name="auth_show_password">Show the password</string>
+    <string name="auth_hide_password">Hide the password</string>
+
+    <!-- 1. Sign in -->
+    <string name="auth_login_title">Welcome back</string>
+    <string name="auth_login_subtitle">Sign in to see your synced accounts.</string>
+    <string name="auth_login_forgot">Forgot your password?</string>
+    <string name="auth_login_submit">Sign in</string>
+    <string name="auth_divider_or">or</string>
+    <string name="auth_login_biometrics">Sign in with fingerprint or PIN</string>
+    <string name="auth_login_no_account">No account yet?</string>
+    <string name="auth_login_register">Sign up</string>
+
+    <!-- 2. Sign up -->
+    <string name="auth_register_title">Create your account</string>
+    <string name="auth_register_subtitle">Your movements and loans are stored in the cloud and synced across your devices.</string>
+    <string name="auth_register_password_placeholder">At least 8 characters</string>
+    <string name="auth_register_terms">I accept the terms of use and the privacy policy.</string>
+    <string name="auth_register_submit">Create account</string>
+    <string name="auth_register_have_account">Already have an account?</string>
+    <string name="auth_register_login">Sign in</string>
+    <string name="auth_register_toast">Account created. Your data is syncing.</string>
+    <string name="auth_strength_label">Password strength: %1$s</string>
+    <string name="auth_strength_empty">At least 8 characters</string>
+    <string name="auth_strength_very_short">Too short</string>
+    <string name="auth_strength_almost">Almost</string>
+    <string name="auth_strength_good">Good</string>
+    <string name="auth_strength_strong">Strong</string>
+
+    <!-- 3. Password recovery -->
+    <string name="auth_forgot_title">Recover your password</string>
+    <string name="auth_forgot_subtitle">Enter your account email and we will send you a link to create a new one.</string>
+    <string name="auth_forgot_submit">Send link</string>
+    <string name="auth_forgot_sent_title">Check your email</string>
+    <string name="auth_forgot_sent_body">We sent a link to %1$s. It expires in 30 minutes.</string>
+    <string name="auth_forgot_email_fallback">your email</string>
+    <string name="auth_forgot_back_to_login">Back to sign in</string>
+    <string name="auth_forgot_resend">Did not arrive? Resend</string>
+    <string name="auth_forgot_resent_toast">Link sent again</string>
+
+    <!-- 4. PIN and fingerprint -->
+    <string name="auth_unlock_greeting">Hi, %1$s</string>
+    <string name="auth_unlock_prompt">Enter your PIN or use your fingerprint</string>
+    <string name="auth_unlock_use_password">Use password</string>
+    <plurals name="auth_unlock_dots">
+        <item quantity="one">Four digit PIN, %1$d entered</item>
+        <item quantity="other">Four digit PIN, %1$d entered</item>
+    </plurals>
+    <string name="auth_unlock_fingerprint">Sign in with fingerprint</string>
+    <string name="auth_unlock_backspace">Delete the last digit</string>
+    <string name="auth_unlock_wrong_pin">Wrong PIN. Try again.</string>
+    <plurals name="auth_unlock_attempts_left">
+        <item quantity="one">Wrong PIN. %1$d try left.</item>
+        <item quantity="other">Wrong PIN. %1$d tries left.</item>
+    </plurals>
+    <string name="auth_unlock_locked_out">Too many tries. Sign in with your password.</string>
+    <string name="auth_unlock_biometrics_failed">Could not read your fingerprint. Use your PIN.</string>
+
+    <!-- Validation errors, the ones the API does not send -->
+    <string name="auth_error_name_required">Enter your name.</string>
+    <string name="auth_error_email_required">Enter your email.</string>
+    <string name="auth_error_email_invalid">That email is not valid.</string>
+    <string name="auth_error_password_required">Enter your password.</string>
+    <string name="auth_error_password_too_short">The password needs 8 characters or more.</string>
+    <string name="auth_error_terms_required">You have to accept the terms to continue.</string>
+    <string name="auth_error_invalid_credentials">Wrong email or password.</string>
+    <string name="auth_error_too_many_requests">Too many tries. Wait a minute and try again.</string>
+    <string name="auth_error_conflict">Could not complete. Check the details.</string>
+
+</resources>

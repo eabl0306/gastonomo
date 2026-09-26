@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Los textos de Movimientos y de Nuevo movimiento. Idioma por defecto (es-CO); la traduccion
+  esta en values-en. Lo que comparten varias pantallas se lee por GastonomoStrings.
+-->
+<resources xmlns:tools="http://schemas.android.com/tools" tools:locale="es">
+    <string name="movements_title">Movimientos</string>
+    <string name="movements_income">Ingresos</string>
+    <string name="movements_expense">Gastos</string>
+    <string name="movements_net">Neto</string>
+    <string name="movements_new">Nuevo</string>
+    <string name="movements_empty">No hay movimientos en este periodo.</string>
+    <string name="movements_error_conflict">Ese movimiento ya se había guardado.</string>
+    <string name="movements_toast_income_saved">Ingreso guardado</string>
+    <string name="movements_toast_expense_saved">Gasto guardado</string>
+
+    <string name="new_movement_title">Nuevo movimiento</string>
+    <string name="new_movement_category">Categoría</string>
+    <string name="new_movement_date">Fecha</string>
+    <string name="new_movement_note">Nota</string>
+    <string name="new_movement_note_placeholder">Ej. Mercado de la semana</string>
+    <string name="new_movement_save">Guardar movimiento</string>
+</resources>

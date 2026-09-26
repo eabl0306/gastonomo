@@ -33,6 +33,11 @@ complexity:
     constructorThreshold: 5
     ignoreDefaultParameters: false
     ignoreDataClasses: true
+    # Un composable lleva por contrato su modifier, sus slots y los estados que pinta, y
+    # la alternativa (una data class de parametros por componente) esconde la firma sin
+    # quitar complejidad. El limite de 5 sigue vigente en todo lo que no es UI.
+    ignoreAnnotated:
+      - 'Composable'
   NestedBlockDepth:
     active: true
     threshold: 4

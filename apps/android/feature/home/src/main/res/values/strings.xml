@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Los textos de Inicio. Idioma por defecto (es-CO); la traduccion esta en values-en. Lo que
+  comparten varias pantallas no esta aqui: se lee por GastonomoStrings.
+-->
+<resources xmlns:tools="http://schemas.android.com/tools" tools:locale="es">
+    <string name="home_greeting">Hola, %1$s</string>
+    <string name="home_greeting_anonymous">Hola</string>
+    <string name="home_balance_of_month">Balance de %1$s</string>
+    <string name="home_balance_of_range">Balance del rango</string>
+    <string name="home_hide_amounts">Ocultar los montos</string>
+    <string name="home_show_amounts">Mostrar los montos</string>
+    <string name="home_income">Ingresos</string>
+    <string name="home_expense">Gastos</string>
+    <string name="home_quick_loan">Préstamo</string>
+    <string name="home_quick_payment">Abono</string>
+    <string name="home_expenses_by_category">Gastos por categoría</string>
+    <string name="home_no_expenses">Sin gastos en este periodo.</string>
+    <string name="home_category_percent">%1$d%%</string>
+    <string name="home_masked_short" translatable="false">••••</string>
+    <string name="home_recent_movements">Últimos movimientos</string>
+    <string name="home_no_movements">Sin movimientos en este periodo.</string>
+    <string name="home_toast_income_saved">Ingreso guardado</string>
+    <string name="home_toast_expense_saved">Gasto guardado</string>
+</resources>

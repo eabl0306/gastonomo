@@ -35,6 +35,8 @@ target/
 
 # --- Gradle / Android ---
 .gradle/
+# El Kotlin Gradle plugin deja aqui sus logs de error y sus sesiones.
+.kotlin/
 captures/
 .externalNativeBuild/
 .cxx/

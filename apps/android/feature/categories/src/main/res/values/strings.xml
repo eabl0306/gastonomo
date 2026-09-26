@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Textos de la pantalla 13, Categorias. Idioma por defecto (es-CO). -->
+<resources xmlns:tools="http://schemas.android.com/tools" tools:locale="es">
+    <string name="categories_title">Categorías</string>
+    <string name="categories_tab_expenses">Gastos</string>
+    <string name="categories_tab_income">Ingresos</string>
+    <string name="categories_mine">Mis categorías</string>
+    <string name="categories_default">Predeterminadas</string>
+    <string name="categories_new">Nueva categoría</string>
+    <string name="categories_locked">No se puede editar</string>
+    <string name="categories_uses_none">Sin movimientos</string>
+    <plurals name="categories_uses">
+        <item quantity="one">%1$d movimiento</item>
+        <!-- El CLDR moderno pide "many" en espanol para los numeros compactos. -->
+        <item quantity="many">%1$d movimientos</item>
+        <item quantity="other">%1$d movimientos</item>
+    </plurals>
+
+    <!-- Sheet de crear o editar -->
+    <string name="category_sheet_new">Nueva categoría</string>
+    <string name="category_sheet_edit">Editar categoría</string>
+    <string name="category_sheet_preview">%1$s · %2$s</string>
+    <string name="category_sheet_unnamed">Sin nombre</string>
+    <string name="category_sheet_name">Nombre de la categoría</string>
+    <string name="category_sheet_icon">Ícono</string>
+    <string name="category_sheet_color">Color</string>
+    <string name="category_sheet_create">Crear categoría</string>
+    <string name="category_sheet_save">Guardar cambios</string>
+    <string name="category_error_duplicate">Ya existe una categoría con ese nombre</string>
+
+    <!-- Avisos -->
+    <string name="categories_toast_deleted">“%1$s” eliminada</string>
+    <string name="categories_toast_created">Categoría “%1$s” creada</string>
+    <string name="categories_toast_updated">Categoría actualizada</string>
+    <string name="categories_error_load">No se pudieron cargar las categorías.</string>
+    <string name="categories_error_save">No se pudo guardar. Inténtalo de nuevo.</string>
+    <string name="categories_error_default">Las categorías predeterminadas no se pueden editar.</string>
+</resources>

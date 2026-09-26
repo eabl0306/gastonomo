@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Los textos de las pantallas 8 a 11: Prestamos, Detalle del prestamo, Nuevo prestamo y el
+  sheet de Registrar abono. Este es el idioma por defecto (es-CO); la traduccion esta en
+  values-en.
+
+  Lo que comparten varias features no esta aqui: se lee por GastonomoStrings.
+-->
+<resources xmlns:tools="http://schemas.android.com/tools" tools:locale="es">
+
+    <!-- Pantalla 8: Prestamos -->
+    <string name="loans_title">Préstamos</string>
+    <string name="loans_owed_to_me">Te deben</string>
+    <string name="loans_i_owe">Debes</string>
+    <string name="loans_empty">No tienes préstamos en esta lista.</string>
+    <string name="loans_fab">Préstamo</string>
+
+    <!-- Tarjeta de prestamo -->
+    <string name="loan_owes_me">Me debe</string>
+    <string name="loan_i_owe">Debo</string>
+    <!-- Las comillas conservan los espacios: el XML los recorta. -->
+    <string name="loan_separator" translatable="false">" · "</string>
+    <string name="loan_outstanding">Saldo pendiente</string>
+    <string name="loan_paid_in_full">Pagado completo</string>
+    <string name="loan_interest_earned">Intereses ganados</string>
+    <string name="loan_of_original">de %1$s</string>
+    <string name="loan_percent">%1$d%%</string>
+    <string name="loan_register_payment">Registrar abono</string>
+    <string name="loan_progress_description">%1$d%% abonado</string>
+
+    <!-- Pantalla 9: Detalle del prestamo -->
+    <string name="loan_detail_title">Detalle del préstamo</string>
+    <string name="loan_detail_created_on">Creado el %1$s</string>
+    <string name="loan_detail_column_original">Original</string>
+    <string name="loan_detail_column_paid">Abonado</string>
+    <string name="loan_detail_column_status">Estado</string>
+    <string name="loan_detail_status_percent">%1$s · %2$d%%</string>
+    <string name="loan_detail_payments">Historial de abonos</string>
+    <string name="loan_detail_payment">Abono</string>
+    <string name="loan_detail_payment_labeled">Abono · %1$s</string>
+    <string name="loan_detail_payments_empty">Aún no hay abonos.</string>
+    <string name="loan_detail_not_found">No encontramos este préstamo.</string>
+
+    <!-- Pantalla 10: Nuevo prestamo -->
+    <string name="new_loan_title">Nuevo préstamo</string>
+    <string name="new_loan_lent">Presté</string>
+    <string name="new_loan_borrowed">Me prestaron</string>
+    <string name="new_loan_total">Monto total</string>
+    <string name="new_loan_person_lent">¿A quién le prestaste?</string>
+    <string name="new_loan_person_borrowed">¿Quién te prestó?</string>
+    <string name="new_loan_person_placeholder">Nombre de la persona</string>
+    <string name="new_loan_note_placeholder">Ej. Teléfono</string>
+    <string name="new_loan_hint_lent">Se registrará como gasto en tus movimientos. Cada abono que recibas contará como ingreso.</string>
+    <string name="new_loan_hint_borrowed">Se registrará como ingreso en tus movimientos. Cada abono que pagues contará como gasto.</string>
+    <string name="new_loan_submit">Crear préstamo</string>
+    <string name="new_loan_created">Préstamo creado</string>
+
+    <!-- Pantalla 11: Registrar abono -->
+    <string name="payment_title">Registrar abono</string>
+    <string name="payment_subtitle">%1$s · saldo %2$s</string>
+    <string name="payment_fill_all">Todo el saldo</string>
+    <string name="payment_fill_half">La mitad</string>
+    <string name="payment_submit">Guardar abono</string>
+    <string name="payment_registered">Abono de %1$s registrado</string>
+
+    <!-- Campos comunes a los dos formularios de esta tanda -->
+    <string name="loan_field_date">Fecha</string>
+    <string name="loan_field_note">Nota</string>
+
+    <!-- Errores que decide el cliente -->
+</resources>

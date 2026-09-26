@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Traduccion al ingles de los textos de Movimientos y Nuevo movimiento. -->
+<resources xmlns:tools="http://schemas.android.com/tools" tools:locale="en">
+    <string name="movements_title">Movements</string>
+    <string name="movements_income">Income</string>
+    <string name="movements_expense">Expenses</string>
+    <string name="movements_net">Net</string>
+    <string name="movements_new">New</string>
+    <string name="movements_empty">No movements in this period.</string>
+    <string name="movements_error_conflict">That movement had already been saved.</string>
+    <string name="movements_toast_income_saved">Income saved</string>
+    <string name="movements_toast_expense_saved">Expense saved</string>
+
+    <string name="new_movement_title">New movement</string>
+    <string name="new_movement_category">Category</string>
+    <string name="new_movement_date">Date</string>
+    <string name="new_movement_note">Note</string>
+    <string name="new_movement_note_placeholder">E.g. weekly groceries</string>
+    <string name="new_movement_save">Save movement</string>
+</resources>

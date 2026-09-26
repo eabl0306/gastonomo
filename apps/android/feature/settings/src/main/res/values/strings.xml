@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Textos de la pantalla 12, Ajustes. Idioma por defecto (es-CO). -->
+<resources xmlns:tools="http://schemas.android.com/tools" tools:locale="es">
+    <string name="settings_title">Ajustes</string>
+
+    <!-- Grupos -->
+    <string name="settings_group_account">Cuenta</string>
+    <string name="settings_group_general">General</string>
+    <string name="settings_group_data">Datos</string>
+
+    <!-- Cuenta -->
+    <string name="settings_cloud_sync">Sincronización en la nube</string>
+    <string name="settings_cloud_sync_ok">Al día</string>
+    <string name="settings_cloud_sync_paused">Pausada</string>
+    <string name="settings_lock">Bloqueo con huella / PIN</string>
+    <string name="settings_change_password">Cambiar contraseña</string>
+
+    <!-- General -->
+    <string name="settings_currency">Moneda</string>
+    <string name="settings_currency_value">%1$s · %2$s</string>
+    <string name="settings_language">Idioma</string>
+    <string name="settings_rates">Tasas de cambio</string>
+    <string name="settings_rates_ready">Frankfurter · %1$s</string>
+    <string name="settings_rates_offline">Sin conexión</string>
+    <string name="settings_general_note">Cada registro guarda su moneda original y su equivalencia. Cambiar la moneda solo cambia cómo ves las cifras y la moneda por defecto de los registros nuevos.</string>
+
+    <!-- Datos -->
+    <string name="settings_categories">Categorías</string>
+    <string name="settings_export">Exportar datos</string>
+    <string name="settings_export_value">CSV · Excel</string>
+
+    <string name="settings_sign_out">Cerrar sesión</string>
+
+    <!-- Hoja para crear el PIN del cerrojo local -->
+    <string name="settings_pin_title">Crea tu PIN</string>
+    <string name="settings_pin_subtitle">Cuatro dígitos para desbloquear Gastonomo en este teléfono.</string>
+    <string name="settings_pin_label">PIN</string>
+    <string name="settings_pin_placeholder">••••</string>
+    <string name="settings_pin_save">Guardar PIN</string>
+
+    <!-- Avisos -->
+    <string name="settings_toast_currency">Mostrando todo en %1$s</string>
+    <string name="settings_toast_lock_on">Bloqueo activado.</string>
+    <string name="settings_toast_lock_off">Bloqueo desactivado.</string>
+    <string name="settings_error_catalog">El catálogo de monedas aún no está listo. Inténtalo de nuevo.</string>
+    <string name="settings_error_save">No se pudo guardar. Inténtalo de nuevo.</string>
+</resources>

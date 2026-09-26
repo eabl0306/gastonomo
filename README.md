@@ -3,9 +3,14 @@
 Monorepo con tres aplicaciones que comparten el mismo contrato: una API en Rust, una web
 en React y una app nativa de Android.
 
-Ahora mismo solo esta implementado un caso de uso, comprobar la salud del servicio, de
-punta a punta en las tres. No hay dominio de negocio todavia: el esqueleto esta montado y
-los huecos estan a la vista.
+La API ya tiene el dominio completo: cuentas con contrasena, movimientos, prestamos con
+abonos, categorias, ajustes y tasas de cambio multimoneda. Son 24 endpoints bajo `/v1` mas
+los de salud, y estan descritos uno por uno en
+[docs/api-surface.md](docs/api-surface.md).
+
+La app de Android ya implementa el rediseno completo: las 14 pantallas, multimoneda, sesion con
+refresco de tokens y cerrojo local con PIN o huella. La web todavia solo tiene el caso de uso de
+salud.
 
 ## Arrancar en cinco minutos
 
@@ -30,17 +35,58 @@ Para tumbarlo todo, `just down`.
 Si prefieres trabajar sin Docker: `just db-up` levanta solo Postgres, `just api-run`
 arranca la API y `just web-dev` el servidor de desarrollo de la web.
 
+## Probar la API
+
+Con la pila arriba, el contrato entero esta en http://localhost:8090/openapi.json y se
+puede ojear en http://localhost:8090/swagger-ui. Un recorrido minimo con `curl`:
+
+```bash
+# Registro: devuelve el par de tokens y siembra las 12 categorias por defecto
+curl -s -X POST http://localhost:8090/v1/auth/register \
+  -H 'content-type: application/json' \
+  -d '{"name":"Camilo","email":"camilo@correo.com",
+       "password":"contrasena-larga","acceptedTerms":true}'
+
+TOKEN=...   # el accessToken de la respuesta
+
+# Las categorias sembradas, con su conteo de uso
+curl -s http://localhost:8090/v1/categories -H "authorization: Bearer $TOKEN"
+
+# Un gasto. Los importes van como string, y base/baseCurrency se pueden omitir
+# si el importe ya esta en la moneda principal. Idempotency-Key evita que un
+# reintento lo guarde dos veces.
+curl -s -X POST http://localhost:8090/v1/movements \
+  -H "authorization: Bearer $TOKEN" -H 'content-type: application/json' \
+  -H 'Idempotency-Key: mi-primer-gasto' \
+  -d '{"occurredOn":"2026-09-15","kind":"out","categoryId":"<id>",
+       "note":"Mercado","amount":"186400","currency":"COP"}'
+
+# Las tasas que la API cachea de Frankfurter, con base USD
+curl -s http://localhost:8090/v1/exchange-rates -H "authorization: Bearer $TOKEN"
+```
+
+Cosas que conviene saber antes de escribir un cliente:
+
+- Los importes viajan **como string** y nunca como number. La API no devuelve importes
+  convertidos: sirve los cuatro campos del registro y las tasas, y el cliente convierte.
+- Los errores son `application/problem+json`, y `errors[].message` viene en castellano
+  listo para pintar junto al campo.
+- Un recurso de otra cuenta responde 404, nunca 403.
+
+Los tests de integracion contra un PostgreSQL de verdad se corren con `just api-test-db`,
+que levanta la base y falla si no la encuentra en vez de saltarse los tests.
+
 ## Que hay dentro
 
 ```
 apps/api         API en Rust (Salvo + SQLx). Cinco crates, uno por capa.
 apps/web         Web en React 19 sobre Vite. Cinco carpetas, una por capa.
-apps/android     App nativa en Kotlin y Compose. Seis modulos de Gradle.
+apps/android     App nativa en Kotlin y Compose. Veinte modulos de Gradle.
 packages/        Configuracion compartida de JS: tsconfig y eslint-config.
 tools/checks     Reglas de calidad comunes a los tres lenguajes (Node puro).
 tools/scripts    Utilidades de shell que usan el justfile y los hooks.
 docker/          Configuracion del gateway de nginx.
-docs/            Arquitectura y decisiones (ADR).
+docs/            Arquitectura, contrato de la API y decisiones (ADR).
 ```
 
 ## Comandos
@@ -62,11 +108,15 @@ Todo pasa por `just`. Escribe `just` a secas para ver la lista completa.
 | `just guard`     | Tamano de fichero, tests apagados y TODO sin ticket              |
 | `just root-lint` | ESLint sobre `packages/` y `tools/`                              |
 | `just up`        | Levanta la pila de desarrollo en Docker                          |
+| `just smoke`     | Comprueba que por el gateway se llega a la API y a la web        |
 | `just down`      | La tumba y borra los volumenes                                   |
 | `just logs`      | Sigue los logs. `just logs api` para uno solo                    |
 | `just db-up`     | Levanta solo PostgreSQL                                          |
 | `just psql`      | Abre una consola de PostgreSQL                                   |
 | `just migrate`   | Aplica las migraciones a mano                                    |
+
+Y dos de la API que se usan mucho: `just api-check` corre todo su enforcement y
+`just api-test-db` los tests de integracion contra PostgreSQL.
 
 Hay recetas por app con los prefijos `api-`, `web-` y `android-`. Por ejemplo
 `just api-test`, `just web-lint` o `just android-check`.
@@ -99,6 +149,8 @@ La CI no se puede saltar.
 
 - [docs/architecture.md](docs/architecture.md): la arquitectura hexagonal y como se
   aplica en las tres apps.
+- [docs/api-surface.md](docs/api-surface.md): el contrato de la API, endpoint por
+  endpoint, y por que cada cosa es como es.
 - [docs/adr/](docs/adr/): por que se decidio cada cosa.
 - [CLAUDE.md](CLAUDE.md): convenciones del repositorio, para humanos y para agentes.
 - Cada app tiene su propio README con el detalle: [apps/api](apps/api/README.md),

@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Textos de la pantalla 14, Exportar datos, y de los archivos que genera. -->
+<resources xmlns:tools="http://schemas.android.com/tools" tools:locale="es">
+    <string name="export_title">Exportar datos</string>
+
+    <!-- Formato -->
+    <string name="export_format">Formato</string>
+    <string name="export_format_xlsx">Excel</string>
+    <string name="export_format_xlsx_hint">Un libro con una hoja por conjunto</string>
+    <string name="export_format_csv">CSV</string>
+    <string name="export_format_csv_hint">Texto plano, compatible con todo</string>
+
+    <!-- Que incluir -->
+    <string name="export_include">Qué incluir</string>
+    <plurals name="export_rows">
+        <item quantity="one">%1$d fila</item>
+        <!-- El CLDR moderno pide "many" en espanol para los numeros compactos. -->
+        <item quantity="many">%1$d filas</item>
+        <item quantity="other">%1$d filas</item>
+    </plurals>
+
+    <!-- Periodo -->
+    <string name="export_period">Periodo de movimientos</string>
+    <string name="export_period_all">Todo el historial</string>
+    <string name="export_period_current">Periodo actual · %1$s</string>
+
+    <!-- Caja de resumen -->
+    <string name="export_pick_one">Selecciona al menos un conjunto</string>
+    <plurals name="export_note_xlsx">
+        <item quantity="one">Un libro con %1$d hoja: %2$s.</item>
+        <!-- El CLDR moderno pide "many" en espanol para los numeros compactos. -->
+        <item quantity="many">Un libro con %1$d hojas: %2$s.</item>
+        <item quantity="other">Un libro con %1$d hojas: %2$s.</item>
+    </plurals>
+    <string name="export_note_csv_one">Separado por punto y coma, UTF-8. Abre directo en Excel o Google Sheets.</string>
+    <string name="export_note_csv_many">Separado por punto y coma, UTF-8. Se comparte un archivo por conjunto.</string>
+    <plurals name="export_files_csv">
+        <item quantity="one">%1$d archivo .csv</item>
+        <!-- El CLDR moderno pide "many" en espanol para los numeros compactos. -->
+        <item quantity="many">%1$d archivos .csv</item>
+        <item quantity="other">%1$d archivos .csv</item>
+    </plurals>
+
+    <!-- Boton y avisos -->
+    <string name="export_do_xlsx">Exportar a Excel</string>
+    <string name="export_do_csv">Exportar CSV</string>
+    <string name="export_share">Compartir exportación</string>
+    <plurals name="export_ready">
+        <item quantity="one">Exportación lista: %1$d fila</item>
+        <!-- El CLDR moderno pide "many" en espanol para los numeros compactos. -->
+        <item quantity="many">Exportación lista: %1$d filas</item>
+        <item quantity="other">Exportación lista: %1$d filas</item>
+    </plurals>
+    <string name="export_error">No se pudo generar el archivo. Inténtalo de nuevo.</string>
+    <string name="export_error_load">No se pudieron cargar tus datos.</string>
+
+    <!-- Nombres de los conjuntos, que son tambien los de las hojas del libro -->
+    <string name="export_set_movements">Movimientos</string>
+    <string name="export_set_loans">Préstamos</string>
+    <string name="export_set_payments">Abonos</string>
+
+    <!-- Columnas de Movimientos -->
+    <string name="export_column_date">Fecha</string>
+    <string name="export_column_type">Tipo</string>
+    <string name="export_column_category">Categoría</string>
+    <string name="export_column_description">Descripción</string>
+    <string name="export_column_original_amount">Monto original</string>
+    <string name="export_column_currency">Moneda</string>
+    <string name="export_column_amount">Monto (%1$s)</string>
+
+    <!-- Columnas de Prestamos -->
+    <string name="export_column_person">Persona</string>
+    <string name="export_column_direction">Dirección</string>
+    <string name="export_column_note">Nota</string>
+    <string name="export_column_paid">Abonado (%1$s)</string>
+    <string name="export_column_outstanding">Saldo pendiente (%1$s)</string>
+    <string name="export_column_status">Estado</string>
+
+    <!-- Columnas de Abonos -->
+    <string name="export_column_label">Concepto</string>
+    <string name="export_payment">Abono</string>
+</resources>

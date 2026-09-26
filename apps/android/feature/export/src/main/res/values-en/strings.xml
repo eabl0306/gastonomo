@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- English translation of the Export screen and of the files it produces. -->
+<resources xmlns:tools="http://schemas.android.com/tools" tools:locale="en">
+    <string name="export_title">Export data</string>
+
+    <!-- Format -->
+    <string name="export_format">Format</string>
+    <string name="export_format_xlsx">Excel</string>
+    <string name="export_format_xlsx_hint">One workbook with a sheet per set</string>
+    <string name="export_format_csv">CSV</string>
+    <string name="export_format_csv_hint">Plain text, works everywhere</string>
+
+    <!-- What to include -->
+    <string name="export_include">What to include</string>
+    <plurals name="export_rows">
+        <item quantity="one">%1$d row</item>
+        <item quantity="other">%1$d rows</item>
+    </plurals>
+
+    <!-- Period -->
+    <string name="export_period">Movement period</string>
+    <string name="export_period_all">All history</string>
+    <string name="export_period_current">Current period · %1$s</string>
+
+    <!-- Summary box -->
+    <string name="export_pick_one">Pick at least one set</string>
+    <plurals name="export_note_xlsx">
+        <item quantity="one">One workbook with %1$d sheet: %2$s.</item>
+        <item quantity="other">One workbook with %1$d sheets: %2$s.</item>
+    </plurals>
+    <string name="export_note_csv_one">Semicolon separated, UTF-8. Opens straight in Excel or Google Sheets.</string>
+    <string name="export_note_csv_many">Semicolon separated, UTF-8. One file per set is shared.</string>
+    <plurals name="export_files_csv">
+        <item quantity="one">%1$d .csv file</item>
+        <item quantity="other">%1$d .csv files</item>
+    </plurals>
+
+    <!-- Button and messages -->
+    <string name="export_do_xlsx">Export to Excel</string>
+    <string name="export_do_csv">Export CSV</string>
+    <string name="export_share">Share export</string>
+    <plurals name="export_ready">
+        <item quantity="one">Export ready: %1$d row</item>
+        <item quantity="other">Export ready: %1$d rows</item>
+    </plurals>
+    <string name="export_error">The file could not be created. Try again.</string>
+    <string name="export_error_load">Your data could not be loaded.</string>
+
+    <!-- Set names, also the sheet names of the workbook -->
+    <string name="export_set_movements">Movements</string>
+    <string name="export_set_loans">Loans</string>
+    <string name="export_set_payments">Payments</string>
+
+    <!-- Movement columns -->
+    <string name="export_column_date">Date</string>
+    <string name="export_column_type">Type</string>
+    <string name="export_column_category">Category</string>
+    <string name="export_column_description">Description</string>
+    <string name="export_column_original_amount">Original amount</string>
+    <string name="export_column_currency">Currency</string>
+    <string name="export_column_amount">Amount (%1$s)</string>
+
+    <!-- Loan columns -->
+    <string name="export_column_person">Person</string>
+    <string name="export_column_direction">Direction</string>
+    <string name="export_column_note">Note</string>
+    <string name="export_column_paid">Paid (%1$s)</string>
+    <string name="export_column_outstanding">Outstanding (%1$s)</string>
+    <string name="export_column_status">Status</string>
+
+    <!-- Payment columns -->
+    <string name="export_column_label">Concept</string>
+    <string name="export_payment">Payment</string>
+</resources>

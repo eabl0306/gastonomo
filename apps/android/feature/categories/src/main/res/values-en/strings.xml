@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- English translation of the Categories screen. -->
+<resources xmlns:tools="http://schemas.android.com/tools" tools:locale="en">
+    <string name="categories_title">Categories</string>
+    <string name="categories_tab_expenses">Expenses</string>
+    <string name="categories_tab_income">Income</string>
+    <string name="categories_mine">My categories</string>
+    <string name="categories_default">Defaults</string>
+    <string name="categories_new">New category</string>
+    <string name="categories_locked">Cannot be edited</string>
+    <string name="categories_uses_none">No movements</string>
+    <plurals name="categories_uses">
+        <item quantity="one">%1$d movement</item>
+        <item quantity="other">%1$d movements</item>
+    </plurals>
+
+    <!-- Create or edit sheet -->
+    <string name="category_sheet_new">New category</string>
+    <string name="category_sheet_edit">Edit category</string>
+    <string name="category_sheet_preview">%1$s · %2$s</string>
+    <string name="category_sheet_unnamed">Unnamed</string>
+    <string name="category_sheet_name">Category name</string>
+    <string name="category_sheet_icon">Icon</string>
+    <string name="category_sheet_color">Colour</string>
+    <string name="category_sheet_create">Create category</string>
+    <string name="category_sheet_save">Save changes</string>
+    <string name="category_error_duplicate">A category with that name already exists</string>
+
+    <!-- Messages -->
+    <string name="categories_toast_deleted">“%1$s” deleted</string>
+    <string name="categories_toast_created">Category “%1$s” created</string>
+    <string name="categories_toast_updated">Category updated</string>
+    <string name="categories_error_load">Categories could not be loaded.</string>
+    <string name="categories_error_save">Could not save. Try again.</string>
+    <string name="categories_error_default">Default categories cannot be edited.</string>
+</resources>

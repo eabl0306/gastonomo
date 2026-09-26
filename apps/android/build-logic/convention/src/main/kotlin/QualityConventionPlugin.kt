@@ -29,6 +29,7 @@ class QualityConventionPlugin : Plugin<Project> {
         with(target) {
             val quality = extensions.create<QualityExtension>("quality")
             quality.lineCoverageMinimum.convention(0)
+            quality.untestableOnJvm.convention(emptyList())
             pluginManager.apply("io.gitlab.arturbosch.detekt")
             pluginManager.apply("org.jetbrains.kotlinx.kover")
             configureDetekt()
@@ -103,6 +104,7 @@ private fun Project.configureKover(quality: QualityExtension) {
                         "hilt_aggregated_deps.*",
                         "dagger.hilt.*",
                     )
+                    classes(quality.untestableOnJvm.get())
                     annotatedBy("androidx.compose.ui.tooling.preview.Preview")
                 }
             }
