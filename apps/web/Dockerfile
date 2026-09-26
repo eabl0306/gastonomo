@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 # El contexto de build es la RAIZ del repo, porque el lockfile de pnpm vive alli:
 #   docker build -f apps/web/Dockerfile -t gastonomo-web .
-FROM node:24-alpine AS base
+FROM node:26-alpine AS base
 ENV PNPM_HOME=/pnpm
 ENV PATH=$PNPM_HOME:$PATH
 RUN corepack enable
