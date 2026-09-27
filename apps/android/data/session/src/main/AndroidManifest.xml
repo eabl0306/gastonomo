@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+    El permiso lo declara el modulo que lo usa, no la aplicacion: asi quien lea
+    AndroidNetworkMonitor ve de donde sale, y quitar el monitor quita tambien el permiso.
+    El merge de manifiestos lo sube a la aplicacion.
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Para saber si hay red antes de intentarlo: la fila de Ajustes tiene que decir la verdad
+         sin esperar a que falle una peticion, y el chip de moneda se apaga sin conexion. -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
+</manifest>

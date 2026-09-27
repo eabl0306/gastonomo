@@ -8,6 +8,7 @@ import com.bahoque.gastonomo.core.application.usecase.loan.LoadLoanDetail
 import com.bahoque.gastonomo.core.application.usecase.loan.LoadLoans
 import com.bahoque.gastonomo.core.application.usecase.loan.RegisterLoanPayment
 import com.bahoque.gastonomo.core.application.usecase.settings.LoadSettings
+import com.bahoque.gastonomo.core.application.usecase.sync.ObserveConnection
 
 /**
  * Lo que necesitan las pantallas de este modulo. Lo implementa la raiz de composicion de
@@ -31,6 +32,8 @@ interface LoansDependencies {
     val loadExchangeRates: LoadExchangeRates
 
     val loadSettings: LoadSettings
+
+    val observeConnection: ObserveConnection
 
     val clock: Clock
 }

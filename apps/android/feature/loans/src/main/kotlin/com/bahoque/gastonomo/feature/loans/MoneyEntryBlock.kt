@@ -8,9 +8,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.bahoque.gastonomo.core.designsystem.GastonomoStrings
 import com.bahoque.gastonomo.core.designsystem.component.AmountInputField
 import com.bahoque.gastonomo.core.designsystem.component.ConversionBox
 import com.bahoque.gastonomo.core.designsystem.component.CurrencyChip
@@ -68,8 +70,12 @@ fun MoneyEntryBlock(
             currency = entry.currency,
             onClick = { actions.onCurrencySheet(true) },
             fallbackName = fallbackNameOf(entry.currency, context),
+            enabled = entry.canConvert,
+            disabledHint = stringResource(GastonomoStrings.offlineCurrency),
         )
-        if (suggestion.isForeign) {
+        // Sin poder convertir no hay nada que ensenar en la caja: el registro va en la moneda
+        // principal y su equivalencia es el propio importe.
+        if (suggestion.isForeign && entry.canConvert) {
             ConversionBox(
                 suggestion = suggestion,
                 baseRaw = entry.baseRaw,

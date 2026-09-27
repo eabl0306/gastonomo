@@ -38,7 +38,7 @@ class NewLoanViewModel(
         viewModelScope.launch {
             val context = contextLoader.load()
             mutable.update {
-                it.copy(context = context, entry = MoneyEntryState.of(context.display))
+                it.copy(context = context, entry = MoneyEntryState.of(context.display, context.canConvert))
             }
         }
     }

@@ -9,6 +9,7 @@ import com.bahoque.gastonomo.core.application.usecase.currency.LoadExchangeRates
 import com.bahoque.gastonomo.core.application.usecase.movement.CreateMovement
 import com.bahoque.gastonomo.core.application.usecase.movement.LoadPeriodMovements
 import com.bahoque.gastonomo.core.application.usecase.settings.LoadSettings
+import com.bahoque.gastonomo.core.application.usecase.sync.ObserveConnection
 
 /**
  * Lo que necesitan las pantallas de este modulo. Lo implementa la raiz de composicion de
@@ -39,6 +40,8 @@ interface MovementsDependencies {
 
     /** El toast que deja el formulario al guardar y volver atras. */
     val messages: TransientMessages
+
+    val observeConnection: ObserveConnection
 
     val clock: Clock
 }

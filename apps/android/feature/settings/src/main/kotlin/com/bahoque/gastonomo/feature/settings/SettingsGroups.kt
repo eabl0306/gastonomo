@@ -22,20 +22,24 @@ internal fun AccountGroup(
     modifier: Modifier = Modifier,
 ) {
     SettingsGroup(stringResource(R.string.settings_group_account), modifier) {
-        // Con algo sin enviar la fila deja de decir "al dia" y se puede tocar: un registro que la
-        // API rechazo no puede quedarse escondido detras de un texto que dice que todo va bien.
-        val pending = state.pendingCount
-        val synced = pending == 0 && state.cloudSync == CloudSyncState.SYNCED
+        // La fila dice lo que de verdad pasa: cuantas escrituras siguen aqui y si hay red. Se
+        // puede tocar siempre, y tocarla fuerza un intento: esperar a que el sistema decida no es
+        // una respuesta cuando lo que el usuario quiere saber es si su gasto esta a salvo.
+        val sync = state.cloudSync
         SettingsValueRow(
-            icon = if (synced) GastonomoIcons.CLOUD_DONE else GastonomoIcons.CLOUD_UPLOAD,
-            label = stringResource(R.string.settings_cloud_sync),
-            value = when {
-                pending > 0 -> pluralStringResource(R.plurals.settings_pending, pending, pending)
-                synced -> stringResource(R.string.settings_cloud_sync_ok)
-                else -> stringResource(R.string.settings_cloud_sync_paused)
+            icon = if (sync == CloudSyncState.SYNCED) {
+                GastonomoIcons.CLOUD_DONE
+            } else {
+                GastonomoIcons.CLOUD_UPLOAD
             },
-            valueColor = if (synced) GastonomoTheme.colors.green else GastonomoTheme.colors.muted,
-            onClick = actions.onPending.takeIf { pending > 0 },
+            label = stringResource(R.string.settings_cloud_sync),
+            value = syncText(sync, state.pendingCount),
+            valueColor = when (sync) {
+                CloudSyncState.SYNCED -> GastonomoTheme.colors.green
+                CloudSyncState.PENDING -> GastonomoTheme.colors.amber
+                else -> GastonomoTheme.colors.muted
+            },
+            onClick = actions.onPending,
         )
         SettingsToggleRow(
             icon = GastonomoIcons.FINGERPRINT,
@@ -122,6 +126,15 @@ internal fun DataGroup(
 }
 
 /** La fila de tasas es de solo lectura: la fecha en verde, o el estado en muted. */
+/** El texto de la fila de sincronizacion para cada estado. */
+@Composable
+private fun syncText(sync: CloudSyncState, pending: Int): String = when (sync) {
+    CloudSyncState.SYNCED -> stringResource(R.string.settings_cloud_sync_ok)
+    CloudSyncState.SYNCING -> stringResource(R.string.settings_cloud_sync_syncing)
+    CloudSyncState.PENDING -> pluralStringResource(R.plurals.settings_pending, pending, pending)
+    CloudSyncState.OFFLINE -> stringResource(R.string.settings_cloud_sync_offline)
+}
+
 @Composable
 private fun RatesRow(rates: RatesIndicator) {
     val ready = rates as? RatesIndicator.Ready

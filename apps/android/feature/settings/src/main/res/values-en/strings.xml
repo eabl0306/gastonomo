@@ -11,7 +11,6 @@
     <!-- Account -->
     <string name="settings_cloud_sync">Cloud sync</string>
     <string name="settings_cloud_sync_ok">Up to date</string>
-    <string name="settings_cloud_sync_paused">Paused</string>
     <string name="settings_lock">Fingerprint / PIN lock</string>
     <string name="settings_change_password">Change password</string>
 
@@ -61,4 +60,6 @@
         <item quantity="one">%d unsent</item>
         <item quantity="other">%d unsent</item>
     </plurals>
+    <string name="settings_cloud_sync_syncing">Syncing…</string>
+    <string name="settings_cloud_sync_offline">No connection</string>
 </resources>

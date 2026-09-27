@@ -7,11 +7,13 @@ import com.bahoque.gastonomo.core.domain.category.Category
 import com.bahoque.gastonomo.core.domain.currency.CurrencyInfo
 import com.bahoque.gastonomo.core.domain.money.CurrencyCode
 import com.bahoque.gastonomo.core.domain.money.ExchangeRates
+import com.bahoque.gastonomo.core.domain.money.RatesStatus
 import com.bahoque.gastonomo.core.domain.movement.Movement
 import com.bahoque.gastonomo.core.domain.period.Period
 import com.bahoque.gastonomo.core.domain.settings.UserSettings
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.first
 
 /** Lo que necesita el formulario de Nuevo movimiento antes de poder pintarse. */
 data class NewMovementForm(
@@ -19,6 +21,12 @@ data class NewMovementForm(
     val rates: ExchangeRates,
     val categories: List<Category>,
     val currencies: List<CurrencyInfo>,
+
+    /**
+     * Si se puede registrar en otra moneda. Un 503 de la API y no tener red acaban en lo mismo
+     * para el usuario: no hay tasas de confianza con las que convertir.
+     */
+    val canConvert: Boolean = true,
 )
 
 /** El resultado de cargar la lista una vez: lo que se pudo traer y lo que fallo. */
@@ -69,12 +77,15 @@ internal class MovementsLoader(private val dependencies: MovementsDependencies) 
         val rates = async { dependencies.loadExchangeRates() }
         val categories = async { dependencies.loadCategories() }
         val currencies = async { dependencies.loadCurrencyCatalog() }
+        val online = dependencies.observeConnection().first()
+        val table = rates.await().valueOrNull() ?: ExchangeRates.EMPTY
         NewMovementForm(
             displayCurrency = settings.await().valueOrNull()?.displayCurrency
                 ?: UserSettings().displayCurrency,
-            rates = rates.await().valueOrNull() ?: ExchangeRates.EMPTY,
+            rates = table,
             categories = categories.await().valueOrNull().orEmpty(),
             currencies = currencies.await().valueOrNull().orEmpty(),
+            canConvert = online && table.status != RatesStatus.UNAVAILABLE,
         )
     }
 }

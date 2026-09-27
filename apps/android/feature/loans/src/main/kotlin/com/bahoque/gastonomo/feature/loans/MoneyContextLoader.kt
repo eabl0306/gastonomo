@@ -3,9 +3,12 @@ package com.bahoque.gastonomo.feature.loans
 import com.bahoque.gastonomo.core.application.usecase.currency.LoadCurrencyCatalog
 import com.bahoque.gastonomo.core.application.usecase.currency.LoadExchangeRates
 import com.bahoque.gastonomo.core.application.usecase.settings.LoadSettings
+import com.bahoque.gastonomo.core.application.usecase.sync.ObserveConnection
 import com.bahoque.gastonomo.core.common.valueOrNull
 import com.bahoque.gastonomo.core.domain.money.ExchangeRates
+import com.bahoque.gastonomo.core.domain.money.RatesStatus
 import com.bahoque.gastonomo.core.domain.settings.UserSettings
+import kotlinx.coroutines.flow.first
 
 /**
  * Carga la moneda principal, las tasas y el catalogo de monedas de una vez.
@@ -22,13 +25,19 @@ class MoneyContextLoader(
     private val loadSettings: LoadSettings,
     private val loadExchangeRates: LoadExchangeRates,
     private val loadCurrencyCatalog: LoadCurrencyCatalog,
+    private val observeConnection: ObserveConnection,
 ) {
     suspend fun load(): MoneyContext {
         val settings = loadSettings().valueOrNull() ?: UserSettings()
+        val rates = loadExchangeRates().valueOrNull() ?: ExchangeRates.EMPTY
+        val online = observeConnection().first()
         return MoneyContext(
             display = settings.displayCurrency,
-            rates = loadExchangeRates().valueOrNull() ?: ExchangeRates.EMPTY,
+            rates = rates,
             currencies = loadCurrencyCatalog().valueOrNull().orEmpty(),
+            // Un 503 de la API y no tener red acaban en lo mismo para el usuario: no hay tasas de
+            // confianza con las que convertir, asi que se registra en la moneda principal.
+            canConvert = online && rates.status != RatesStatus.UNAVAILABLE,
         )
     }
 }
@@ -38,4 +47,5 @@ fun LoansDependencies.moneyContextLoader(): MoneyContextLoader = MoneyContextLoa
     loadSettings = loadSettings,
     loadExchangeRates = loadExchangeRates,
     loadCurrencyCatalog = loadCurrencyCatalog,
+    observeConnection = observeConnection,
 )

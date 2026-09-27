@@ -79,4 +79,5 @@
     <!-- Language sheet -->
     <string name="gastonomo_language_title">Language</string>
     <string name="gastonomo_language_subtitle">App language and number and date format.</string>
+    <string name="gastonomo_offline_currency">Currencies cannot be converted without a connection</string>
 </resources>

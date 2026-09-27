@@ -38,6 +38,12 @@ data class NewMovementUiState(
     val currencies: List<CurrencyInfo> = emptyList(),
     val currencySheetOpen: Boolean = false,
     val currencyQuery: String = "",
+
+    /**
+     * Si se puede registrar en otra moneda. Sin conexion, o sin ninguna pasada de tasas guardada,
+     * no: guardar un importe sin conocer su equivalencia romperia la regla de los cuatro campos.
+     */
+    val canConvert: Boolean = true,
     val loading: Boolean = true,
     val saving: Boolean = false,
     val saved: Boolean = false,

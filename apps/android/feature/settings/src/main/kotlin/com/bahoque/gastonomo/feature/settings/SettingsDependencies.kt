@@ -12,6 +12,7 @@ import com.bahoque.gastonomo.core.application.usecase.settings.ObserveDeviceSett
 import com.bahoque.gastonomo.core.application.usecase.settings.UpdateSettings
 import com.bahoque.gastonomo.core.application.usecase.sync.CorrectPendingWrite
 import com.bahoque.gastonomo.core.application.usecase.sync.DiscardPendingWrite
+import com.bahoque.gastonomo.core.application.usecase.sync.ObserveConnection
 import com.bahoque.gastonomo.core.application.usecase.sync.ObservePendingWrites
 import com.bahoque.gastonomo.core.application.usecase.sync.RetryPendingWrites
 
@@ -52,4 +53,6 @@ interface SettingsDependencies {
     val discardPendingWrite: DiscardPendingWrite
 
     val retryPendingWrites: RetryPendingWrites
+
+    val observeConnection: ObserveConnection
 }

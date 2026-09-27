@@ -18,4 +18,13 @@ data class MoneyContext(
     val display: CurrencyCode = CurrencyCode.COP,
     val rates: ExchangeRates = ExchangeRates.EMPTY,
     val currencies: List<CurrencyInfo> = emptyList(),
+
+    /**
+     * Si se puede registrar en otra moneda. Sin conexion, o sin ninguna pasada de tasas guardada,
+     * no: guardar un importe sin conocer su equivalencia romperia la regla de los cuatro campos.
+     *
+     * Se decide al abrir el formulario, no en cada tecla. Es coherente con el modelo: la
+     * equivalencia que se guarda es la del momento de registrar, no la de hoy.
+     */
+    val canConvert: Boolean = true,
 )

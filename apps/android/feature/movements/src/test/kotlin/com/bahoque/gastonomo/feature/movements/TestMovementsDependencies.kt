@@ -10,9 +10,11 @@ import com.bahoque.gastonomo.core.application.usecase.currency.LoadExchangeRates
 import com.bahoque.gastonomo.core.application.usecase.movement.CreateMovement
 import com.bahoque.gastonomo.core.application.usecase.movement.LoadPeriodMovements
 import com.bahoque.gastonomo.core.application.usecase.settings.LoadSettings
+import com.bahoque.gastonomo.core.application.usecase.sync.ObserveConnection
 import com.bahoque.gastonomo.core.testing.fake.FakeCategoryGateway
 import com.bahoque.gastonomo.core.testing.fake.FakeCurrencyGateway
 import com.bahoque.gastonomo.core.testing.fake.FakeMovementGateway
+import com.bahoque.gastonomo.core.testing.fake.FakeNetworkMonitor
 import com.bahoque.gastonomo.core.testing.fake.FakeSettingsGateway
 import com.bahoque.gastonomo.core.testing.fake.FixedClock
 import com.bahoque.gastonomo.core.testing.fake.SampleFinance
@@ -22,11 +24,14 @@ import com.bahoque.gastonomo.core.testing.fake.SampleFinance
  *
  * Por defecto devuelve los datos de ejemplo del prototipo; cada test cambia lo que le importa.
  */
+@Suppress("LongParameterList") // Un parametro por camino de fallo: es lo que deja fallar solo uno.
 internal class TestMovementsDependencies(
     movementsFailure: ApiError? = null,
     createFailure: ApiError? = null,
     replay: Boolean = false,
     ratesFailure: ApiError? = null,
+    /** Con false, el chip de moneda sale apagado: es el modo avion. */
+    private val online: Boolean = true,
 ) : MovementsDependencies {
 
     override val periodFilter = PeriodFilter.startingOn(FixedClock.PROTOTYPE_TODAY)
@@ -53,5 +58,7 @@ internal class TestMovementsDependencies(
     override val loadCurrencyCatalog = LoadCurrencyCatalog(FakeCurrencyGateway())
     override val loadExchangeRates = LoadExchangeRates(FakeCurrencyGateway(failure = ratesFailure))
     override val loadSettings = LoadSettings(FakeSettingsGateway())
+    val network = FakeNetworkMonitor(connected = online)
+    override val observeConnection = ObserveConnection(network)
     override val clock = FixedClock()
 }

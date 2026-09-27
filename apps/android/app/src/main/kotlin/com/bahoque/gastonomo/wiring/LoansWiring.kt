@@ -18,5 +18,6 @@ internal fun loansDependencies(useCases: UseCases): LoansDependencies =
         override val loadCurrencyCatalog = useCases.loadCurrencyCatalog
         override val loadExchangeRates = useCases.loadExchangeRates
         override val loadSettings = useCases.loadSettings
+        override val observeConnection = useCases.observeConnection
         override val clock = useCases.clock
     }

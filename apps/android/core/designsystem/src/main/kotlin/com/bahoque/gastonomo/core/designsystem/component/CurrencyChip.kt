@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -31,6 +32,11 @@ import com.bahoque.gastonomo.core.domain.money.CurrencyCode
  * ```
  * CurrencyChip(currency = state.currency, onClick = viewModel::openCurrencySheet)
  * ```
+ *
+ * Con [enabled] en false el chip no abre nada y debajo sale [disabledHint]. Es lo que pasa sin
+ * conexion: sin tasas nuevas no se puede guardar un importe en otra moneda sin inventarse su
+ * equivalencia, y eso romperia la regla de los cuatro campos. Se apaga con una explicacion y no
+ * en silencio, que es la diferencia entre degradar y estar roto.
  */
 @Composable
 fun CurrencyChip(
@@ -38,6 +44,29 @@ fun CurrencyChip(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     fallbackName: String = currency.value,
+    enabled: Boolean = true,
+    disabledHint: String? = null,
+) {
+    Column(horizontalAlignment = Alignment.Start) {
+        Chip(currency, onClick, modifier, fallbackName, enabled)
+        if (!enabled && disabledHint != null) {
+            GastonomoText(
+                text = disabledHint,
+                style = GastonomoTheme.typography.secondarySmall,
+                color = GastonomoTheme.colors.muted,
+                modifier = Modifier.padding(top = HINT_GAP),
+            )
+        }
+    }
+}
+
+@Composable
+private fun Chip(
+    currency: CurrencyCode,
+    onClick: () -> Unit,
+    modifier: Modifier,
+    fallbackName: String,
+    enabled: Boolean,
 ) {
     val label = currency.value + SEPARATOR + GastonomoTheme.formats.currencyNames.of(currency, fallbackName)
     val shape = RoundedCornerShape(GastonomoTheme.radii.control)
@@ -46,7 +75,7 @@ fun CurrencyChip(
         // 44 minimos de Android sin mover el dibujo, que es lo unico que se ve.
         modifier = modifier
             .heightIn(min = GastonomoTheme.dimens.minTouchTarget)
-            .pressable(onClick = onClick, role = Role.Button),
+            .pressable(onClick = onClick, role = Role.Button, enabled = enabled),
         contentAlignment = Alignment.Center,
     ) {
         Row(
@@ -75,3 +104,4 @@ private val START_PADDING = 12.dp
 private val END_PADDING = 8.dp
 private val GAP = 2.dp
 private val ICON_SIZE = 18.dp
+private val HINT_GAP = 6.dp

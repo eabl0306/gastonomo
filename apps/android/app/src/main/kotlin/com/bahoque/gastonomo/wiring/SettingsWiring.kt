@@ -25,4 +25,5 @@ internal fun settingsDependencies(useCases: UseCases): SettingsDependencies =
         override val correctPendingWrite = useCases.correctPendingWrite
         override val discardPendingWrite = useCases.discardPendingWrite
         override val retryPendingWrites = useCases.retryPendingWrites
+        override val observeConnection = useCases.observeConnection
     }

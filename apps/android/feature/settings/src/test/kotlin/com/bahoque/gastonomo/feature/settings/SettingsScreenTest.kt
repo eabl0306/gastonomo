@@ -59,9 +59,21 @@ class SettingsScreenTest {
     }
 
     @Test
-    fun `the sync row says paused when the client could not reach the api`() {
-        setContent(loadedState().copy(cloudSync = CloudSyncState.PAUSED))
-        compose.onNodeWithText("Pausada").assertIsDisplayed()
+    fun `the sync row says there is no connection when there is none`() {
+        setContent(loadedState().copy(online = false))
+        compose.onNodeWithText("Sin conexión").assertIsDisplayed()
+    }
+
+    @Test
+    fun `the sync row says how many are waiting, instead of pretending all is well`() {
+        setContent(loadedState().copy(online = false, pendingCount = 2))
+        compose.onNodeWithText("2 sin enviar").assertIsDisplayed()
+    }
+
+    @Test
+    fun `with network and a queue it says it is syncing`() {
+        setContent(loadedState().copy(pendingCount = 1))
+        compose.onNodeWithText("Sincronizando…").assertIsDisplayed()
     }
 
     @Test
