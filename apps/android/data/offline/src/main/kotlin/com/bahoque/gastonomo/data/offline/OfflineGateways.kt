@@ -18,10 +18,16 @@ fun offlineMovementGateway(
     remote: MovementGateway,
     store: LocalStore,
     gate: RefreshGate,
-): MovementGateway = OfflineMovementGateway(remote, store.movements, gate)
+    onQueued: () -> Unit = {},
+): MovementGateway =
+    OfflineMovementGateway(remote, store.movements, gate, OfflineQueue(store, onQueued = onQueued))
 
-fun offlineLoanGateway(remote: LoanGateway, store: LocalStore, gate: RefreshGate): LoanGateway =
-    OfflineLoanGateway(remote, store.loans, gate)
+fun offlineLoanGateway(
+    remote: LoanGateway,
+    store: LocalStore,
+    gate: RefreshGate,
+    onQueued: () -> Unit = {},
+): LoanGateway = OfflineLoanGateway(remote, store.loans, gate, OfflineQueue(store, onQueued = onQueued))
 
 fun offlineCategoryGateway(
     remote: CategoryGateway,
@@ -43,3 +49,14 @@ fun offlineCurrencyGateway(
 
 fun offlineAuthGateway(remote: AuthGateway, store: LocalStore, gate: RefreshGate): AuthGateway =
     OfflineAuthGateway(remote, store, store.account, gate)
+
+/**
+ * Quien sube lo pendiente. Recibe los adaptadores **de red sin decorar**: con los que leen de la
+ * base, subir una escritura volveria a encolarla al primer corte y la cola no bajaria nunca.
+ */
+fun pendingUploader(
+    remoteMovements: MovementGateway,
+    remoteLoans: LoanGateway,
+    store: LocalStore,
+    gate: RefreshGate,
+): PendingUploader = QueuePendingUploader(remoteMovements, remoteLoans, store, gate)

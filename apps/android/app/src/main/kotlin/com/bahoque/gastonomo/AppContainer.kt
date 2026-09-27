@@ -13,6 +13,7 @@ import com.bahoque.gastonomo.data.database.local.createLocalStore
 import com.bahoque.gastonomo.data.finance.createLoanGateway
 import com.bahoque.gastonomo.data.finance.createMovementGateway
 import com.bahoque.gastonomo.data.network.createApiClient
+import com.bahoque.gastonomo.data.offline.PendingUploader
 import com.bahoque.gastonomo.data.offline.RefreshGate
 import com.bahoque.gastonomo.data.offline.offlineAuthGateway
 import com.bahoque.gastonomo.data.offline.offlineCategoryGateway
@@ -20,6 +21,7 @@ import com.bahoque.gastonomo.data.offline.offlineCurrencyGateway
 import com.bahoque.gastonomo.data.offline.offlineLoanGateway
 import com.bahoque.gastonomo.data.offline.offlineMovementGateway
 import com.bahoque.gastonomo.data.offline.offlineSettingsGateway
+import com.bahoque.gastonomo.data.offline.pendingUploader
 import com.bahoque.gastonomo.data.session.createBiometricLock
 import com.bahoque.gastonomo.data.session.createDeviceSettingsStore
 import com.bahoque.gastonomo.data.session.createLocalLock
@@ -31,6 +33,7 @@ import com.bahoque.gastonomo.feature.home.HomeDependencies
 import com.bahoque.gastonomo.feature.loans.LoansDependencies
 import com.bahoque.gastonomo.feature.movements.MovementsDependencies
 import com.bahoque.gastonomo.feature.settings.SettingsDependencies
+import com.bahoque.gastonomo.sync.PendingUploadWorker
 import com.bahoque.gastonomo.wiring.authDependencies
 import com.bahoque.gastonomo.wiring.categoriesDependencies
 import com.bahoque.gastonomo.wiring.exportDependencies
@@ -49,6 +52,8 @@ import com.bahoque.gastonomo.wiring.sharedUserPreferences
  * fichero.
  */
 class AppContainer(context: Context) {
+
+    private val appContext = context.applicationContext
 
     /**
      * La actividad viva, que el dialogo de huella necesita. La registra [MainActivity] al
@@ -80,18 +85,32 @@ class AppContainer(context: Context) {
      * el mismo puerto que antes, asi que ninguna feature se entera de que hay una base de datos
      * detras ni de que la red puede no estar.
      */
+    // Los adaptadores de red sin decorar. Los guarda porque quien sube lo pendiente tiene que
+    // hablar con la red directamente: con los decorados, subir una escritura la volveria a encolar
+    // al primer corte y la cola no bajaria nunca.
+    private val remoteMovements = createMovementGateway(apiClient)
+    private val remoteLoans = createLoanGateway(apiClient)
+
+    /** Sube lo que quedo pendiente. Lo llama el worker en cuanto hay red. */
+    val uploader: PendingUploader = pendingUploader(remoteMovements, remoteLoans, store, refresh)
+
     private val gateways = Gateways(
         auth = offlineAuthGateway(
             createAuthGateway(apiClient, devices.sessionStore),
             store,
             refresh,
         ),
-        movements = offlineMovementGateway(createMovementGateway(apiClient), store, refresh),
-        loans = offlineLoanGateway(createLoanGateway(apiClient), store, refresh),
+        movements = offlineMovementGateway(remoteMovements, store, refresh, ::onQueued),
+        loans = offlineLoanGateway(remoteLoans, store, refresh, ::onQueued),
         categories = offlineCategoryGateway(createCategoryGateway(apiClient), store, refresh),
         settings = offlineSettingsGateway(createSettingsGateway(apiClient), store, refresh),
         currencies = offlineCurrencyGateway(createCurrencyGateway(apiClient), store, refresh),
     )
+
+    /** Algo quedo sin subir: se pide el trabajo, que arrancara cuando haya red. */
+    private fun onQueued() {
+        PendingUploadWorker.schedule(appContext)
+    }
 
     private val useCases = UseCases(gateways, devices, sharedUserPreferences)
 

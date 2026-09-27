@@ -56,6 +56,9 @@ internal interface MovementDao {
     @Query("DELETE FROM movements WHERE occurred_on BETWEEN :from AND :to AND pending = 0")
     suspend fun deleteBetween(from: LocalDate, to: LocalDate)
 
+    @Query("DELETE FROM movements WHERE id = :id")
+    suspend fun deleteById(id: String)
+
     @Query("DELETE FROM movements")
     suspend fun clear()
 }

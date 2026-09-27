@@ -24,6 +24,7 @@ internal class OfflineLoanGateway(
     private val remote: LoanGateway,
     private val local: LocalLoans,
     private val gate: RefreshGate,
+    private val queue: OfflineQueue,
 ) : LoanGateway {
 
     override suspend fun list(direction: LoanDirection?): Outcome<List<Loan>, ApiError> {
@@ -47,29 +48,41 @@ internal class OfflineLoanGateway(
     override suspend fun create(
         draft: LoanDraft,
         key: IdempotencyKey,
-    ): Outcome<IdempotentResult<Loan>, ApiError> {
-        val result = remote.create(draft, key)
-        if (result is Outcome.Success) {
-            local.save(result.value.value)
-            // Crear un prestamo crea ademas su movimiento, asi que el periodo tambien cambio.
-            gate.forget()
+    ): Outcome<IdempotentResult<Loan>, ApiError> =
+        when (val result = remote.create(draft, key)) {
+            is Outcome.Success -> result.also {
+                local.save(it.value.value)
+                // Crear un prestamo crea ademas su movimiento, asi que el periodo tambien cambio.
+                gate.forget()
+            }
+            is Outcome.Failure -> when {
+                result.error !is ApiError.Network -> result
+                else -> queue.loan(draft, key)
+                    ?.let { Outcome.Success(IdempotentResult(it, false)) }
+                    ?.also { gate.forget() }
+                    ?: result
+            }
         }
-        return result
-    }
 
     override suspend fun addPayment(
         id: LoanId,
         draft: LoanPaymentDraft,
         key: IdempotencyKey,
-    ): Outcome<IdempotentResult<LoanPayment>, ApiError> {
-        val result = remote.addPayment(id, draft, key)
-        if (result is Outcome.Success) {
-            gate.forget()
-            // El abono llega suelto: el prestamo con su saldo nuevo hay que volver a pedirlo.
-            refreshOne(id)
+    ): Outcome<IdempotentResult<LoanPayment>, ApiError> =
+        when (val result = remote.addPayment(id, draft, key)) {
+            is Outcome.Success -> result.also {
+                gate.forget()
+                // El abono llega suelto: el prestamo con su saldo nuevo hay que volver a pedirlo.
+                refreshOne(id)
+            }
+            is Outcome.Failure -> when {
+                result.error !is ApiError.Network -> result
+                else -> queue.payment(id, draft, key)
+                    ?.let { Outcome.Success(IdempotentResult(it, false)) }
+                    ?.also { gate.forget() }
+                    ?: result
+            }
         }
-        return result
-    }
 
     private suspend fun refreshAll(): Outcome<Unit, ApiError> = remote.list(null).map { loans ->
         local.replaceAll(loans)

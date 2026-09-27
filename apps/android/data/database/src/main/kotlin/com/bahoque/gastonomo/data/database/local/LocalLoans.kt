@@ -4,6 +4,7 @@ import com.bahoque.gastonomo.core.domain.loan.Loan
 import com.bahoque.gastonomo.core.domain.loan.LoanDirection
 import com.bahoque.gastonomo.core.domain.loan.LoanId
 import com.bahoque.gastonomo.core.domain.loan.LoanPayment
+import com.bahoque.gastonomo.core.domain.loan.LoanPaymentId
 import com.bahoque.gastonomo.data.database.dao.LoanDao
 import com.bahoque.gastonomo.data.database.dao.LoanPaymentDao
 import com.bahoque.gastonomo.data.database.entity.LoanEntity
@@ -46,5 +47,10 @@ class LocalLoans internal constructor(
     /** Borra un prestamo pendiente y sus abonos, cuando ya se subio y llego el de verdad. */
     suspend fun forget(id: LoanId) {
         dao.deleteById(id.value)
+    }
+
+    /** Borra un abono provisional por identificador. */
+    suspend fun forgetPayment(id: LoanPaymentId) {
+        payments.deleteById(id.value)
     }
 }

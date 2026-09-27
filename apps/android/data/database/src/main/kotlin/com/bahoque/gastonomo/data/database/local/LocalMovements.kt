@@ -1,6 +1,7 @@
 package com.bahoque.gastonomo.data.database.local
 
 import com.bahoque.gastonomo.core.domain.movement.Movement
+import com.bahoque.gastonomo.core.domain.movement.MovementId
 import com.bahoque.gastonomo.core.domain.movement.MovementKind
 import com.bahoque.gastonomo.data.database.dao.MovementDao
 import com.bahoque.gastonomo.data.database.entity.MovementEntity
@@ -38,5 +39,10 @@ class LocalMovements internal constructor(private val dao: MovementDao) {
     /** Guarda uno solo, que es lo que devuelve crear un movimiento. */
     suspend fun save(movement: Movement) {
         dao.upsert(listOf(MovementEntity.of(movement)))
+    }
+
+    /** Borra uno por identificador. Se usa para quitar el provisional cuando llega el de verdad. */
+    suspend fun forget(id: MovementId) {
+        dao.deleteById(id.value)
     }
 }

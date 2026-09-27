@@ -55,12 +55,14 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.navigation.compose)
     implementation(libs.kotlinx.coroutines.android)
+    implementation(libs.androidx.work.runtime)
 
     testImplementation(project(":core:testing"))
     testImplementation(libs.konsist)
     testImplementation(libs.robolectric)
     testImplementation(libs.androidx.test.core)
     testImplementation(libs.androidx.test.junit)
+    testImplementation(libs.androidx.work.testing)
 
     androidTestImplementation(libs.bundles.android.instrumented.test)
 }

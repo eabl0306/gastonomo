@@ -27,6 +27,7 @@ internal class OfflineMovementGateway(
     private val remote: MovementGateway,
     private val local: LocalMovements,
     private val gate: RefreshGate,
+    private val queue: OfflineQueue,
 ) : MovementGateway {
 
     override suspend fun list(
@@ -48,17 +49,35 @@ internal class OfflineMovementGateway(
         return refresh(from, to, key).map { MovementPage(local.between(from, to, kind, limit), null) }
     }
 
+    /**
+     * Sin conexion el movimiento se apunta aqui y se sube cuando vuelva la red, asi que el usuario
+     * lo ve en la lista y en el balance al instante: es dinero que ya gasto.
+     *
+     * La clave que llega es la del intento, y es la que se guarda con la fila pendiente. **No se
+     * genera otra al reintentar**, que es lo que duplicaria el gasto (ADR 0012).
+     */
     override suspend fun create(
         draft: MovementDraft,
         key: IdempotencyKey,
-    ): Outcome<IdempotentResult<Movement>, ApiError> {
-        val result = remote.create(draft, key)
-        if (result is Outcome.Success) {
-            local.save(result.value.value)
-            // El movimiento cambia el contador de uso de su categoria y puede venir de un abono.
-            gate.forget()
+    ): Outcome<IdempotentResult<Movement>, ApiError> =
+        when (val result = remote.create(draft, key)) {
+            is Outcome.Success -> result.also {
+                local.save(it.value.value)
+                // El movimiento cambia el contador de uso de su categoria y puede venir de un abono.
+                gate.forget()
+            }
+            is Outcome.Failure -> enqueueIfOffline(draft, key, result)
         }
-        return result
+
+    private suspend fun enqueueIfOffline(
+        draft: MovementDraft,
+        key: IdempotencyKey,
+        failure: Outcome.Failure<ApiError>,
+    ): Outcome<IdempotentResult<Movement>, ApiError> {
+        if (failure.error !is ApiError.Network) return failure
+        val movement = queue.movement(draft, key) ?: return failure
+        gate.forget()
+        return Outcome.Success(IdempotentResult(movement, isReplay = false))
     }
 
     /** Trae el periodo entero y lo reemplaza. Devuelve el fallo tal cual si la red no responde. */

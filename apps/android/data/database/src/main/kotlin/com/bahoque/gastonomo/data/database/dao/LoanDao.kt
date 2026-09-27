@@ -74,4 +74,7 @@ internal interface LoanPaymentDao {
     /** Los ya subidos de un prestamo. Los pendientes se quedan: todavia no existen en la API. */
     @Query("DELETE FROM loan_payments WHERE loan_id = :loanId AND pending = 0")
     suspend fun deleteSyncedOf(loanId: String)
+
+    @Query("DELETE FROM loan_payments WHERE id = :id")
+    suspend fun deleteById(id: String)
 }
