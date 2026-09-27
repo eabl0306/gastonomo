@@ -1,11 +1,18 @@
 package com.bahoque.gastonomo.core.designsystem.component
 
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.bahoque.gastonomo.core.designsystem.GastonomoStrings
 import com.bahoque.gastonomo.core.designsystem.icon.GastonomoIcon
+import com.bahoque.gastonomo.core.designsystem.icon.GastonomoIcons
 import com.bahoque.gastonomo.core.designsystem.theme.GastonomoTheme
 
 /**
@@ -28,6 +35,9 @@ import com.bahoque.gastonomo.core.designsystem.theme.GastonomoTheme
  *     showDivider = index != last,
  * )
  * ```
+ *
+ * Con [pending] lleva la marca de que todavia no ha salido del telefono. Es deliberadamente
+ * discreta: el movimiento ya cuenta para el balance, asi que no es un aviso, es una nota.
  */
 @Composable
 fun MovementRow(
@@ -40,6 +50,7 @@ fun MovementRow(
     showDivider: Boolean,
     modifier: Modifier = Modifier,
     horizontalPadding: Dp = CARD_PADDING,
+    pending: Boolean = false,
 ) {
     ListRow(
         title = title,
@@ -54,14 +65,28 @@ fun MovementRow(
             }
         },
         trailing = {
-            GastonomoAmountText(
-                text = amount,
-                style = GastonomoTheme.typography.amount,
-                color = amountColor,
-            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                if (pending) {
+                    GastonomoIcon(
+                        name = GastonomoIcons.CLOUD_UPLOAD,
+                        size = PENDING_ICON,
+                        tint = GastonomoTheme.colors.muted,
+                        contentDescription = stringResource(GastonomoStrings.pendingUpload),
+                    )
+                    Spacer(Modifier.width(PENDING_GAP))
+                }
+                GastonomoAmountText(
+                    text = amount,
+                    style = GastonomoTheme.typography.amount,
+                    color = amountColor,
+                )
+            }
         },
     )
 }
 
 /** El padding de una fila dentro de una tarjeta de lista de movimientos. */
 private val CARD_PADDING = 16.dp
+
+private val PENDING_ICON = 16.dp
+private val PENDING_GAP = 6.dp

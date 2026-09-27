@@ -26,8 +26,12 @@ import kotlin.test.fail
 class ExportedSchemaTest {
 
     @Test
-    fun `no column is REAL anywhere in the schema`() {
-        val offenders = columns().filter { it.affinity == "REAL" }
+    fun `no column is REAL in any version ever exported`() {
+        // Todas las versiones, no solo la ultima: una que hubiera guardado dinero en REAL seguiria
+        // siendo de donde migra quien todavia la tenga.
+        val offenders = (1..GastonomoDatabase.VERSION).flatMap { version ->
+            columnsOf(schemaOf(version)).filter { it.affinity == "REAL" }
+        }
 
         assertTrue(offenders.isEmpty(), "columnas REAL: ${offenders.map { "${it.table}.${it.name}" }}")
     }
@@ -69,7 +73,9 @@ class ExportedSchemaTest {
         }
     }
 
-    private fun columns(): List<Column> = tables().flatMap { table ->
+    private fun columns(): List<Column> = columnsOf(schema())
+
+    private fun columnsOf(schema: JSONObject): List<Column> = tablesOf(schema).flatMap { table ->
         val name = table.getString("tableName")
         val fields = table.getJSONArray("fields")
         (0 until fields.length()).map { index ->
@@ -78,22 +84,25 @@ class ExportedSchemaTest {
         }
     }
 
-    private fun tables(): List<JSONObject> {
-        val entities = schema().getJSONArray("entities")
+    private fun tables(): List<JSONObject> = tablesOf(schema())
+
+    private fun tablesOf(schema: JSONObject): List<JSONObject> {
+        val entities = schema.getJSONArray("entities")
         return (0 until entities.length()).map { entities.getJSONObject(it) }
     }
 
-    private fun schema(): JSONObject {
-        val file = File(SCHEMA_PATH)
-        if (!file.exists()) fail("no existe $SCHEMA_PATH; el esquema tiene que estar versionado")
+    private fun schema(): JSONObject = schemaOf(GastonomoDatabase.VERSION)
+
+    private fun schemaOf(version: Int): JSONObject {
+        val file = File("$SCHEMA_DIR/$version.json")
+        if (!file.exists()) fail("no existe ${file.path}; el esquema tiene que estar versionado")
         return JSONObject(file.readText()).getJSONObject("database")
     }
 
     private data class Column(val table: String, val name: String, val affinity: String)
 
     private companion object {
-        const val SCHEMA_PATH =
-            "schemas/com.bahoque.gastonomo.data.database.GastonomoDatabase/1.json"
+        const val SCHEMA_DIR = "schemas/com.bahoque.gastonomo.data.database.GastonomoDatabase"
 
         val MONEY_COLUMNS = setOf("amount", "base", "rate")
         val DATE_COLUMNS = setOf("occurred_on", "opened_on", "paid_on", "date")

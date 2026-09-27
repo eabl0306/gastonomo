@@ -89,36 +89,39 @@ internal class LocalStorageTest {
     @Test
     fun `a loan comes back with its payments`() = runTest {
         val dao = local.database.loans()
+        val payments = local.database.loanPayments()
         val loan = SampleFinance.partialLoan
 
-        dao.upsert(LoanEntity.of(loan), loan.payments.map(LoanPaymentEntity::of))
+        dao.upsert(LoanEntity.of(loan), loan.payments.map(LoanPaymentEntity::of), payments)
 
         val stored = dao.loan(loan.id.value)!!
-        assertEquals(loan, stored.toDomain(dao.paymentsOf(loan.id.value).map { it.toDomain() }))
+        assertEquals(loan, stored.toDomain(payments.of(loan.id.value).map { it.toDomain() }))
     }
 
     @Test
     fun `payments of a loan come back newest first`() = runTest {
         val dao = local.database.loans()
+        val payments = local.database.loanPayments()
         val loan = SampleFinance.paidLoan
 
-        dao.upsert(LoanEntity.of(loan), loan.payments.map(LoanPaymentEntity::of))
+        dao.upsert(LoanEntity.of(loan), loan.payments.map(LoanPaymentEntity::of), payments)
 
-        val dates = dao.paymentsOf(loan.id.value).map { it.paidOn }
+        val dates = payments.of(loan.id.value).map { it.paidOn }
         assertEquals(dates.sortedDescending(), dates)
     }
 
     @Test
     fun `a loan that goes takes its payments with it`() = runTest {
         val dao = local.database.loans()
+        val payments = local.database.loanPayments()
         val loan = SampleFinance.partialLoan
-        dao.upsert(LoanEntity.of(loan), loan.payments.map(LoanPaymentEntity::of))
+        dao.upsert(LoanEntity.of(loan), loan.payments.map(LoanPaymentEntity::of), payments)
 
         dao.clear()
 
         // Sin el borrado en cascada quedarian abonos de un prestamo que ya no existe, sumando
         // dinero que no esta.
-        assertTrue(dao.payments().isEmpty())
+        assertTrue(payments.all().isEmpty())
     }
 
     @Test

@@ -28,6 +28,10 @@ import com.bahoque.gastonomo.core.application.usecase.settings.LoadSettings
 import com.bahoque.gastonomo.core.application.usecase.settings.ObserveDeviceSettings
 import com.bahoque.gastonomo.core.application.usecase.settings.SetHideAmounts
 import com.bahoque.gastonomo.core.application.usecase.settings.UpdateSettings
+import com.bahoque.gastonomo.core.application.usecase.sync.CorrectPendingWrite
+import com.bahoque.gastonomo.core.application.usecase.sync.DiscardPendingWrite
+import com.bahoque.gastonomo.core.application.usecase.sync.ObservePendingWrites
+import com.bahoque.gastonomo.core.application.usecase.sync.RetryPendingWrites
 
 /**
  * Todos los casos de uso, construidos una sola vez. Los ficheros de `wiring` reparten de
@@ -75,6 +79,11 @@ internal class UseCases(
 
     val loadCurrencyCatalog = LoadCurrencyCatalog(gateways.currencies)
     val loadExchangeRates = LoadExchangeRates(gateways.currencies)
+
+    val observePendingWrites = ObservePendingWrites(gateways.pending)
+    val correctPendingWrite = CorrectPendingWrite(gateways.pending)
+    val discardPendingWrite = DiscardPendingWrite(gateways.pending)
+    val retryPendingWrites = RetryPendingWrites(gateways.pending)
 
     val clock = devices.clock
 }

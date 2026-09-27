@@ -88,6 +88,7 @@ private fun GroupRow(movement: Movement, state: MovementsUiState, showDivider: B
             GastonomoTheme.colors.ink
         },
         showDivider = showDivider,
+        pending = movement.pending,
     )
 }
 

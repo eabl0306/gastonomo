@@ -44,4 +44,21 @@
     <string name="settings_toast_lock_off">Lock turned off.</string>
     <string name="settings_error_catalog">The currency catalogue is not ready yet. Try again.</string>
     <string name="settings_error_save">Could not save. Try again.</string>
+    <string name="pending_title">Unsent records</string>
+    <string name="pending_empty">Nothing is waiting. Everything you have registered is in the cloud.</string>
+    <string name="pending_waiting">Waiting for a connection</string>
+    <string name="pending_amount">Amount</string>
+    <string name="pending_fix">Fix and retry</string>
+    <string name="pending_discard">Discard</string>
+    <string name="pending_discard_title">Discard this record?</string>
+    <string name="pending_discard_body">It will be deleted from your phone and will not reach the cloud. This cannot be undone.</string>
+    <string name="pending_retry">Retry now</string>
+    <string name="pending_movement_in">Income</string>
+    <string name="pending_movement_out">Expense</string>
+    <string name="pending_loan">Loan</string>
+    <string name="pending_payment">Payment</string>
+    <plurals name="settings_pending">
+        <item quantity="one">%d unsent</item>
+        <item quantity="other">%d unsent</item>
+    </plurals>
 </resources>

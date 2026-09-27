@@ -23,6 +23,9 @@ object GastonomoStrings {
     /** El pie de Ajustes. Lleva la version como argumento. */
     @StringRes val footer = R.string.gastonomo_footer
 
+    /** La marca de un registro que todavia no ha salido del telefono. */
+    @StringRes val pendingUpload = R.string.gastonomo_pending_upload
+
     @StringRes val tabHome = R.string.gastonomo_tab_home
 
     @StringRes val tabMovements = R.string.gastonomo_tab_movements

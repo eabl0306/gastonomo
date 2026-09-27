@@ -70,6 +70,13 @@ framework, ni HTTP, ni SQL, ni React, ni Android. Los detalles estan en
   ya no esta compuesto. El host se queda compuesto mientras baja y retiene el ultimo valor no nulo,
   que es lo que evita que lo que baje sea una hoja vacia.
 
+  **Registrar sin conexion escribe en la base y encola la subida.** La clave de idempotencia se
+  guarda con la fila y **no se regenera nunca**: un reintento tras un timeout que si llego crearia
+  el gasto dos veces y no hay pantalla para borrarlo. Todo borrado de refresco lleva
+  `AND pending = 0`, porque llevarse por delante lo que el usuario acaba de registrar es el peor
+  fallo posible de esta aplicacion. Lo sube un WorkManager con restriccion de red. Ver el
+  [ADR 0020](docs/adr/0020-cola-de-escrituras-pendientes.md).
+
   **La base de datos local es `:data:database`, con Room.** Dos reglas que rompen el dinero en
   silencio si se olvidan: **ninguna columna de importe puede ser `REAL`** (un `REAL` es un
   `double`) y **las fechas de registro van como texto `YYYY-MM-DD`**, no como epoch. Las dos las

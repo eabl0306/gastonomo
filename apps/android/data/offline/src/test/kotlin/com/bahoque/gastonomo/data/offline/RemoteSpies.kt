@@ -49,6 +49,12 @@ internal class SpyMovementGateway : MovementGateway {
         private set
     var page: MovementPage = MovementPage(SampleFinance.movements, null)
     var created: Movement = SampleFinance.groceries
+    var replay: Boolean = false
+    var createCalls: Int = 0
+        private set
+
+    /** Las claves con las que se llamo a create, en orden. Es lo que delata un duplicado. */
+    val keys = mutableListOf<IdempotencyKey>()
     var failure: ApiError? = null
 
     override suspend fun list(
@@ -65,9 +71,12 @@ internal class SpyMovementGateway : MovementGateway {
     override suspend fun create(
         draft: MovementDraft,
         key: IdempotencyKey,
-    ): Outcome<IdempotentResult<Movement>, ApiError> =
-        failure?.let { Outcome.Failure(it) }
-            ?: Outcome.Success(IdempotentResult(created, false))
+    ): Outcome<IdempotentResult<Movement>, ApiError> {
+        createCalls++
+        keys += key
+        return failure?.let { Outcome.Failure(it) }
+            ?: Outcome.Success(IdempotentResult(created, replay))
+    }
 }
 
 internal class SpyLoanGateway : LoanGateway {

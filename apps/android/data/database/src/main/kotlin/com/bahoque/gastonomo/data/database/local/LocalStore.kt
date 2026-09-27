@@ -20,10 +20,11 @@ class LocalStore internal constructor(
 ) {
 
     val movements: LocalMovements = LocalMovements(database.movements())
-    val loans: LocalLoans = LocalLoans(database.loans())
+    val loans: LocalLoans = LocalLoans(database.loans(), database.loanPayments())
     val categories: LocalCategories = LocalCategories(database.categories())
     val account: LocalAccount = LocalAccount(database.account())
     val currencies: LocalCurrencies = LocalCurrencies(database.currencies())
+    val pending: LocalPendingWrites = LocalPendingWrites(database.pending())
 
     /**
      * Vacia todo, porque cambio la cuenta. Sin esto, quien entra despues de que otro cierre sesion

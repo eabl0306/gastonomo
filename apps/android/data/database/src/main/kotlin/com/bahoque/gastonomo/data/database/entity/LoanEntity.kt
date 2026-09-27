@@ -30,6 +30,7 @@ internal data class LoanEntity(
     @ColumnInfo(name = "direction") val direction: String,
     @ColumnInfo(name = "opened_on") val openedOn: LocalDate,
     @Embedded val money: MoneyColumns,
+    @ColumnInfo(name = "pending", defaultValue = "0") val pending: Boolean = false,
 ) {
     fun toDomain(payments: List<LoanPayment>): Loan = Loan(
         id = LoanId(id),
@@ -39,6 +40,7 @@ internal data class LoanEntity(
         openedOn = openedOn,
         money = money.toDomain(),
         payments = payments,
+        pending = pending,
     )
 
     companion object {
@@ -49,6 +51,7 @@ internal data class LoanEntity(
             direction = loan.direction.wire,
             openedOn = loan.openedOn,
             money = MoneyColumns.of(loan.money),
+            pending = loan.pending,
         )
     }
 }
@@ -83,6 +86,7 @@ internal data class LoanPaymentEntity(
     @ColumnInfo(name = "paid_on") val paidOn: LocalDate,
     @ColumnInfo(name = "label") val label: String?,
     @Embedded val money: MoneyColumns,
+    @ColumnInfo(name = "pending", defaultValue = "0") val pending: Boolean = false,
 ) {
     fun toDomain(): LoanPayment = LoanPayment(
         id = LoanPaymentId(id),
@@ -90,6 +94,7 @@ internal data class LoanPaymentEntity(
         paidOn = paidOn,
         label = label,
         money = money.toDomain(),
+        pending = pending,
     )
 
     companion object {
@@ -99,6 +104,7 @@ internal data class LoanPaymentEntity(
             paidOn = payment.paidOn,
             label = payment.label,
             money = MoneyColumns.of(payment.money),
+            pending = payment.pending,
         )
     }
 }

@@ -34,6 +34,7 @@ internal data class MovementEntity(
     @Embedded(prefix = "category_") val category: CategoryEntity,
     @ColumnInfo(name = "loan_id") val loanId: String?,
     @ColumnInfo(name = "loan_payment_id") val loanPaymentId: String?,
+    @ColumnInfo(name = "pending", defaultValue = "0") val pending: Boolean = false,
 ) {
     fun toDomain(): Movement = Movement(
         id = MovementId(id),
@@ -44,6 +45,7 @@ internal data class MovementEntity(
         category = category.toDomain(),
         loanId = loanId,
         loanPaymentId = loanPaymentId,
+        pending = pending,
     )
 
     companion object {
@@ -56,6 +58,7 @@ internal data class MovementEntity(
             category = CategoryEntity.of(movement.category),
             loanId = movement.loanId,
             loanPaymentId = movement.loanPaymentId,
+            pending = movement.pending,
         )
     }
 }

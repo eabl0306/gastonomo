@@ -1,6 +1,7 @@
 package com.bahoque.gastonomo.core.domain.loan
 
 import com.bahoque.gastonomo.core.domain.money.MonetaryAmount
+import com.bahoque.gastonomo.core.domain.movement.Movement
 import java.time.LocalDate
 
 /**
@@ -15,6 +16,8 @@ data class Loan(
     val openedOn: LocalDate,
     val money: MonetaryAmount,
     val payments: List<LoanPayment> = emptyList(),
+    /** True mientras el prestamo solo existe en este telefono. Ver [Movement.pending]. */
+    val pending: Boolean = false,
 )
 
 /** Identificador de un prestamo. Es un UUID en la API. */

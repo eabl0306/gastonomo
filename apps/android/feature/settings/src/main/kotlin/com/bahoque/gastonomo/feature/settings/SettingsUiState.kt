@@ -22,6 +22,9 @@ data class SettingsUiState(
     val currencies: List<CurrencyInfo> = emptyList(),
     val rates: RatesIndicator = RatesIndicator.Loading,
     val cloudSync: CloudSyncState = CloudSyncState.SYNCED,
+
+    /** Cuantos registros siguen sin salir del telefono. */
+    val pendingCount: Int = 0,
     val sheet: SettingsSheet? = null,
     val currencyQuery: String = "",
     val pin: String = "",

@@ -73,7 +73,7 @@ class SettingsScreenTest {
     @Test
     fun `tapping the currency row asks to open its sheet`() {
         var opened = 0
-        setContent(loadedState(), SettingsActions({ opened++ }, {}, {}, {}, {}, {}))
+        setContent(loadedState(), SettingsActions({ opened++ }, {}, {}, {}, {}, {}, {}))
         compose.onNodeWithText("Moneda").performScrollTo().performClick()
         assertEquals(1, opened)
     }

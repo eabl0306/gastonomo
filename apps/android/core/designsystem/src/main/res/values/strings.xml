@@ -20,6 +20,7 @@
 
     <!-- Acciones que salen en varias pantallas -->
     <string name="gastonomo_action_save">Guardar</string>
+    <string name="gastonomo_pending_upload">Sin enviar</string>
     <string name="gastonomo_action_cancel">Cancelar</string>
     <string name="gastonomo_action_back">Volver</string>
     <string name="gastonomo_action_close">Cerrar</string>

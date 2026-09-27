@@ -11,6 +11,9 @@ import java.time.LocalDate
  * @property title la nota del usuario o, si no la escribio, el nombre de la categoria.
  * @property loanId lo rellena la API cuando el movimiento lo genero un prestamo.
  * @property loanPaymentId lo rellena la API cuando lo genero un abono.
+ * @property pending true mientras el movimiento solo existe en este telefono, porque se
+ *   registro sin conexion y todavia no se ha subido. Cuenta para el balance: es dinero que el
+ *   usuario ya gasto.
  */
 data class Movement(
     val id: MovementId,
@@ -21,6 +24,7 @@ data class Movement(
     val category: Category,
     val loanId: String? = null,
     val loanPaymentId: String? = null,
+    val pending: Boolean = false,
 )
 
 /** Identificador de un movimiento. Es un UUID en la API. */

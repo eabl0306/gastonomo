@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.bahoque.gastonomo.core.designsystem.GastonomoStrings
@@ -21,14 +22,20 @@ internal fun AccountGroup(
     modifier: Modifier = Modifier,
 ) {
     SettingsGroup(stringResource(R.string.settings_group_account), modifier) {
-        val synced = state.cloudSync == CloudSyncState.SYNCED
+        // Con algo sin enviar la fila deja de decir "al dia" y se puede tocar: un registro que la
+        // API rechazo no puede quedarse escondido detras de un texto que dice que todo va bien.
+        val pending = state.pendingCount
+        val synced = pending == 0 && state.cloudSync == CloudSyncState.SYNCED
         SettingsValueRow(
-            icon = GastonomoIcons.CLOUD_DONE,
+            icon = if (synced) GastonomoIcons.CLOUD_DONE else GastonomoIcons.CLOUD_UPLOAD,
             label = stringResource(R.string.settings_cloud_sync),
-            value = stringResource(
-                if (synced) R.string.settings_cloud_sync_ok else R.string.settings_cloud_sync_paused,
-            ),
+            value = when {
+                pending > 0 -> pluralStringResource(R.plurals.settings_pending, pending, pending)
+                synced -> stringResource(R.string.settings_cloud_sync_ok)
+                else -> stringResource(R.string.settings_cloud_sync_paused)
+            },
             valueColor = if (synced) GastonomoTheme.colors.green else GastonomoTheme.colors.muted,
+            onClick = actions.onPending.takeIf { pending > 0 },
         )
         SettingsToggleRow(
             icon = GastonomoIcons.FINGERPRINT,
