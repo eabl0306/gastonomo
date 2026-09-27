@@ -11,6 +11,7 @@
 
     <!-- Actions shared by several screens -->
     <string name="gastonomo_action_save">Save</string>
+    <string name="gastonomo_pending_upload">Not sent yet</string>
     <string name="gastonomo_action_cancel">Cancel</string>
     <string name="gastonomo_action_back">Back</string>
     <string name="gastonomo_action_close">Close</string>

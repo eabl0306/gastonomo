@@ -95,6 +95,7 @@ private fun RecentRow(movement: Movement, state: HomeUiState, showDivider: Boole
             GastonomoTheme.colors.ink
         },
         showDivider = showDivider,
+        pending = movement.pending,
     )
 }
 

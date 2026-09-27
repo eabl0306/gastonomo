@@ -28,6 +28,7 @@ object GastonomoIcons {
     const val CHEVRON_RIGHT = "chevron_right"
     const val CLOSE = "close"
     const val CLOUD_DONE = "cloud_done"
+    const val CLOUD_UPLOAD = "cloud_upload"
     const val CURRENCY_EXCHANGE = "currency_exchange"
     const val DATA_OBJECT = "data_object"
     const val DATE_RANGE = "date_range"
