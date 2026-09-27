@@ -22,5 +22,6 @@ internal fun movementsDependencies(useCases: UseCases): MovementsDependencies =
         // mismo objeto en las dos, no una copia por feature.
         override val periodFilter = sharedPeriodFilter
         override val messages = sharedMessages
+        override val observeConnection = useCases.observeConnection
         override val clock = useCases.clock
     }

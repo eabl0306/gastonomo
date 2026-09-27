@@ -30,6 +30,7 @@ import com.bahoque.gastonomo.core.application.usecase.settings.SetHideAmounts
 import com.bahoque.gastonomo.core.application.usecase.settings.UpdateSettings
 import com.bahoque.gastonomo.core.application.usecase.sync.CorrectPendingWrite
 import com.bahoque.gastonomo.core.application.usecase.sync.DiscardPendingWrite
+import com.bahoque.gastonomo.core.application.usecase.sync.ObserveConnection
 import com.bahoque.gastonomo.core.application.usecase.sync.ObservePendingWrites
 import com.bahoque.gastonomo.core.application.usecase.sync.RetryPendingWrites
 
@@ -84,6 +85,7 @@ internal class UseCases(
     val correctPendingWrite = CorrectPendingWrite(gateways.pending)
     val discardPendingWrite = DiscardPendingWrite(gateways.pending)
     val retryPendingWrites = RetryPendingWrites(gateways.pending)
+    val observeConnection = ObserveConnection(devices.network)
 
     val clock = devices.clock
 }

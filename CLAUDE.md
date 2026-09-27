@@ -70,6 +70,12 @@ framework, ni HTTP, ni SQL, ni React, ni Android. Los detalles estan en
   ya no esta compuesto. El host se queda compuesto mientras baja y retiene el ultimo valor no nulo,
   que es lo que evita que lo que baje sea una hoja vacia.
 
+  **Sin conexion la multimoneda se degrada, no se rompe.** El chip de moneda de los tres
+  formularios se apaga **con una explicacion**, y el registro va en la moneda principal, asi que
+  los cuatro campos quedan coherentes solos (`base` igual a `amount`). Un 503 de la API y no tener
+  red acaban en lo mismo para el usuario. La fila de Ajustes dice cuantas escrituras siguen aqui,
+  no un "al dia" fijo. Ver el [ADR 0021](docs/adr/0021-degradar-sin-conexion.md).
+
   **Registrar sin conexion escribe en la base y encola la subida.** La clave de idempotencia se
   guarda con la fila y **no se regenera nunca**: un reintento tras un timeout que si llego crearia
   el gasto dos veces y no hay pantalla para borrarlo. Todo borrado de refresco lleva

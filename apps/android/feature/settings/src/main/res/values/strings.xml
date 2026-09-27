@@ -11,7 +11,6 @@
     <!-- Cuenta -->
     <string name="settings_cloud_sync">Sincronización en la nube</string>
     <string name="settings_cloud_sync_ok">Al día</string>
-    <string name="settings_cloud_sync_paused">Pausada</string>
     <string name="settings_lock">Bloqueo con huella / PIN</string>
     <string name="settings_change_password">Cambiar contraseña</string>
 
@@ -62,4 +61,6 @@
         <item quantity="many">%d sin enviar</item>
         <item quantity="other">%d sin enviar</item>
     </plurals>
+    <string name="settings_cloud_sync_syncing">Sincronizando…</string>
+    <string name="settings_cloud_sync_offline">Sin conexión</string>
 </resources>

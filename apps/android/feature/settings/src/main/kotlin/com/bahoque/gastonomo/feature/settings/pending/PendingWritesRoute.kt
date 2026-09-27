@@ -4,6 +4,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.bahoque.gastonomo.feature.settings.SettingsDependencies
@@ -24,6 +26,10 @@ internal fun PendingWritesRoute(
         )
     }
     val state by viewModel.state.collectAsStateWithLifecycle()
+    // Abrir la pantalla ya intenta subir. Tocar la fila de Ajustes es, entonces, forzar un
+    // intento: esperar a que el sistema decida no es una respuesta cuando lo que el usuario
+    // quiere saber es si su gasto esta a salvo.
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { viewModel.onRetry() }
     val actions = remember(viewModel) {
         PendingWritesActions(
             onBack = onBack,

@@ -34,7 +34,7 @@ internal class SettingsLoader(private val dependencies: SettingsDependencies) {
     private suspend fun withAccountSettings(state: SettingsUiState): SettingsUiState =
         when (val result = dependencies.loadSettings()) {
             is Outcome.Success ->
-                state.copy(settings = result.value, cloudSync = CloudSyncState.SYNCED)
+                state.copy(settings = result.value, reachedApi = true)
             is Outcome.Failure -> state.pausedIfOffline(result.error)
         }
 
@@ -65,11 +65,11 @@ internal class SettingsLoader(private val dependencies: SettingsDependencies) {
 }
 
 /**
- * "Sincronizacion en la nube: Pausada" es lo que se ensena cuando no se pudo hablar con la
- * API. Un 422 o un 404 no son una sincronizacion pausada, asi que no la tocan.
+ * La fila de sincronizacion pasa a "Sin conexion" cuando no se pudo hablar con la API. Un 422 o
+ * un 404 no son falta de conexion, asi que no la tocan.
  */
 internal fun SettingsUiState.pausedIfOffline(error: ApiError): SettingsUiState =
-    if (error is ApiError.Network) copy(cloudSync = CloudSyncState.PAUSED) else this
+    if (error is ApiError.Network) copy(reachedApi = false) else this
 
 /**
  * El estado tras un fallo al guardar: el aviso que toca y, si fue de red, la sincronizacion

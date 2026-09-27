@@ -9,6 +9,7 @@ import com.bahoque.gastonomo.data.network.ApiClientTest.Probe
 import com.bahoque.gastonomo.data.network.MockApi.Companion.json
 import com.bahoque.gastonomo.data.network.MockApi.Companion.problem
 import io.ktor.client.request.HttpRequestData
+import io.ktor.http.HttpHeaders
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.test.runTest
@@ -56,12 +57,15 @@ class TokenRefresherTest {
 
     @Test
     fun `two requests failing at once only refresh once`() = runTest {
-        var businessCalls = 0
         val store = FakeSessionStore(SampleAuth.session)
         val api = MockApi(sessionStore = store) { request ->
             when {
                 request.isRefresh() -> json(REFRESHED)
-                businessCalls++ < 2 -> problem(401, """{"status":401}""")
+                // La API rechaza mientras el token sea el viejo, que es lo que de verdad pasa.
+                // Contar peticiones hacia que el test dependiera de en que orden se intercalan las
+                // dos, y fallaba de vez en cuando: si la primera reintentaba antes de que la
+                // segunda hubiera fallado, su reintento se llevaba el 401 que era de la otra.
+                request.carriesStaleToken() -> problem(401, """{"status":401}""")
                 else -> json("""{"name":"ok"}""")
             }
         }
@@ -104,6 +108,10 @@ class TokenRefresherTest {
 
     private fun HttpRequestData.isRefresh(): Boolean =
         url.encodedPath.endsWith("auth/refresh")
+
+    /** Si la peticion todavia lleva el access token de antes del refresco. */
+    private fun HttpRequestData.carriesStaleToken(): Boolean =
+        headers[HttpHeaders.Authorization]?.contains(SampleAuth.session.accessToken) == true
 
     private companion object {
         const val REFRESHED =

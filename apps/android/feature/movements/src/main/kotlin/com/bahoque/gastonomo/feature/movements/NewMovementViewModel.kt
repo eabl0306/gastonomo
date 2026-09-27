@@ -53,6 +53,7 @@ class NewMovementViewModel(
                     rates = form.rates,
                     categories = form.categories,
                     currencies = form.currencies,
+                    canConvert = form.canConvert,
                 )
             }
         }

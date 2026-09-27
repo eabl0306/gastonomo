@@ -46,7 +46,7 @@ class SettingsViewModelTest {
     fun `without network the sync indicator is paused and the rates are offline`() = runTest {
         val viewModel = SettingsViewModel(FakeSettingsDependencies.offline())
         advanceUntilIdle()
-        assertEquals(CloudSyncState.PAUSED, viewModel.state.value.cloudSync)
+        assertEquals(CloudSyncState.OFFLINE, viewModel.state.value.cloudSync)
         assertEquals(RatesIndicator.Offline, viewModel.state.value.rates)
     }
 

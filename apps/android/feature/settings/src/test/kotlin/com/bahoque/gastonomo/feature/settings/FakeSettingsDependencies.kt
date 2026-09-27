@@ -16,6 +16,7 @@ import com.bahoque.gastonomo.core.application.usecase.settings.ObserveDeviceSett
 import com.bahoque.gastonomo.core.application.usecase.settings.UpdateSettings
 import com.bahoque.gastonomo.core.application.usecase.sync.CorrectPendingWrite
 import com.bahoque.gastonomo.core.application.usecase.sync.DiscardPendingWrite
+import com.bahoque.gastonomo.core.application.usecase.sync.ObserveConnection
 import com.bahoque.gastonomo.core.application.usecase.sync.ObservePendingWrites
 import com.bahoque.gastonomo.core.application.usecase.sync.RetryPendingWrites
 import com.bahoque.gastonomo.core.testing.fake.FakeAuthGateway
@@ -23,6 +24,7 @@ import com.bahoque.gastonomo.core.testing.fake.FakeCategoryGateway
 import com.bahoque.gastonomo.core.testing.fake.FakeCurrencyGateway
 import com.bahoque.gastonomo.core.testing.fake.FakeDeviceSettingsStore
 import com.bahoque.gastonomo.core.testing.fake.FakeLocalLock
+import com.bahoque.gastonomo.core.testing.fake.FakeNetworkMonitor
 import com.bahoque.gastonomo.core.testing.fake.FakePendingWritesGateway
 import com.bahoque.gastonomo.core.testing.fake.FakeSessionStore
 import com.bahoque.gastonomo.core.testing.fake.FakeSettingsGateway
@@ -40,6 +42,7 @@ internal class FakeSettingsDependencies(
     val localLock: FakeLocalLock = FakeLocalLock(),
     val deviceSettings: FakeDeviceSettingsStore = FakeDeviceSettingsStore(),
     val pendingGateway: FakePendingWritesGateway = FakePendingWritesGateway(),
+    val network: FakeNetworkMonitor = FakeNetworkMonitor(),
 ) : SettingsDependencies {
     override val loadSettings = LoadSettings(settingsGateway)
     override val updateSettings = UpdateSettings(settingsGateway)
@@ -55,6 +58,7 @@ internal class FakeSettingsDependencies(
     override val correctPendingWrite = CorrectPendingWrite(pendingGateway)
     override val discardPendingWrite = DiscardPendingWrite(pendingGateway)
     override val retryPendingWrites = RetryPendingWrites(pendingGateway)
+    override val observeConnection = ObserveConnection(network)
 
     companion object {
         /** Las dependencias con todo en verde, que es lo que usan las capturas. */

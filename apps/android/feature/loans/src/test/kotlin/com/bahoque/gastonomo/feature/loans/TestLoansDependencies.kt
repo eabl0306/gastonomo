@@ -8,9 +8,11 @@ import com.bahoque.gastonomo.core.application.usecase.loan.LoadLoanDetail
 import com.bahoque.gastonomo.core.application.usecase.loan.LoadLoans
 import com.bahoque.gastonomo.core.application.usecase.loan.RegisterLoanPayment
 import com.bahoque.gastonomo.core.application.usecase.settings.LoadSettings
+import com.bahoque.gastonomo.core.application.usecase.sync.ObserveConnection
 import com.bahoque.gastonomo.core.domain.loan.Loan
 import com.bahoque.gastonomo.core.testing.fake.FakeCurrencyGateway
 import com.bahoque.gastonomo.core.testing.fake.FakeLoanGateway
+import com.bahoque.gastonomo.core.testing.fake.FakeNetworkMonitor
 import com.bahoque.gastonomo.core.testing.fake.FakeSettingsGateway
 import com.bahoque.gastonomo.core.testing.fake.FixedClock
 import com.bahoque.gastonomo.core.testing.fake.SampleFinance
@@ -26,6 +28,8 @@ internal class TestLoansDependencies(
     val gateway: FakeLoanGateway = FakeLoanGateway(),
     currencies: FakeCurrencyGateway = FakeCurrencyGateway(),
     settings: FakeSettingsGateway = FakeSettingsGateway(),
+    /** Con false, el chip de moneda sale apagado: es el modo avion. */
+    private val online: Boolean = true,
 ) : LoansDependencies {
     override val loadLoans = LoadLoans(gateway)
     override val loadLoanDetail = LoadLoanDetail(gateway)
@@ -34,6 +38,8 @@ internal class TestLoansDependencies(
     override val loadCurrencyCatalog = LoadCurrencyCatalog(currencies)
     override val loadExchangeRates = LoadExchangeRates(currencies)
     override val loadSettings = LoadSettings(settings)
+    val network = FakeNetworkMonitor(connected = online)
+    override val observeConnection = ObserveConnection(network)
     override val clock = FixedClock()
 
     companion object {

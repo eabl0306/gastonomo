@@ -97,4 +97,5 @@
     <string name="gastonomo_language_spanish_region" translatable="false">Colombia · es-CO</string>
     <string name="gastonomo_language_english" translatable="false">English</string>
     <string name="gastonomo_language_english_region" translatable="false">United States · en-US</string>
+    <string name="gastonomo_offline_currency">Sin conexión no se pueden convertir monedas</string>
 </resources>

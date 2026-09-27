@@ -139,8 +139,12 @@ private fun AmountBlock(state: NewMovementUiState, actions: NewMovementActions) 
             modifier = Modifier.padding(top = CHIP_GAP),
             fallbackName = state.currencies.firstOrNull { it.code == state.currency }?.name
                 ?: state.currency.value,
+            enabled = state.canConvert,
+            disabledHint = stringResource(GastonomoStrings.offlineCurrency),
         )
-        if (state.suggestion.isForeign) {
+        // Sin poder convertir no hay nada que ensenar: el registro va en la moneda principal y
+        // su equivalencia es el propio importe.
+        if (state.suggestion.isForeign && state.canConvert) {
             ConversionBox(
                 suggestion = state.suggestion,
                 baseRaw = state.baseRaw,

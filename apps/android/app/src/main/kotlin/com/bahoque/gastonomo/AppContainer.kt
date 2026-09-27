@@ -26,6 +26,7 @@ import com.bahoque.gastonomo.data.offline.pendingUploader
 import com.bahoque.gastonomo.data.session.createBiometricLock
 import com.bahoque.gastonomo.data.session.createDeviceSettingsStore
 import com.bahoque.gastonomo.data.session.createLocalLock
+import com.bahoque.gastonomo.data.session.createNetworkMonitor
 import com.bahoque.gastonomo.data.session.createSessionStore
 import com.bahoque.gastonomo.feature.auth.AuthDependencies
 import com.bahoque.gastonomo.feature.categories.CategoriesDependencies
@@ -68,6 +69,7 @@ class AppContainer(context: Context) {
         deviceSettings = createDeviceSettingsStore(context),
         biometricLock = createBiometricLock(context) { currentActivity },
         clock = SystemClock,
+        network = createNetworkMonitor(context),
     )
 
     private val apiClient = createApiClient(devices.sessionStore)

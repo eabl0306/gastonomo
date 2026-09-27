@@ -21,7 +21,11 @@ data class SettingsUiState(
     val categoryCount: Int = 0,
     val currencies: List<CurrencyInfo> = emptyList(),
     val rates: RatesIndicator = RatesIndicator.Loading,
-    val cloudSync: CloudSyncState = CloudSyncState.SYNCED,
+    /** Si la ultima lectura llego a la API. False solo cuando fallo por red. */
+    val reachedApi: Boolean = true,
+
+    /** Si el dispositivo tiene por donde salir a internet. */
+    val online: Boolean = true,
 
     /** Cuantos registros siguen sin salir del telefono. */
     val pendingCount: Int = 0,
@@ -29,7 +33,26 @@ data class SettingsUiState(
     val currencyQuery: String = "",
     val pin: String = "",
     val message: SettingsMessage? = null,
-)
+) {
+
+    /**
+     * Lo que dice la fila. Se deriva, no se guarda: guardarlo permitiria que dijera una cosa
+     * mientras la cola dice otra, que es exactamente como empezo este issue.
+     */
+    val cloudSync: CloudSyncState
+        get() = when {
+            pendingCount > 0 && online -> CloudSyncState.SYNCING
+            pendingCount > 0 -> CloudSyncState.PENDING
+            online && reachedApi -> CloudSyncState.SYNCED
+            else -> CloudSyncState.OFFLINE
+        }
+
+    /**
+     * Si se puede registrar en otra moneda. Sin red no: guardar un importe sin conocer su
+     * equivalencia rompe la regla de los cuatro campos, y las tasas guardadas pueden ser viejas.
+     */
+    val canConvert: Boolean get() = online && rates is RatesIndicator.Ready
+}
 
 /** Lo que ensena la fila "Tasas de cambio", que es de solo lectura. */
 sealed interface RatesIndicator {
@@ -44,13 +67,26 @@ sealed interface RatesIndicator {
     data object Offline : RatesIndicator
 }
 
-/** El indicador "Sincronizacion en la nube". Es conectividad del cliente, no un campo de la API. */
+/**
+ * El indicador "Sincronizacion en la nube". Es del cliente, no un campo de la API.
+ *
+ * Sale de dos cosas que el usuario no puede ver por su cuenta: **cuantas escrituras siguen sin
+ * salir del telefono** y **si hay red**. Antes era un texto fijo que decia "Al dia" pasara lo que
+ * pasara, que es justo lo que destapo que la aplicacion tenia que funcionar sin conexion.
+ */
 enum class CloudSyncState {
-    /** La ultima lectura fue bien. */
+    /** Nada pendiente y la API responde. */
     SYNCED,
 
-    /** La ultima lectura no pudo hablar con la API. */
-    PAUSED,
+    /** Hay cola y hay red: se esta vaciando. */
+    SYNCING,
+
+    /** Hay cola y no hay por donde subirla. Es lo que el usuario querria saber antes de
+     *  desinstalar la aplicacion o cambiar de telefono. */
+    PENDING,
+
+    /** Sin red y sin nada pendiente. No hay nada que perder, pero tampoco nada que bajar. */
+    OFFLINE,
 }
 
 /** Las tres hojas que abre Ajustes. */

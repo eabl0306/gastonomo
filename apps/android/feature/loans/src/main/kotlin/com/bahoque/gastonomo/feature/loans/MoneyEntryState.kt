@@ -26,6 +26,12 @@ data class MoneyEntryState(
     val baseRaw: String? = null,
     val currencySheetOpen: Boolean = false,
     val currencyQuery: String = "",
+    /**
+     * Si se puede registrar en otra moneda. Sin conexion no: guardar un importe sin conocer su
+     * equivalencia romperia la regla de los cuatro campos, y las tasas guardadas pueden ser
+     * viejas. El chip se apaga con una explicacion y el registro va en la moneda principal.
+     */
+    val canConvert: Boolean = true,
 ) {
     /** El importe tecleado. Una cadena vacia o a medio teclear vale cero. */
     val amount: BigDecimal get() = AmountInput.parse(amountRaw)
@@ -56,8 +62,18 @@ data class MoneyEntryState(
     fun withCurrencySheet(open: Boolean): MoneyEntryState =
         copy(currencySheetOpen = open, currencyQuery = if (open) "" else currencyQuery)
 
+    /**
+     * Se pierde o se recupera la conexion. Al perderla el registro vuelve a la moneda principal:
+     * dejarlo en otra guardaria un importe con una equivalencia que nadie puede calcular.
+     */
+    fun withConnection(canConvert: Boolean, display: CurrencyCode): MoneyEntryState = when {
+        canConvert -> copy(canConvert = true)
+        else -> copy(canConvert = false, currency = display, baseRaw = null, currencySheetOpen = false)
+    }
+
     companion object {
         /** Un registro nuevo empieza en la moneda principal. */
-        fun of(display: CurrencyCode): MoneyEntryState = MoneyEntryState(currency = display)
+        fun of(display: CurrencyCode, canConvert: Boolean = true): MoneyEntryState =
+            MoneyEntryState(currency = display, canConvert = canConvert)
     }
 }

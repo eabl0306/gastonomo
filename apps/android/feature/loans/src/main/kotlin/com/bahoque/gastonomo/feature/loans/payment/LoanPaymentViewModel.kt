@@ -46,7 +46,7 @@ class LoanPaymentViewModel(
         mutable.value = PaymentUiState(
             loan = loan,
             outstanding = summary.outstanding,
-            entry = MoneyEntryState.of(context.display),
+            entry = MoneyEntryState.of(context.display, context.canConvert),
             date = clock.today(),
             context = context,
         )
