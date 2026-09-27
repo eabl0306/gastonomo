@@ -642,10 +642,27 @@ Ingresos. Tiene que pedir sin filtrar y filtrar en local, o hacer dos llamadas.
 ## Lo que no existe todavia
 
 - **Login con Google.** Pedido omitir. La pantalla mantiene el hueco.
-- **Editar y borrar movimientos, prestamos y abonos.** El handoff los lista como no
-  disenados, asi que no hay pantalla ni endpoint. Sigue mereciendo la pena abrirlo
-  pronto: hoy un error de tecleo en un importe no tiene arreglo desde la aplicacion. La
-  idempotencia evita el duplicado por reintento, pero no el dedazo.
+- **Editar y borrar movimientos, prestamos y abonos. Y no es un hueco: es la decision
+  central del producto.** El historico es de solo anadir, a proposito y para siempre. No
+  habra `PATCH` ni `DELETE` de estos recursos.
+
+  El motivo es de integridad: que alguien que coja el movil o robe la cuenta no pueda
+  alterar el historial financiero sin que el dueno lo note. Un registro que no se puede
+  modificar es lo que hace que lo que se ve sea lo que paso. La version anterior de la
+  aplicacion, que era completamente local, ya funcionaba asi.
+
+  Un error se corrige **registrando otro movimiento que lo compense**, no tachando el
+  anterior. Es la logica de un libro contable. Por eso cada movimiento lleva nota: para
+  poder explicar por que se registra.
+
+  Dos consecuencias que se derivan de esto y conviene no perder de vista:
+
+  - **La idempotencia pasa a ser imprescindible, no un lujo.** Un movimiento duplicado por
+    un reintento es permanente, porque no hay forma de borrarlo. Ver el ADR 0012.
+  - **Sincronizar es trivial.** Si nada se edita, dos dispositivos no pueden tocar el mismo
+    registro, asi que no hay conflictos que resolver: solo subir lo pendiente y bajar lo
+    nuevo.
+
 - **Exportacion a CSV y Excel.** La genera el cliente; la API solo tiene que dejar leer
   todo el historial, y para "Todo el historial" el cliente pagina hasta el final.
 - **PIN y huella**, por lo dicho en Autenticacion.

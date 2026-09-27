@@ -122,7 +122,14 @@ Todo `/v1` exige `Authorization: Bearer {accessToken}` menos `auth/register`,
    que es para los logs.
 6. **Un recurso de otra cuenta responde 404, nunca 403.** Un 403 confirmaria que existe.
    Lo mismo si el identificador del camino no es un UUID.
-7. **Las fechas de registro son `DATE`** (`YYYY-MM-DD`), sin hora ni zona. Los instantes
+7. **El historico es de solo anadir, y no va a cambiar.** No hay `PATCH` ni `DELETE` de
+   movimientos, prestamos ni abonos, y no los habra. Es una decision de integridad: que
+   nadie con acceso al movil o a la cuenta pueda alterar el historial sin que se note. Un
+   error se corrige registrando un movimiento que lo compense, y para eso cada movimiento
+   lleva nota. **No lo trates como un hueco ni propongas anadir esos endpoints.** De aqui
+   sale que la idempotencia sea imprescindible (un duplicado es permanente) y que
+   sincronizar no tenga conflictos que resolver.
+8. **Las fechas de registro son `DATE`** (`YYYY-MM-DD`), sin hora ni zona. Los instantes
    tecnicos si son `timestamptz`.
 
 ### Idempotencia
