@@ -41,8 +41,9 @@ y por que es provisional estan en el
 Rompen el build igual que las demas, y son las que hacen que catorce pantallas se parezcan
 entre si:
 
-1. **Un color o un tamano no se escriben a mano fuera de `:core:designsystem`.** Salen de
-   `GastonomoTheme.colors`, `.typography`, `.radii`, `.dimens`, `.shadows` y `.formats`. Si
+1. **Un color, un tamano o una duracion de animacion no se escriben a mano fuera de
+   `:core:designsystem`.** Salen de `GastonomoTheme.colors`, `.typography`, `.radii`, `.dimens`,
+   `.shadows`, `.motion` y `.formats`. Si
    falta un valor, se anade al token, no al fichero de la pantalla. La unica excepcion son los
    ocho colores que el usuario elige para una categoria: esos son datos que viajan a la API y
    viven en `:core:domain`.

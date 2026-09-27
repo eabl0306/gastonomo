@@ -1,10 +1,12 @@
 package com.bahoque.gastonomo.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import com.bahoque.gastonomo.AppContainer
+import com.bahoque.gastonomo.core.designsystem.theme.GastonomoTheme
 import com.bahoque.gastonomo.core.navigation.GastonomoNavActions
 import com.bahoque.gastonomo.core.navigation.GastonomoRoute
 import com.bahoque.gastonomo.feature.auth.authNavGraph
@@ -27,10 +29,18 @@ fun GastonomoNavHost(
     modifier: Modifier = Modifier,
 ) {
     val actions = GastonomoNavActions.of(navController)
+    // Las animaciones se deciden en un sitio, mirando las dos pantallas de la transicion. Lo que
+    // cada una significa esta en GastonomoTransitions.
+    val motion = GastonomoTheme.motion
+    val transitions = remember(motion) { GastonomoTransitions(motion) }
     NavHost(
         navController = navController,
         startDestination = startDestination,
         modifier = modifier,
+        enterTransition = transitions.enter,
+        exitTransition = transitions.exit,
+        popEnterTransition = transitions.popEnter,
+        popExitTransition = transitions.popExit,
     ) {
         authNavGraph(container.auth, actions)
         homeNavGraph(container.home, actions)

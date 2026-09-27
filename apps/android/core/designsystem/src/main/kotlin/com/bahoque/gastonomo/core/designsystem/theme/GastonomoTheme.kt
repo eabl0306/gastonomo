@@ -10,6 +10,7 @@ import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import com.bahoque.gastonomo.core.designsystem.format.GastonomoFormats
 import com.bahoque.gastonomo.core.designsystem.format.LocalGastonomoFormats
@@ -37,6 +38,10 @@ fun GastonomoTheme(
     content: @Composable () -> Unit,
 ) {
     val colors = remember { GastonomoColors() }
+    val context = LocalContext.current
+    // La preferencia del sistema se lee una vez y queda en los tokens, asi que cualquier
+    // composable la respeta por leer la duracion.
+    val motion = remember(context) { GastonomoMotion(systemAnimationsEnabled(context)) }
     val formats = remember(language, displayCurrency) {
         GastonomoFormats(language = language, displayCurrency = displayCurrency)
     }
@@ -49,6 +54,7 @@ fun GastonomoTheme(
         LocalGastonomoRadii provides remember { GastonomoRadii() },
         LocalGastonomoDimens provides remember { GastonomoDimens() },
         LocalGastonomoShadows provides remember { GastonomoShadows() },
+        LocalGastonomoMotion provides motion,
         LocalGastonomoFormats provides formats,
         LocalTextSelectionColors provides selection,
         LocalIndication provides NoIndication,
@@ -86,6 +92,12 @@ object GastonomoTheme {
         @ReadOnlyComposable
         get() = LocalGastonomoShadows.current
 
+    /** Duraciones y curvas. Valen cero si el sistema tiene las animaciones apagadas. */
+    val motion: GastonomoMotion
+        @Composable
+        @ReadOnlyComposable
+        get() = LocalGastonomoMotion.current
+
     /** Formato de dinero, tasas y fechas para el idioma y la moneda principal vigentes. */
     val formats: GastonomoFormats
         @Composable
@@ -104,6 +116,7 @@ internal val LocalGastonomoTypography = staticCompositionLocalOf { GastonomoTypo
 internal val LocalGastonomoRadii = staticCompositionLocalOf { GastonomoRadii() }
 internal val LocalGastonomoDimens = staticCompositionLocalOf { GastonomoDimens() }
 internal val LocalGastonomoShadows = staticCompositionLocalOf { GastonomoShadows() }
+internal val LocalGastonomoMotion = staticCompositionLocalOf { GastonomoMotion() }
 
 /**
  * Reemplaza el borroso circular de Material. El diseno no lo usa: sus controles responden

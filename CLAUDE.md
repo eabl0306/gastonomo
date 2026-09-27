@@ -48,14 +48,22 @@ framework, ni HTTP, ni SQL, ni React, ni Android. Los detalles estan en
   de composables a PNG desde la JVM). El detalle esta en
   [apps/android/README.md](apps/android/README.md).
 
-  Dos reglas que rompen el build y conviene saber antes de escribir una pantalla: **un color o
-  un tamano no se escriben a mano fuera de `:core:designsystem`** (salen de
-  `GastonomoTheme.colors`, `.typography`, `.radii`, `.dimens`, `.shadows`, `.formats`), y
+  Dos reglas que rompen el build y conviene saber antes de escribir una pantalla: **un color,
+  un tamano o una duracion de animacion no se escriben a mano fuera de `:core:designsystem`**
+  (salen de `GastonomoTheme.colors`, `.typography`, `.radii`, `.dimens`, `.shadows`, `.motion`,
+  `.formats`), y
   **un texto visible no se escribe en un composable**: va al `strings.xml` de su feature, o al
   de `:core:designsystem` si lo comparten varias, y se lee por `GastonomoStrings`. Espanol en
   `values`, ingles en `values-en`, las mismas claves en las dos salvo las `translatable="false"`.
   Las decisiones estan en el [ADR 0013](docs/adr/0013-sistema-de-diseno-en-android.md) y el
   [ADR 0014](docs/adr/0014-sesion-en-el-cliente-android.md).
+
+  **Las animaciones de navegacion se deciden en un solo sitio**, `GastonomoTransitions` en `:app`,
+  porque dependen de las dos pantallas: apilar desliza en horizontal, cambiar de tab solo funde y
+  los dos formularios de creacion entran de abajo arriba. Ninguna pasa de 300 ms y todas se apagan
+  si el sistema tiene las animaciones desactivadas, porque las duraciones del token valen cero. Si
+  anades un formulario de creacion, tiene que entrar en `FORM_ROUTES`. Ver el
+  [ADR 0017](docs/adr/0017-movimiento-en-android.md).
 
   **Los seis gateways van envueltos en una cache en memoria** (`:data:cache`), que se cablea en
   `AppContainer` y es invisible para los casos de uso y las features. Sirve lo guardado durante
