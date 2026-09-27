@@ -1,9 +1,5 @@
-package com.bahoque.gastonomo.data.database.local
+package com.bahoque.gastonomo.core.application.port
 
-import com.bahoque.gastonomo.core.application.port.IdempotencyKey
-import com.bahoque.gastonomo.core.application.port.LoanDraft
-import com.bahoque.gastonomo.core.application.port.LoanPaymentDraft
-import com.bahoque.gastonomo.core.application.port.MovementDraft
 import com.bahoque.gastonomo.core.domain.loan.LoanId
 
 /**

@@ -5,6 +5,7 @@ import com.bahoque.gastonomo.core.application.port.CategoryGateway
 import com.bahoque.gastonomo.core.application.port.CurrencyGateway
 import com.bahoque.gastonomo.core.application.port.LoanGateway
 import com.bahoque.gastonomo.core.application.port.MovementGateway
+import com.bahoque.gastonomo.core.application.port.PendingWritesGateway
 import com.bahoque.gastonomo.core.application.port.SettingsGateway
 import com.bahoque.gastonomo.data.database.local.LocalStore
 
@@ -60,3 +61,7 @@ fun pendingUploader(
     store: LocalStore,
     gate: RefreshGate,
 ): PendingUploader = QueuePendingUploader(remoteMovements, remoteLoans, store, gate)
+
+/** La cola vista desde la pantalla que la ensena y la corrige. */
+fun offlinePendingWrites(store: LocalStore, uploader: PendingUploader): PendingWritesGateway =
+    OfflinePendingWrites(store, uploader)

@@ -10,6 +10,10 @@ import com.bahoque.gastonomo.core.application.usecase.currency.LoadExchangeRates
 import com.bahoque.gastonomo.core.application.usecase.settings.LoadSettings
 import com.bahoque.gastonomo.core.application.usecase.settings.ObserveDeviceSettings
 import com.bahoque.gastonomo.core.application.usecase.settings.UpdateSettings
+import com.bahoque.gastonomo.core.application.usecase.sync.CorrectPendingWrite
+import com.bahoque.gastonomo.core.application.usecase.sync.DiscardPendingWrite
+import com.bahoque.gastonomo.core.application.usecase.sync.ObservePendingWrites
+import com.bahoque.gastonomo.core.application.usecase.sync.RetryPendingWrites
 
 /**
  * Lo que necesitan las pantallas de este modulo. Lo implementa la raiz de composicion de
@@ -40,4 +44,12 @@ interface SettingsDependencies {
 
     /** Solo para el conteo de la fila "Categorias": la pantalla de Categorias es otra feature. */
     val loadCategories: LoadCategories
+
+    val observePendingWrites: ObservePendingWrites
+
+    val correctPendingWrite: CorrectPendingWrite
+
+    val discardPendingWrite: DiscardPendingWrite
+
+    val retryPendingWrites: RetryPendingWrites
 }

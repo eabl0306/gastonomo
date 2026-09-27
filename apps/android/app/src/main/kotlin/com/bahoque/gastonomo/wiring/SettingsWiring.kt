@@ -21,4 +21,8 @@ internal fun settingsDependencies(useCases: UseCases): SettingsDependencies =
         override val setUpLocalLock = useCases.setUpLocalLock
         override val observeDeviceSettings = useCases.observeDeviceSettings
         override val loadCategories = useCases.loadCategories
+        override val observePendingWrites = useCases.observePendingWrites
+        override val correctPendingWrite = useCases.correctPendingWrite
+        override val discardPendingWrite = useCases.discardPendingWrite
+        override val retryPendingWrites = useCases.retryPendingWrites
     }

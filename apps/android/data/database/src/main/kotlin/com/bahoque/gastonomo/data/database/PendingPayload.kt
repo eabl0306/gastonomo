@@ -3,12 +3,12 @@ package com.bahoque.gastonomo.data.database
 import com.bahoque.gastonomo.core.application.port.LoanDraft
 import com.bahoque.gastonomo.core.application.port.LoanPaymentDraft
 import com.bahoque.gastonomo.core.application.port.MovementDraft
+import com.bahoque.gastonomo.core.application.port.PendingDraft
 import com.bahoque.gastonomo.core.domain.category.CategoryId
 import com.bahoque.gastonomo.core.domain.loan.LoanDirection
 import com.bahoque.gastonomo.core.domain.money.CurrencyCode
 import com.bahoque.gastonomo.core.domain.money.MonetaryAmount
 import com.bahoque.gastonomo.core.domain.movement.MovementKind
-import com.bahoque.gastonomo.data.database.local.PendingDraft
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json

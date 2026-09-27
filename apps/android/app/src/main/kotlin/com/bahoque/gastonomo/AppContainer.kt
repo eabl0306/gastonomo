@@ -20,6 +20,7 @@ import com.bahoque.gastonomo.data.offline.offlineCategoryGateway
 import com.bahoque.gastonomo.data.offline.offlineCurrencyGateway
 import com.bahoque.gastonomo.data.offline.offlineLoanGateway
 import com.bahoque.gastonomo.data.offline.offlineMovementGateway
+import com.bahoque.gastonomo.data.offline.offlinePendingWrites
 import com.bahoque.gastonomo.data.offline.offlineSettingsGateway
 import com.bahoque.gastonomo.data.offline.pendingUploader
 import com.bahoque.gastonomo.data.session.createBiometricLock
@@ -105,6 +106,7 @@ class AppContainer(context: Context) {
         categories = offlineCategoryGateway(createCategoryGateway(apiClient), store, refresh),
         settings = offlineSettingsGateway(createSettingsGateway(apiClient), store, refresh),
         currencies = offlineCurrencyGateway(createCurrencyGateway(apiClient), store, refresh),
+        pending = offlinePendingWrites(store, uploader),
     )
 
     /** Algo quedo sin subir: se pide el trabajo, que arrancara cuando haya red. */

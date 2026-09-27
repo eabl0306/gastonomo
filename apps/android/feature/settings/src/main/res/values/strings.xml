@@ -44,4 +44,22 @@
     <string name="settings_toast_lock_off">Bloqueo desactivado.</string>
     <string name="settings_error_catalog">El catálogo de monedas aún no está listo. Inténtalo de nuevo.</string>
     <string name="settings_error_save">No se pudo guardar. Inténtalo de nuevo.</string>
+    <string name="pending_title">Registros sin enviar</string>
+    <string name="pending_empty">No hay nada esperando. Todo lo que has registrado está en la nube.</string>
+    <string name="pending_waiting">Esperando conexión</string>
+    <string name="pending_amount">Importe</string>
+    <string name="pending_fix">Corregir y reintentar</string>
+    <string name="pending_discard">Descartar</string>
+    <string name="pending_discard_title">¿Descartar este registro?</string>
+    <string name="pending_discard_body">Se borrará de tu teléfono y no llegará a la nube. No se puede deshacer.</string>
+    <string name="pending_retry">Reintentar ahora</string>
+    <string name="pending_movement_in">Ingreso</string>
+    <string name="pending_movement_out">Gasto</string>
+    <string name="pending_loan">Préstamo</string>
+    <string name="pending_payment">Abono</string>
+    <plurals name="settings_pending">
+        <item quantity="one">%d sin enviar</item>
+        <item quantity="many">%d sin enviar</item>
+        <item quantity="other">%d sin enviar</item>
+    </plurals>
 </resources>

@@ -1,6 +1,8 @@
 package com.bahoque.gastonomo.data.database.local
 
 import com.bahoque.gastonomo.core.application.port.IdempotencyKey
+import com.bahoque.gastonomo.core.application.port.PendingDraft
+import com.bahoque.gastonomo.core.application.port.PendingWrite
 import com.bahoque.gastonomo.core.domain.loan.LoanId
 import com.bahoque.gastonomo.data.database.dao.PendingWriteDao
 import com.bahoque.gastonomo.data.database.decodePendingDraft

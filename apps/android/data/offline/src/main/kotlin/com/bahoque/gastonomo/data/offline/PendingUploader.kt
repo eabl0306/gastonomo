@@ -4,13 +4,13 @@ import com.bahoque.gastonomo.core.application.error.ApiError
 import com.bahoque.gastonomo.core.application.error.ConflictCode
 import com.bahoque.gastonomo.core.application.port.LoanGateway
 import com.bahoque.gastonomo.core.application.port.MovementGateway
+import com.bahoque.gastonomo.core.application.port.PendingDraft
+import com.bahoque.gastonomo.core.application.port.PendingWrite
 import com.bahoque.gastonomo.core.common.Outcome
 import com.bahoque.gastonomo.core.domain.loan.LoanId
 import com.bahoque.gastonomo.core.domain.loan.LoanPaymentId
 import com.bahoque.gastonomo.core.domain.movement.MovementId
 import com.bahoque.gastonomo.data.database.local.LocalStore
-import com.bahoque.gastonomo.data.database.local.PendingDraft
-import com.bahoque.gastonomo.data.database.local.PendingWrite
 
 /**
  * Sube lo que quedo pendiente, en el orden en el que el usuario lo registro.

@@ -84,4 +84,12 @@ sealed interface GastonomoRoute {
     /** 14. Exportar datos. */
     @Serializable
     data object Export : GastonomoRoute
+
+    /**
+     * Registros sin enviar. No esta en el rediseno: sale de que registrar sin conexion sea
+     * posible, y hace falta porque un registro que la API rechaza no puede desaparecer en
+     * silencio.
+     */
+    @Serializable
+    data object PendingWrites : GastonomoRoute
 }

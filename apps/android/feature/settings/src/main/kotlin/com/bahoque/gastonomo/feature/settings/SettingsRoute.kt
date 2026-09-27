@@ -28,18 +28,20 @@ fun SettingsRoute(
     dependencies: SettingsDependencies,
     onCategories: () -> Unit,
     onExport: () -> Unit,
+    onPending: () -> Unit,
     onSignedOut: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val viewModel = viewModel { SettingsViewModel(dependencies) }
     val state by viewModel.state.collectAsStateWithLifecycle()
-    val actions = remember(viewModel, onCategories, onExport, onSignedOut) {
+    val actions = remember(viewModel, onCategories, onExport, onPending, onSignedOut) {
         SettingsActions(
             onCurrency = { viewModel.showSheet(SettingsSheet.CURRENCY) },
             onLanguage = { viewModel.showSheet(SettingsSheet.LANGUAGE) },
             onLockToggled = viewModel::onLockToggled,
             onCategories = onCategories,
             onExport = onExport,
+            onPending = onPending,
             onSignOut = { viewModel.signOut(onSignedOut) },
         )
     }

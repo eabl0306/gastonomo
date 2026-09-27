@@ -27,6 +27,14 @@ data class MonetaryAmount(
 
     companion object {
         /**
+         * Precision para recalcular la equivalencia al corregir un importe rechazado. Se conserva
+         * la tasa que tenia el registro: es el mismo gasto del mismo dia con otro numero, no un
+         * registro nuevo al cambio de hoy.
+         */
+        val CORRECTION_PRECISION: java.math.MathContext =
+            java.math.MathContext(20, java.math.RoundingMode.HALF_UP)
+
+        /**
          * Registro en la moneda principal: la equivalencia es el propio importe. Es el
          * caso en el que la API deja omitir `base` y `baseCurrency` los dos juntos.
          */

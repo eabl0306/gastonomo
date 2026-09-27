@@ -7,6 +7,8 @@ import com.bahoque.gastonomo.core.application.port.IdempotencyKey
 import com.bahoque.gastonomo.core.application.port.LoanDraft
 import com.bahoque.gastonomo.core.application.port.LoanPaymentDraft
 import com.bahoque.gastonomo.core.application.port.MovementDraft
+import com.bahoque.gastonomo.core.application.port.PendingDraft
+import com.bahoque.gastonomo.core.application.port.PendingWrite
 import com.bahoque.gastonomo.core.domain.loan.LoanDirection
 import com.bahoque.gastonomo.core.domain.loan.LoanId
 import com.bahoque.gastonomo.core.domain.money.CurrencyCode
@@ -14,8 +16,6 @@ import com.bahoque.gastonomo.core.domain.money.MonetaryAmount
 import com.bahoque.gastonomo.core.domain.movement.MovementKind
 import com.bahoque.gastonomo.core.testing.fake.SampleFinance
 import com.bahoque.gastonomo.data.database.local.LocalStore
-import com.bahoque.gastonomo.data.database.local.PendingDraft
-import com.bahoque.gastonomo.data.database.local.PendingWrite
 import com.bahoque.gastonomo.data.database.local.createInMemoryLocalStore
 import kotlinx.coroutines.test.runTest
 import org.junit.After

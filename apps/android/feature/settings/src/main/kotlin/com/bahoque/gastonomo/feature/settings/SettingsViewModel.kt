@@ -31,6 +31,11 @@ class SettingsViewModel(private val dependencies: SettingsDependencies) : ViewMo
                 mutableState.update { it.copy(device = device) }
             }
         }
+        viewModelScope.launch {
+            dependencies.observePendingWrites().collect { writes ->
+                mutableState.update { it.copy(pendingCount = writes.size) }
+            }
+        }
         load()
     }
 

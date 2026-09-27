@@ -4,6 +4,8 @@ import com.bahoque.gastonomo.core.application.port.IdempotencyKey
 import com.bahoque.gastonomo.core.application.port.LoanDraft
 import com.bahoque.gastonomo.core.application.port.LoanPaymentDraft
 import com.bahoque.gastonomo.core.application.port.MovementDraft
+import com.bahoque.gastonomo.core.application.port.PendingDraft
+import com.bahoque.gastonomo.core.application.port.PendingWrite
 import com.bahoque.gastonomo.core.domain.loan.Loan
 import com.bahoque.gastonomo.core.domain.loan.LoanDirection
 import com.bahoque.gastonomo.core.domain.loan.LoanId
@@ -14,8 +16,6 @@ import com.bahoque.gastonomo.core.domain.movement.Movement
 import com.bahoque.gastonomo.core.domain.movement.MovementId
 import com.bahoque.gastonomo.core.domain.movement.MovementKind
 import com.bahoque.gastonomo.data.database.local.LocalStore
-import com.bahoque.gastonomo.data.database.local.PendingDraft
-import com.bahoque.gastonomo.data.database.local.PendingWrite
 import java.time.LocalDate
 import java.util.UUID
 
