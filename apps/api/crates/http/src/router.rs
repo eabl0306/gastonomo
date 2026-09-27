@@ -17,6 +17,7 @@
 
 mod auth;
 mod categories;
+mod changes;
 mod currencies;
 mod health;
 mod loans;
@@ -27,6 +28,7 @@ use salvo::prelude::Router;
 
 pub use auth::AuthDependencies;
 pub use categories::CategoryDependencies;
+pub use changes::ChangesDependencies;
 pub use currencies::CurrencyDependencies;
 pub use health::HealthDependencies;
 pub use loans::LoanDependencies;
@@ -58,6 +60,8 @@ pub struct RouterDependencies {
     pub settings: SettingsDependencies,
     /// Monedas y tasas.
     pub currencies: CurrencyDependencies,
+    /// Feed de cambios incrementales.
+    pub changes: ChangesDependencies,
 }
 
 /// Construye el router completo del servicio.
@@ -92,6 +96,7 @@ fn v1_router(dependencies: RouterDependencies) -> Router {
                 .push(loans::router(dependencies.loans))
                 .push(categories::router(dependencies.categories))
                 .push(settings::router(dependencies.settings))
-                .push(currencies::router(dependencies.currencies)),
+                .push(currencies::router(dependencies.currencies))
+                .push(changes::router(dependencies.changes)),
         )
 }

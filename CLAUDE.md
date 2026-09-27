@@ -147,6 +147,7 @@ POST   /v1/categories/{id}/restore
 
 GET    /v1/settings                  PATCH /v1/settings
 GET    /v1/currencies                GET /v1/exchange-rates
+GET    /v1/changes?since=&limit=
 ```
 
 Todo `/v1` exige `Authorization: Bearer {accessToken}` menos `auth/register`,

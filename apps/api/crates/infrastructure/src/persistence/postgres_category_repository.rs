@@ -11,7 +11,7 @@
 //! sqlx 0.9 solo acepta SQL literal, asi que la lista de columnas se repite en cada
 //! consulta en vez de salir de una constante.
 
-mod row;
+pub(super) mod row;
 
 use async_trait::async_trait;
 use gastonomo_application::error::AppError;

@@ -10,7 +10,7 @@
 //!   el orden `ORDER BY occurred_on DESC, id DESC` del indice
 //!   `movements_user_occurred_on_idx`.
 
-mod row;
+pub(super) mod row;
 
 use async_trait::async_trait;
 use gastonomo_application::error::AppError;

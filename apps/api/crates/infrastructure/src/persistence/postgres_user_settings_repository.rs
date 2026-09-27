@@ -73,7 +73,7 @@ fn corrupt(column: &str, detail: &str) -> AppError {
     ))
 }
 
-fn settings(row: &PgRow) -> Result<UserSettings, AppError> {
+pub(super) fn settings(row: &PgRow) -> Result<UserSettings, AppError> {
     let user_id = row
         .try_get::<uuid::Uuid, _>("user_id")
         .map_err(|error| database_error("could not read column user_id", &error))?;

@@ -7,6 +7,7 @@ mod health_response;
 
 pub mod auth;
 pub mod category;
+pub mod changes;
 pub mod currency;
 pub mod loan;
 pub mod movement;

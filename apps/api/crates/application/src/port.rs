@@ -16,6 +16,7 @@ mod user_provisioning;
 mod user_repository;
 
 pub mod category;
+pub mod changes;
 pub mod currency;
 pub mod loan;
 pub mod movement;

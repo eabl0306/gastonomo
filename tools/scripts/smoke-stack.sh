@@ -81,6 +81,10 @@ if expect "POST /v1/auth/register" 201 json "${registro}"; then
     else
       fail "el registro siembra las categorias" "esperaba 12 o mas, llegaron ${total}"
     fi
+    # Despues del conteo: `expect` deja el cuerpo en el mismo fichero y el conteo lee
+    # el de la ultima peticion.
+    expect "GET /v1/changes con token" 200 json \
+      "$(request "${body}" GET /v1/changes -H "authorization: Bearer ${token}")" || true
   fi
 fi
 
