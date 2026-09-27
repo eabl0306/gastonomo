@@ -14,6 +14,8 @@ data class LoanPayment(
     val paidOn: LocalDate,
     val label: String?,
     val money: MonetaryAmount,
+    /** True mientras el abono solo existe en este telefono. */
+    val pending: Boolean = false,
 )
 
 /** Identificador de un abono. Es un UUID en la API. */

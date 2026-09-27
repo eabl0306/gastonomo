@@ -24,28 +24,54 @@ internal interface LoanDao {
     @Query("SELECT * FROM loans WHERE id = :id")
     suspend fun loan(id: String): LoanEntity?
 
-    @Query("SELECT * FROM loan_payments ORDER BY paid_on DESC, id DESC")
-    suspend fun payments(): List<LoanPaymentEntity>
-
-    @Query("SELECT * FROM loan_payments WHERE loan_id = :loanId ORDER BY paid_on DESC, id DESC")
-    suspend fun paymentsOf(loanId: String): List<LoanPaymentEntity>
-
     @Upsert
     suspend fun upsertLoans(loans: List<LoanEntity>)
-
-    @Upsert
-    suspend fun upsertPayments(payments: List<LoanPaymentEntity>)
 
     /**
      * Guarda un prestamo con sus abonos de una pieza. En una transaccion porque un prestamo sin
      * sus abonos aparenta un saldo pendiente que no es el que hay.
+     *
+     * Los abonos ya subidos de ese prestamo se reemplazan; los pendientes se quedan, que es lo que
+     * el usuario acaba de registrar sin conexion.
      */
     @Transaction
-    suspend fun upsert(loan: LoanEntity, payments: List<LoanPaymentEntity>) {
+    suspend fun upsert(loan: LoanEntity, payments: List<LoanPaymentEntity>, dao: LoanPaymentDao) {
         upsertLoans(listOf(loan))
-        upsertPayments(payments)
+        dao.deleteSyncedOf(loan.id)
+        dao.upsert(payments)
     }
+
+    /**
+     * Quita los prestamos ya subidos que la API ya no lista. Los pendientes no se tocan: todavia
+     * no existen en el servidor, asi que no puede listarlos.
+     */
+    @Query("DELETE FROM loans WHERE pending = 0 AND id NOT IN (:keep)")
+    suspend fun deleteSyncedNotIn(keep: List<String>)
+
+    @Query("DELETE FROM loans WHERE id = :id")
+    suspend fun deleteById(id: String)
 
     @Query("DELETE FROM loans")
     suspend fun clear()
+}
+
+/**
+ * Los abonos. Van en su propio DAO y no dentro de [LoanDao] porque se leen y se escriben por su
+ * cuenta: un abono registrado sin conexion se guarda solo, sin su prestamo.
+ */
+@Dao
+internal interface LoanPaymentDao {
+
+    @Query("SELECT * FROM loan_payments ORDER BY paid_on DESC, id DESC")
+    suspend fun all(): List<LoanPaymentEntity>
+
+    @Query("SELECT * FROM loan_payments WHERE loan_id = :loanId ORDER BY paid_on DESC, id DESC")
+    suspend fun of(loanId: String): List<LoanPaymentEntity>
+
+    @Upsert
+    suspend fun upsert(payments: List<LoanPaymentEntity>)
+
+    /** Los ya subidos de un prestamo. Los pendientes se quedan: todavia no existen en la API. */
+    @Query("DELETE FROM loan_payments WHERE loan_id = :loanId AND pending = 0")
+    suspend fun deleteSyncedOf(loanId: String)
 }

@@ -9,7 +9,9 @@ import com.bahoque.gastonomo.data.database.dao.AccountDao
 import com.bahoque.gastonomo.data.database.dao.CategoryDao
 import com.bahoque.gastonomo.data.database.dao.CurrencyDao
 import com.bahoque.gastonomo.data.database.dao.LoanDao
+import com.bahoque.gastonomo.data.database.dao.LoanPaymentDao
 import com.bahoque.gastonomo.data.database.dao.MovementDao
+import com.bahoque.gastonomo.data.database.dao.PendingWriteDao
 import com.bahoque.gastonomo.data.database.entity.CategoryEntity
 import com.bahoque.gastonomo.data.database.entity.CurrencyEntity
 import com.bahoque.gastonomo.data.database.entity.ExchangeRateEntity
@@ -17,6 +19,7 @@ import com.bahoque.gastonomo.data.database.entity.ExchangeRateSnapshotEntity
 import com.bahoque.gastonomo.data.database.entity.LoanEntity
 import com.bahoque.gastonomo.data.database.entity.LoanPaymentEntity
 import com.bahoque.gastonomo.data.database.entity.MovementEntity
+import com.bahoque.gastonomo.data.database.entity.PendingWriteEntity
 import com.bahoque.gastonomo.data.database.entity.ProfileEntity
 import com.bahoque.gastonomo.data.database.entity.SettingsEntity
 
@@ -42,6 +45,7 @@ import com.bahoque.gastonomo.data.database.entity.SettingsEntity
         CurrencyEntity::class,
         ExchangeRateSnapshotEntity::class,
         ExchangeRateEntity::class,
+        PendingWriteEntity::class,
     ],
     version = GastonomoDatabase.VERSION,
     exportSchema = true,
@@ -53,21 +57,27 @@ internal abstract class GastonomoDatabase : RoomDatabase() {
 
     abstract fun loans(): LoanDao
 
+    abstract fun loanPayments(): LoanPaymentDao
+
     abstract fun categories(): CategoryDao
 
     abstract fun account(): AccountDao
 
     abstract fun currencies(): CurrencyDao
 
+    abstract fun pending(): PendingWriteDao
+
     companion object {
         /** Sube con cada cambio de esquema, y cada subida trae su migracion y su test. */
-        const val VERSION = 1
+        const val VERSION = 2
 
         /** El fichero, dentro del almacenamiento privado de la aplicacion. */
         const val FILE_NAME = "gastonomo.db"
 
         fun open(context: Context): GastonomoDatabase =
-            Room.databaseBuilder(context, GastonomoDatabase::class.java, FILE_NAME).build()
+            Room.databaseBuilder(context, GastonomoDatabase::class.java, FILE_NAME)
+                .addGastonomoMigrations()
+                .build()
 
         /** Sin fichero: lo que se guarda se va con el proceso. Para tests. */
         fun inMemory(context: Context): GastonomoDatabase =

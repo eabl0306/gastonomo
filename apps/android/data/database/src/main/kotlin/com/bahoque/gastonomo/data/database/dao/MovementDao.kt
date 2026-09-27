@@ -48,7 +48,12 @@ internal interface MovementDao {
         upsert(movements)
     }
 
-    @Query("DELETE FROM movements WHERE occurred_on BETWEEN :from AND :to")
+    /**
+     * Borra lo **ya subido** de un periodo. Nunca lo pendiente: un refresco que se llevara por
+     * delante lo que el usuario acaba de registrar sin conexion seria perderle dinero, que es el
+     * peor fallo posible de esta aplicacion.
+     */
+    @Query("DELETE FROM movements WHERE occurred_on BETWEEN :from AND :to AND pending = 0")
     suspend fun deleteBetween(from: LocalDate, to: LocalDate)
 
     @Query("DELETE FROM movements")

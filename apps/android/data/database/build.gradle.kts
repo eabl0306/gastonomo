@@ -2,6 +2,7 @@ plugins {
     id("gastonomo.android.library")
     alias(libs.plugins.ksp)
     alias(libs.plugins.room)
+    alias(libs.plugins.kotlin.serialization)
 }
 
 android {
@@ -31,6 +32,7 @@ dependencies {
     api(project(":core:application"))
 
     implementation(libs.androidx.room.runtime)
+    implementation(libs.kotlinx.serialization.json)
     ksp(libs.androidx.room.compiler)
 
     testImplementation(project(":core:testing"))
