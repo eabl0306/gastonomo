@@ -1,13 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?><!--
-   Sample backup rules file; uncomment and customize as necessary.
-   See https://developer.android.com/guide/topics/data/autobackup
-   for details.
-   Note: This file is ignored for devices older than API 31
-   See https://developer.android.com/about/versions/12/backup-restore
+    Reglas de copia para Android 11 y anteriores. Con android:allowBackup="false" no se llegan a
+    usar, y estan igualmente por si alguien vuelve a activar la copia sin leer el ADR 0018.
+
+    No se copia nada. Dos motivos:
+
+    1. La base de datos local es un reflejo de la cuenta, asi que restaurarla no aporta nada: al
+       entrar se vuelve a bajar. Lo unico que consigue copiarla es sacar el historico financiero
+       del telefono.
+    2. El refresh token esta cifrado con una clave del Keystore que nunca sale del dispositivo.
+       Restaurarlo en otro telefono deja un texto cifrado que ya no se puede descifrar.
 -->
 <full-backup-content>
-    <!--
-   <include domain="sharedpref" path="."/>
-   <exclude domain="sharedpref" path="device.xml"/>
--->
+    <exclude domain="root" path="." />
+    <exclude domain="database" path="." />
+    <exclude domain="sharedpref" path="." />
+    <exclude domain="file" path="." />
 </full-backup-content>

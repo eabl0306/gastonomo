@@ -6,19 +6,20 @@ import com.bahoque.gastonomo.core.application.port.SessionStore
 import com.bahoque.gastonomo.core.application.port.SystemClock
 import com.bahoque.gastonomo.core.application.state.UserPreferences
 import com.bahoque.gastonomo.data.auth.createAuthGateway
-import com.bahoque.gastonomo.data.cache.GatewayCaches
-import com.bahoque.gastonomo.data.cache.cachedAuthGateway
-import com.bahoque.gastonomo.data.cache.cachedCategoryGateway
-import com.bahoque.gastonomo.data.cache.cachedCurrencyGateway
-import com.bahoque.gastonomo.data.cache.cachedLoanGateway
-import com.bahoque.gastonomo.data.cache.cachedMovementGateway
-import com.bahoque.gastonomo.data.cache.cachedSettingsGateway
 import com.bahoque.gastonomo.data.catalog.createCategoryGateway
 import com.bahoque.gastonomo.data.catalog.createCurrencyGateway
 import com.bahoque.gastonomo.data.catalog.createSettingsGateway
+import com.bahoque.gastonomo.data.database.local.createLocalStore
 import com.bahoque.gastonomo.data.finance.createLoanGateway
 import com.bahoque.gastonomo.data.finance.createMovementGateway
 import com.bahoque.gastonomo.data.network.createApiClient
+import com.bahoque.gastonomo.data.offline.RefreshGate
+import com.bahoque.gastonomo.data.offline.offlineAuthGateway
+import com.bahoque.gastonomo.data.offline.offlineCategoryGateway
+import com.bahoque.gastonomo.data.offline.offlineCurrencyGateway
+import com.bahoque.gastonomo.data.offline.offlineLoanGateway
+import com.bahoque.gastonomo.data.offline.offlineMovementGateway
+import com.bahoque.gastonomo.data.offline.offlineSettingsGateway
 import com.bahoque.gastonomo.data.session.createBiometricLock
 import com.bahoque.gastonomo.data.session.createDeviceSettingsStore
 import com.bahoque.gastonomo.data.session.createLocalLock
@@ -65,24 +66,31 @@ class AppContainer(context: Context) {
 
     private val apiClient = createApiClient(devices.sessionStore)
 
-    /**
-     * La cache en memoria, compartida por los seis adaptadores porque la invalidacion cruza
-     * recursos: un movimiento nuevo cambia tambien el contador de uso de las categorias.
-     */
-    private val caches = GatewayCaches()
+    /** La base local, que es la unica fuente de verdad de lo que se pinta. */
+    private val store = createLocalStore(context)
 
     /**
-     * Cada adaptador de red va envuelto en su decorador de cache. Los casos de uso reciben el
-     * mismo puerto que antes, asi que ninguna feature se entera de que hay una cache: quitarla
-     * cuando exista la base de datos local es borrar estas seis llamadas.
+     * Quien decide cuando vale la pena volver a pedir algo a la red. No guarda datos: eso es cosa
+     * de [store]. Es uno solo para los seis adaptadores porque una escritura cruza recursos.
+     */
+    private val refresh = RefreshGate()
+
+    /**
+     * Cada adaptador de red va envuelto en el que lee de la base local. Los casos de uso reciben
+     * el mismo puerto que antes, asi que ninguna feature se entera de que hay una base de datos
+     * detras ni de que la red puede no estar.
      */
     private val gateways = Gateways(
-        auth = cachedAuthGateway(createAuthGateway(apiClient, devices.sessionStore), caches),
-        movements = cachedMovementGateway(createMovementGateway(apiClient), caches),
-        loans = cachedLoanGateway(createLoanGateway(apiClient), caches),
-        categories = cachedCategoryGateway(createCategoryGateway(apiClient), caches),
-        settings = cachedSettingsGateway(createSettingsGateway(apiClient), caches),
-        currencies = cachedCurrencyGateway(createCurrencyGateway(apiClient), caches),
+        auth = offlineAuthGateway(
+            createAuthGateway(apiClient, devices.sessionStore),
+            store,
+            refresh,
+        ),
+        movements = offlineMovementGateway(createMovementGateway(apiClient), store, refresh),
+        loans = offlineLoanGateway(createLoanGateway(apiClient), store, refresh),
+        categories = offlineCategoryGateway(createCategoryGateway(apiClient), store, refresh),
+        settings = offlineSettingsGateway(createSettingsGateway(apiClient), store, refresh),
+        currencies = offlineCurrencyGateway(createCurrencyGateway(apiClient), store, refresh),
     )
 
     private val useCases = UseCases(gateways, devices, sharedUserPreferences)

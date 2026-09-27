@@ -1,7 +1,12 @@
 # ADR 0016: Cache en memoria en el cliente Android, y por que es provisional
 
-- Estado: aceptado
+- Estado: **reemplazado** por el [ADR 0019](0019-leer-de-la-base-local.md) el 2026-09-27
 - Fecha: 2026-09-27
+
+> Este ADR se cumplio y se retiro el mismo dia. La cache en memoria era provisional a
+> proposito y el modulo `:data:cache` ya no existe: la base local de Room es ahora la unica
+> fuente de verdad. Se conserva porque explica por que se hizo, que decisiones se tomaron y
+> cuales de ellas sobrevivieron al cambio.
 
 ## Contexto
 

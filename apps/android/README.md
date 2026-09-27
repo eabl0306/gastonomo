@@ -19,7 +19,8 @@ completo: 14 pantallas, multimoneda y sesion con refresco de tokens.
 | `:data:auth`          | Android library     | `AuthGateway`                                                         |
 | `:data:finance`       | Android library     | `MovementGateway` y `LoanGateway`                                     |
 | `:data:catalog`       | Android library     | `CategoryGateway`, `SettingsGateway` y `CurrencyGateway`              |
-| `:data:cache`         | Kotlin JVM puro     | Cache en memoria que decora los seis gateways (provisional, ver ADR 0016) |
+| `:data:database`      | Android library     | Base de datos local con Room: el esquema, los DAO y el mapeo a dominio |
+| `:data:offline`       | Android library     | Los gateways que leen de la base local y dejan la red solo refrescando |
 | `:feature:*`          | Android library     | Una pantalla o un grupo de pantallas, con su grafo de navegacion      |
 | `:app`                | Android application | Raiz de composicion, `MainActivity` y el NavHost                      |
 
@@ -31,10 +32,10 @@ arquitectura con Konsist y la tarea `moduleGraphGuard`, que lee el grafo real de
 Ninguna `:feature:*` depende de `:data:*` ni de otra `:feature:*`. Las une `:app`, con un
 fichero de cableado por feature en `app/src/main/kotlin/com/bahoque/gastonomo/wiring/`.
 
-Los seis gateways van envueltos en un decorador de cache en memoria, y eso tambien se ve solo en
-`AppContainer`: los casos de uso reciben el mismo puerto de siempre. Los plazos, que invalida que
-y por que es provisional estan en el
-[ADR 0016](../../docs/adr/0016-cache-en-memoria-en-el-cliente.md).
+Los seis gateways van envueltos en el adaptador que lee de la base local, y eso tambien se ve
+solo en `AppContainer`: los casos de uso reciben el mismo puerto de siempre. Por que la base es la
+unica fuente de verdad, y que se degrada sin conexion, esta en el
+[ADR 0019](../../docs/adr/0019-leer-de-la-base-local.md).
 
 ## Las dos reglas del sistema de diseno
 
