@@ -107,6 +107,31 @@ impl Fixture {
         )
         .expect("a seeded category is valid")
     }
+
+    /// Crea una categoria del usuario, que es la unica que se puede archivar: el
+    /// `CHECK` de la tabla no deja archivar una predeterminada.
+    pub async fn custom_category(&self, name: &str) -> MovementCategory {
+        let id = Uuid::new_v4();
+        sqlx::query(
+            "INSERT INTO categories \
+             (id, user_id, name, kind, icon, color, is_default, created_at, updated_at) \
+             VALUES ($1, $2, $3, 'out', 'pets', '#2f7fb5', FALSE, now(), now())",
+        )
+        .bind(id)
+        .bind(self.user.as_uuid())
+        .bind(name)
+        .execute(&self.pool)
+        .await
+        .expect("should insert the category");
+        MovementCategory::new(
+            CategoryId::from_uuid(id),
+            name,
+            CategoryKind::Out,
+            "pets",
+            "#2f7fb5",
+        )
+        .expect("the fixture respects the design rules")
+    }
 }
 
 fn a_user() -> User {

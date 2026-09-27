@@ -62,6 +62,13 @@ pub trait MovementRepository: Send + Sync {
 pub trait MovementCategoryReader: Send + Sync {
     /// Busca una categoria de la cuenta dada.
     ///
+    /// **Encuentra tambien las archivadas, a proposito.** Archivada quiere decir
+    /// "no se ofrece", no "se rechaza lo que la mencione". Si esto filtrara, un
+    /// movimiento que el cliente dejo en la cola sin conexion y cuya categoria se
+    /// archivo despues nunca podria subirse, y no hay pantalla para arreglarlo: el
+    /// historico es de solo anadir. El movimiento lleva su categoria incrustada, asi
+    /// que se lee igual de bien.
+    ///
     /// # Errors
     ///
     /// Devuelve [`AppError::Dependency`] si falla la base de datos.

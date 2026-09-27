@@ -23,7 +23,7 @@ mod movement_fixture;
 
 use chrono::Utc;
 use gastonomo_application::port::movement::{
-    MovementCategoryReader as _, MovementFilter, MovementRepository as _,
+    MovementCategoryReader, MovementFilter, MovementRepository as _,
 };
 use gastonomo_domain::movement::{
     CategoryId, Movement, MovementCategory, MovementKind, MovementTitle, NewMovement,
@@ -108,6 +108,58 @@ async fn a_movement_round_trips_with_its_category_and_its_four_amounts() {
     assert_eq!(read.category().id(), category.id());
     assert_eq!(read.category().name(), "Alimentación");
     assert_eq!(read.category().icon(), "restaurant");
+}
+
+#[tokio::test]
+async fn a_movement_whose_category_got_archived_still_comes_back_complete() {
+    let Some(fixture) = Fixture::new().await else {
+        return;
+    };
+    let repository = PostgresMovementRepository::new(fixture.pool.clone());
+    let category = fixture.custom_category("Mascotas").await;
+    let stored = movement(
+        fixture.user,
+        category.clone(),
+        "2026-09-15",
+        MovementKind::Out,
+        "186400",
+    );
+    repository.insert(&stored).await.expect("should insert");
+
+    archive(&fixture, &category).await;
+
+    let listed = repository
+        .list(&filter(fixture.user))
+        .await
+        .expect("should list");
+
+    // El join no filtra por archivada a proposito: si lo hiciera, el movimiento
+    // desapareceria de la lista y el gasto se perderia de vista.
+    assert_eq!(listed.len(), 1);
+    assert_eq!(listed[0].category().name(), "Mascotas");
+    assert_eq!(listed[0].category().icon(), "pets");
+    assert_eq!(listed[0].category().id(), category.id());
+}
+
+#[tokio::test]
+async fn an_archived_category_can_still_receive_a_movement_that_was_waiting() {
+    let Some(fixture) = Fixture::new().await else {
+        return;
+    };
+    let repository = PostgresMovementRepository::new(fixture.pool.clone());
+    let category = fixture.custom_category("Gimnasio").await;
+    archive(&fixture, &category).await;
+
+    let resolved = MovementCategoryReader::find(&repository, fixture.user, category.id())
+        .await
+        .expect("should read the category");
+
+    // Se encuentra: si no, un movimiento encolado sin conexion antes de archivar no
+    // podria subirse nunca, y el historico no tiene como arreglarse a mano.
+    assert_eq!(
+        resolved.map(|found| found.name().to_owned()),
+        Some("Gimnasio".to_owned())
+    );
 }
 
 #[tokio::test]
@@ -287,4 +339,13 @@ async fn a_category_of_another_account_reads_as_missing() {
     assert_eq!(found.map(|category| category.id()), Some(mine.id()));
     assert!(foreign.is_none());
     assert!(unknown.is_none());
+}
+
+/// Archiva la categoria por debajo, como lo dejaria `DELETE /v1/categories/{id}`.
+async fn archive(fixture: &Fixture, category: &MovementCategory) {
+    sqlx::query("UPDATE categories SET archived_at = now() WHERE id = $1")
+        .bind(category.id().as_uuid())
+        .execute(&fixture.pool)
+        .await
+        .expect("should archive the category");
 }
