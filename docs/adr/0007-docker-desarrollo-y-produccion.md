@@ -34,6 +34,13 @@ Dos ficheros de compose en la raiz, con dos Dockerfile por app.
 
 `compose.prod.yaml` (produccion):
 
+> Actualizado por el [ADR 0015](0015-despliegue-en-instancia-compartida.md). Esta pila, con
+> su gateway de nginx y su puerto publicado, se llama ahora `infra/compose.smoke.yaml` y es
+> solo local: la prueban `just stack-smoke` y el job `stack` de la CI. El nombre
+> `compose.prod.yaml` paso a ser el fichero de despliegue de apps-01, que no construye nada,
+> no publica ningun puerto y entra por Caddy en vez de por un gateway propio. Lo de abajo
+> describe la pila local.
+
 - Imagenes de produccion, sin volumenes de codigo.
 - La base de datos no publica puertos al host: solo se llega por la red interna.
 - `restart: unless-stopped`, healthchecks y limites de CPU y memoria por servicio.

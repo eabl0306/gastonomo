@@ -9,7 +9,10 @@ set dotenv-load := true
 
 gradle := "bash tools/scripts/gradle.sh"
 compose := "docker compose"
-compose_prod := "docker compose -f compose.prod.yaml"
+# La pila local que imita produccion. compose.prod.yaml NO sirve para esto desde
+# que es el fichero de despliegue de apps-01: no construye, no publica puertos y
+# exige la red externa `edge`.
+compose_stack := "docker compose -f infra/compose.smoke.yaml"
 pg_user := env_var_or_default("POSTGRES_USER", "gastonomo")
 pg_db := env_var_or_default("POSTGRES_DB", "gastonomo")
 
@@ -73,12 +76,12 @@ cov: api-cov web-cov android-cov
 [group('monorepo')]
 e2e: web-e2e api-test-db
 
-# Levanta la pila de produccion, le pasa la prueba de humo y la tumba siempre.
+# Levanta la pila local que imita produccion, le pasa la prueba de humo y la tumba.
 stack-smoke:
     #!/usr/bin/env bash
     set -euo pipefail
-    trap '{{compose_prod}} down -v >/dev/null 2>&1 || true' EXIT
-    {{compose_prod}} up -d --build --wait
+    trap '{{compose_stack}} down -v >/dev/null 2>&1 || true' EXIT
+    {{compose_stack}} up -d --build --wait
     bash tools/scripts/smoke-stack.sh "http://127.0.0.1:${PUBLIC_PORT:-8080}"
 
 # E2E contra la pila entera: navegador, web, API y PostgreSQL, sin mockear nada.
@@ -317,20 +320,20 @@ ps:
 rebuild:
     {{compose}} build --no-cache
 
-# Levanta la pila de produccion.
+# Levanta la pila local que imita produccion (con gateway y puerto publicado).
 [group('docker')]
-prod-up:
-    {{compose_prod}} up -d --build
+stack-up:
+    {{compose_stack}} up -d --build
 
-# Para la pila de produccion.
+# Para la pila local que imita produccion.
 [group('docker')]
-prod-down:
-    {{compose_prod}} down
+stack-down:
+    {{compose_stack}} down
 
-# Logs de la pila de produccion.
+# Logs de la pila local que imita produccion.
 [group('docker')]
-prod-logs service="":
-    {{compose_prod}} logs -f --tail 100 {{service}}
+stack-logs service="":
+    {{compose_stack}} logs -f --tail 100 {{service}}
 
 # ---------------------------------------------------------------- database ---
 

@@ -84,6 +84,12 @@ if expect "POST /v1/auth/register" 201 json "${registro}"; then
   fi
 fi
 
+# El contrato tambien se sirve bajo el origen de la web, y es el tercer prefijo que
+# el gateway (y Caddy en produccion) tiene que mandar a la API. Si llega text/html,
+# falta su bloque y la peticion acabo en el nginx de la SPA.
+expect "GET /openapi.json" 200 json \
+  "$(request "${body}" GET /openapi.json)" || true
+
 expect "GET / (la web)" 200 text/html \
   "$(request "${body}" GET /)" || true
 

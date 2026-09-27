@@ -11,9 +11,14 @@ Thumbs.db
 *.swp
 
 # --- Secretos y entorno local ---
+# Las plantillas SI van en git; cualquier otro .env se queda en la maquina que lo
+# escribio. Cada plantilla nueva necesita su propia excepcion aqui, porque `.env.*`
+# las ignora todas: sin la linea de abajo, .env.production.example no se commitea y
+# los pasos de despliegue apuntan a un fichero que no existe en el repositorio.
 .env
 .env.*
 !.env.example
+!.env.production.example
 local.properties
 *.keystore
 *.jks

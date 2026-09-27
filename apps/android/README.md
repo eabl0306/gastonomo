@@ -78,7 +78,11 @@ condiciona al cliente:
 - **`POST /v1/auth/refresh` rota**: presentar un token ya rotado revoca la familia entera,
   asi que los refrescos van serializados en `TokenRefresher`.
 - `API_BASE_URL` sale de `BuildConfig` de `:data:network`: `http://10.0.2.2:8080` en debug
-  (el host de la maquina visto desde el emulador) y un placeholder en release.
+  (el host de la maquina visto desde el emulador) y `https://api.gastonomo.bahoque.com` en
+  release. Se define por buildType en `data/network/build.gradle.kts`, nunca con un `if` en
+  el codigo. El texto claro solo esta permitido en debug y solo para los hosts locales: cada
+  buildType tiene su `app/src/<tipo>/res/xml/network_security_config.xml`. El detalle del
+  despliegue esta en [docs/despliegue.md](../../docs/despliegue.md).
 
 ## Capturas sin emulador
 

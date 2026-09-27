@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Politica de red de release: nada de texto claro. La API vive en
+  https://api.gastonomo.bahoque.com y no hay ningun host local al que llamar.
+  El buildType debug sustituye este fichero por el suyo.
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="false" />
+</network-security-config>

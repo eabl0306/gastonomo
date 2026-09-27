@@ -29,10 +29,4 @@ internal object ProjectConfig {
 
     /** Cobertura minima del nucleo hexagonal (dominio y casos de uso). */
     const val CORE_LINE_COVERAGE = 80
-
-    /** URL base de la API para el emulador de Android. */
-    const val DEBUG_API_BASE_URL = "http://10.0.2.2:8080"
-
-    /** Placeholder de release: se sustituye por el host real cuando exista despliegue. */
-    const val RELEASE_API_BASE_URL = "https://api.gastonomo.invalid"
 }

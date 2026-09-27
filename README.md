@@ -145,12 +145,31 @@ no quieres sorpresas.
 Los hooks pueden saltarse con `LEFTHOOK=0 git commit ...` cuando de verdad hace falta.
 La CI no se puede saltar.
 
+## Donde vive
+
+La web esta en https://gastonomo.bahoque.com y la API en
+https://api.gastonomo.bahoque.com. Corren en `apps-01`, una instancia de Lightsail
+compartida con otra aplicacion, detras de un Caddy que reparte por dominio y se ocupa de
+los certificados.
+
+Un push verde a `main` construye las dos imagenes en GitHub Actions, las publica en GHCR
+etiquetadas con el SHA del commit y las despliega. Nada se construye en el servidor, y
+volver atras es un comando.
+
+La app de Android no se despliega: se compila. El build de release apunta a la API de
+produccion y el de debug al emulador.
+
+El detalle esta en [docs/despliegue.md](docs/despliegue.md). Lo que es del servidor, Caddy
+incluido, vive en su propio repositorio de infraestructura.
+
 ## Documentacion
 
 - [docs/architecture.md](docs/architecture.md): la arquitectura hexagonal y como se
   aplica en las tres apps.
 - [docs/api-surface.md](docs/api-surface.md): el contrato de la API, endpoint por
   endpoint, y por que cada cosa es como es.
+- [docs/despliegue.md](docs/despliegue.md): como se despliega, que hay en la
+  instancia y que hacer cuando falla.
 - [docs/adr/](docs/adr/): por que se decidio cada cosa.
 - [CLAUDE.md](CLAUDE.md): convenciones del repositorio, para humanos y para agentes.
 - Cada app tiene su propio README con el detalle: [apps/api](apps/api/README.md),

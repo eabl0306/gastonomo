@@ -279,3 +279,30 @@ Los hooks se saltan con `LEFTHOOK=0` y solo en emergencias.
 `dorny/paths-filter` y llama a `quality.yml`, `api.yml`, `web.yml` y `android.yml` como
 workflows reutilizables. El job `all-green` es el unico check que hay que marcar como
 required en la proteccion de rama.
+
+## Despliegue
+
+La web y la API viven en `apps-01`, una instancia de Lightsail compartida con Grimdex, en
+`https://gastonomo.bahoque.com` y `https://api.gastonomo.bahoque.com`. Delante hay un Caddy
+que es el unico contenedor que publica puertos. El detalle completo esta en
+[docs/despliegue.md](docs/despliegue.md) y el porque en el
+[ADR 0015](docs/adr/0015-despliegue-en-instancia-compartida.md).
+
+Lo minimo que hay que saber antes de tocar algo de esto:
+
+- Un push verde a `main` dispara `release.yml`, que publica las dos imagenes en GHCR, y
+  `deploy.yml`, que las pone en la maquina. No hay despliegue manual en el camino normal.
+- **Las imagenes se construyen en CI, nunca en el servidor.** La maquina no tiene toolchain.
+- **La etiqueta que se despliega es el SHA del commit, nunca `latest` ni `main`.** Con una
+  etiqueta movil no se puede decir que esta corriendo y el rollback deja de existir.
+- **Lo que es del servidor esta en otro repositorio**, `infra-apps-01`: Caddy y su tabla de
+  enrutado, la red `edge`, el aprovisionamiento y las copias de seguridad. Aqui se queda lo
+  de esta aplicacion: los dos Dockerfile, `compose.prod.yaml` y los tres workflows de
+  release, despliegue y healthcheck.
+- **Nada en `compose.prod.yaml` publica puertos** y la base de datos no entra en la red
+  `edge`. Se entra siempre por Caddy.
+- Volver atras es `./rollback.sh` en `/srv/apps/gastonomo`, y no toca la base de datos: las
+  migraciones son solo hacia delante.
+- Android apunta a `https://api.gastonomo.bahoque.com` en release y sigue en
+  `http://10.0.2.2:8080` en debug. Cada buildType tiene su `network_security_config.xml`, y
+  el texto claro solo esta permitido en debug y solo para los hosts locales.

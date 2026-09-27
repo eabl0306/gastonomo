@@ -1,0 +1,119 @@
+# Publica las dos imagenes de produccion en GHCR.
+#
+# Solo se llama desde ci.yml, en push a main y colgado de all-green, o sea
+# despues de que TODO lo demas este verde. Publicar una imagen que nadie ha
+# verificado es como una rama roja acaba en un servidor.
+#
+# Las dos imagenes se construyen SIEMPRE, incluso si el cambio solo toco una de
+# las dos. No es un descuido: el servidor fija una sola variable, GASTONOMO_TAG,
+# para la API y para la web, asi que las dos tienen que existir con la etiqueta
+# de este commit o el `docker compose pull` del despliegue falla buscando una
+# imagen que nunca se publico. Por eso este workflow no mira los filtros de
+# rutas de ci.yml.
+#
+# Son dos jobs y no una matriz a proposito: los contextos de build son distintos
+# (la web se construye desde la raiz y la API desde apps/api) y solo la web lleva
+# un build-arg. Si cambias las etiquetas o la cache en uno, cambialo en el otro.
+name: release
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  api-image:
+    name: imagen de la api
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: docker/setup-buildx-action@v4
+
+      - name: Entrar en GHCR
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Construir y publicar
+        uses: docker/build-push-action@v7
+        with:
+          # El contexto es apps/api: lo dice la cabecera de su Dockerfile, que
+          # copia el workspace de cargo entero desde la raiz del contexto.
+          context: apps/api
+          file: apps/api/Dockerfile
+          push: true
+          # El SHA es la etiqueta de verdad y la unica que se despliega. "main"
+          # es solo un puntero de conveniencia para saber que fue lo ultimo que
+          # paso la CI: una etiqueta movil hace imposible decir que esta
+          # corriendo en el servidor.
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/gastonomo-api:${{ github.sha }}
+            ghcr.io/${{ github.repository_owner }}/gastonomo-api:main
+          # Solo amd64: el destino es Lightsail, que no vende bundles ARM.
+          # Anadir arm64 duplicaria cada build para una plataforma que no se
+          # puede comprar, y la de la API tarda de verdad.
+          platforms: linux/amd64
+          # Con scope por app: sin el, las dos comparten la cache por defecto de
+          # buildkit y se la sobreescriben la una a la otra.
+          cache-from: type=gha,scope=release-api
+          cache-to: type=gha,scope=release-api,mode=max
+          # Sin attestations de provenance: con una sola plataforma dejan la
+          # imagen publicada como un indice en vez de un manifest plano, y eso
+          # complica leer en el servidor que hay publicado sin ganar nada.
+          provenance: false
+
+  web-image:
+    name: imagen de la web
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: docker/setup-buildx-action@v4
+
+      - name: Entrar en GHCR
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Construir y publicar
+        uses: docker/build-push-action@v7
+        with:
+          # El contexto es la RAIZ del repo, no apps/web: el lockfile de pnpm y
+          # los packages/* compartidos viven alli. Lo dice la cabecera de
+          # apps/web/Dockerfile.
+          context: .
+          file: apps/web/Dockerfile
+          push: true
+          # VITE_API_URL se compila DENTRO del bundle, asi que la imagen no es
+          # neutra: lleva grabado a que dominio llama la SPA. De ahi que se fije
+          # aqui y no en el .env del servidor, donde ya seria tarde. Cambiar de
+          # dominio significa volver a construir la imagen.
+          #
+          # Es el dominio de la WEB, no el de la API, y no es un descuido: en
+          # apps-01 es Caddy quien manda /v1/, /health/ y /openapi.json de
+          # gastonomo.bahoque.com al contenedor de la API, asi que la SPA llama a
+          # su propio origen. La API no envia cabeceras CORS: si el bundle
+          # apuntase a api.gastonomo.bahoque.com el navegador bloquearia todas
+          # las llamadas. Ese dominio existe para la app de Android, que necesita
+          # una URL absoluta.
+          #
+          # Si el enrutado del servidor cambia, no hay que tocar este fichero:
+          # se define la variable de repositorio WEB_API_URL y gana esa.
+          build-args: |
+            VITE_API_URL=${{ vars.WEB_API_URL || 'https://gastonomo.bahoque.com' }}
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/gastonomo-web:${{ github.sha }}
+            ghcr.io/${{ github.repository_owner }}/gastonomo-web:main
+          platforms: linux/amd64
+          cache-from: type=gha,scope=release-web
+          cache-to: type=gha,scope=release-web,mode=max
+          provenance: false

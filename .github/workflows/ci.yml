@@ -12,8 +12,14 @@ permissions:
   contents: read
 
 concurrency:
+  # En un pull request, un empujon nuevo deja la ejecucion anterior sin sentido y
+  # se cancela. En main NO se cancela, y no es por gusto: desde que el despliegue
+  # cuelga de esta misma ejecucion, cancelarla a mitad cortaria un `docker compose
+  # up` por la mitad y dejaria la maquina entre dos etiquetas. El grupo de
+  # concurrencia de deploy.yml no protege de eso, porque quien cancela es el
+  # workflow de arriba, no otro despliegue.
   group: ci-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 jobs:
   changes:
@@ -48,7 +54,7 @@ jobs:
               - '.github/workflows/ci.yml'
             stack:
               - 'compose.yaml'
-              - 'compose.prod.yaml'
+              - 'infra/compose.smoke.yaml'
               - 'docker/**'
               - 'tools/scripts/smoke-stack.sh'
               - '.github/workflows/stack.yml'
@@ -124,3 +130,39 @@ jobs:
             fi
           done
           echo "todo en verde"
+
+  # ---------------------------------------------------------------------------
+  # Despliegue. Va aqui dentro, y no en un workflow aparte con un trigger de
+  # workflow_run, por una razon concreta: all-green ya es "todo lo anterior esta
+  # verde", asi que colgarse de el es la forma mas corta y mas legible de decir
+  # "solo si la CI paso". Un workflow_run tendria que reconstruir ese juicio y
+  # ademas corre con el fichero de la rama por defecto y con un github.sha que no
+  # es el del commit que lo disparo, que es una trampa clasica.
+  #
+  # Esto NO cambia lo que significa all-green ni bloquea ningun merge: all-green
+  # no depende de estos dos jobs (no estan en su `needs`), y los dos solo corren
+  # en push a main, o sea cuando el PR ya se ha fundido. En un pull request se
+  # saltan sin aparecer como check.
+  #
+  # Los filtros de rutas tampoco les afectan: release.yml construye las dos
+  # imagenes siempre, porque el servidor fija una sola etiqueta para las dos.
+  release:
+    name: publicar imagenes
+    needs: [all-green]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    uses: ./.github/workflows/release.yml
+    permissions:
+      contents: read
+      packages: write
+
+  deploy:
+    name: desplegar
+    needs: [release]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    uses: ./.github/workflows/deploy.yml
+    permissions:
+      contents: read
+      packages: read
+    # Un workflow reutilizable no ve los secretos del que lo llama si no se le
+    # pasan: la misma trampa que con GITLEAKS_LICENSE en quality.yml.
+    secrets: inherit

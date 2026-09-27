@@ -1,0 +1,153 @@
+# Pone en la instancia apps-01 las imagenes que acaba de publicar release.yml.
+#
+# Nada duradero llega al servidor desde aqui: la entrada a GHCR se hace con el
+# token efimero de este propio job y en un DOCKER_CONFIG de usar y tirar, asi
+# que las credenciales que la maquina tenga guardadas para uso manual no se
+# tocan. El acceso es por SSH como el usuario "deploy", que no tiene sudo.
+#
+# El servidor es compartido: en la misma instancia vive Grimdex. Todo lo que se
+# toca aqui esta dentro de /srv/apps/gastonomo.
+name: deploy
+
+on:
+  workflow_call:
+    secrets:
+      DEPLOY_SSH_KEY:
+        description: clave privada ed25519 del usuario deploy
+        required: true
+      DEPLOY_HOST:
+        description: IP o nombre de la instancia apps-01
+        required: true
+      DEPLOY_USER:
+        description: usuario de despliegue, sin sudo y en el grupo docker
+        required: true
+
+permissions:
+  contents: read
+  packages: read
+
+jobs:
+  deploy:
+    name: desplegar en apps-01
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    # De uno en uno y sin cancelar a medias: un despliegue interrumpido deja la
+    # maquina entre dos etiquetas. El grupo lleva el nombre de la app porque
+    # Grimdex despliega en la misma instancia con su propio grupo.
+    concurrency:
+      group: deploy-production-gastonomo
+      cancel-in-progress: false
+    steps:
+      - name: Preparar la sesion SSH
+        env:
+          KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          HOST: ${{ secrets.DEPLOY_HOST }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$KEY" > ~/.ssh/deploy
+          chmod 600 ~/.ssh/deploy
+          # Se fija la clave del host en vez de aceptar lo que contesta. Este
+          # runner nunca ha visto la maquina, y StrictHostKeyChecking=no
+          # aceptaria sin decir nada a cualquiera que responda por esa IP.
+          ssh-keyscan -t ed25519 "$HOST" >> ~/.ssh/known_hosts 2>/dev/null
+
+      - name: Bajar la etiqueta nueva y reiniciar
+        env:
+          HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_AS: ${{ secrets.DEPLOY_USER }}
+          SHA: ${{ github.sha }}
+          GHCR_USER: ${{ github.actor }}
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ssh -i ~/.ssh/deploy "$DEPLOY_AS@$HOST" \
+            "SHA='$SHA' GHCR_USER='$GHCR_USER' GHCR_TOKEN='$GHCR_TOKEN' bash -euo pipefail" <<'REMOTE'
+          cd /srv/apps/gastonomo
+
+          # Un docker config de usar y tirar: esta credencial muere con el job.
+          DOCKER_CONFIG="$(mktemp -d)"
+          export DOCKER_CONFIG
+          trap 'rm -rf "$DOCKER_CONFIG"' EXIT
+          printf '%s' "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin >/dev/null
+
+          # Si la linea no existe, el sed de abajo no cambiaria nada y el
+          # despliegue se daria por hecho habiendo dejado la etiqueta vieja.
+          grep -q '^GASTONOMO_TAG=' .env \
+            || { echo "el .env de /srv/apps/gastonomo no tiene GASTONOMO_TAG"; exit 1; }
+
+          # Donde estabamos, para que una vuelta atras sea un comando y no una
+          # excavacion arqueologica a las tres de la manana.
+          PREVIOUS="$(grep '^GASTONOMO_TAG=' .env | cut -d= -f2)"
+          printf '%s' "$PREVIOUS" > .previous-tag
+          echo "desplegando ${SHA:0:7}, anterior ${PREVIOUS:0:7}"
+
+          sed -i "s|^GASTONOMO_TAG=.*|GASTONOMO_TAG=${SHA}|" .env
+          docker compose pull --quiet
+          # --wait espera a los healthchecks, asi que un contenedor que arranca
+          # roto rompe este paso en vez de darse por desplegado.
+          docker compose up -d --wait --wait-timeout 180
+          REMOTE
+
+      - name: Comprobar que sirve la version nueva
+        env:
+          HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_AS: ${{ secrets.DEPLOY_USER }}
+          SHA: ${{ github.sha }}
+        run: |
+          # Desde internet y no desde dentro de la maquina: es la unica
+          # comprobacion que cubre DNS, Caddy, TLS y la app a la vez.
+          #
+          # /health/ready ademas de /health/live: live solo dice que el proceso
+          # esta en pie, y ready da 503 si la API no llega a PostgreSQL. Un
+          # despliegue que arranca sin base de datos no esta desplegado.
+          # El reintento se escribe a mano y no con --retry de curl: --retry no
+          # reintenta un 503, que es justo el codigo que da ready mientras la
+          # conexion a PostgreSQL se asienta. Haria falta -f --retry-all-errors,
+          # y entonces se pierde el codigo que se quiere ver en el log.
+          esperar_200() {
+            for _ in $(seq 1 20); do
+              # curl ya escribe 000 cuando no llega a conectar, asi que el
+              # fallback solo tiene que evitar que el `bash -e` mate la funcion.
+              code="$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 "$1" || true)"
+              # Un if y no `[ ... ] && ...`: el paso corre con `bash -e`, donde una
+              # lista AND que falla mataria la funcion en el primer intento.
+              if [ "$code" = "200" ]; then
+                echo "$code  $1"
+                return 0
+              fi
+              sleep 3
+            done
+            echo "$code  $1"
+            return 1
+          }
+          #
+          # /health/live bajo el dominio de la WEB tambien, y ese es el que mas
+          # veces se va a romper: es Caddy quien manda los prefijos de la API al
+          # contenedor de la API bajo el origen de la web, y de ahi salen todas
+          # las llamadas de la SPA. Si ese reparto falta, la web se ve perfecta y
+          # no funciona nada dentro. Es el mismo fallo que ya se colo una vez en
+          # el gateway de nginx, y por el que existe la prueba de humo de la pila.
+          for url in https://api.gastonomo.bahoque.com/health/live \
+                     https://api.gastonomo.bahoque.com/health/ready \
+                     https://gastonomo.bahoque.com/ \
+                     https://gastonomo.bahoque.com/health/live ; do
+            esperar_200 "$url" || exit 1
+          done
+          corriendo="$(ssh -i ~/.ssh/deploy "$DEPLOY_AS@$HOST" \
+            "grep '^GASTONOMO_TAG=' /srv/apps/gastonomo/.env | cut -d= -f2")"
+          echo "corriendo ${corriendo:0:7}, esperado ${SHA:0:7}"
+          [ "$corriendo" = "$SHA" ]
+
+      - name: Volver atras si no levanto
+        if: failure()
+        env:
+          HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_AS: ${{ secrets.DEPLOY_USER }}
+        run: |
+          ssh -i ~/.ssh/deploy "$DEPLOY_AS@$HOST" 'bash -euo pipefail' <<'REMOTE'
+          cd /srv/apps/gastonomo
+          [ -s .previous-tag ] || { echo "no hay etiqueta anterior apuntada, se deja como esta"; exit 0; }
+          PREVIOUS="$(cat .previous-tag)"
+          echo "volviendo a ${PREVIOUS:0:7}"
+          sed -i "s|^GASTONOMO_TAG=.*|GASTONOMO_TAG=${PREVIOUS}|" .env
+          docker compose up -d --wait --wait-timeout 180
+          REMOTE

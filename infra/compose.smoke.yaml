@@ -1,0 +1,139 @@
+# Pila LOCAL completa: construye las tres imagenes y las pone detras del gateway
+# de nginx, con un puerto publicado en el host. Es la que prueba `just
+# stack-smoke` y el job `stack` de la CI.
+#
+#   docker compose -f infra/compose.smoke.yaml up -d --build --wait
+#   bash tools/scripts/smoke-stack.sh "http://127.0.0.1:8080"
+#   docker compose -f infra/compose.smoke.yaml down -v
+#
+# Es lo que antes era compose.prod.yaml. Se separo cuando compose.prod.yaml paso
+# a ser el fichero de despliegue de apps-01, donde no hay gateway (lo sustituye
+# Caddy) y donde nadie publica puertos. Los dos ficheros tienen que seguir
+# probando lo mismo: que la web y la API se alcanzan bajo un MISMO origen y que
+# /v1 llega a la API y no al nginx de la SPA. Aqui el reparto por prefijo lo hace
+# docker/gateway.prod.conf; alli, el Caddyfile del repositorio de infraestructura.
+#
+# Las rutas son relativas a este fichero, que vive en infra/.
+
+name: gastonomo-smoke
+
+services:
+  db:
+    image: postgres:18-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-gastonomo}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-gastonomo}
+      POSTGRES_DB: ${POSTGRES_DB:-gastonomo}
+    # Sin puertos publicados: solo se llega desde la red interna de compose.
+    expose:
+      - '5432'
+    volumes:
+      # postgres:18 guarda los datos en un subdirectorio por version mayor: el
+      # volumen va en /var/lib/postgresql, no en /var/lib/postgresql/data.
+      - postgres-data:/var/lib/postgresql
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-gastonomo} -d ${POSTGRES_DB:-gastonomo}']
+      interval: 10s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+
+  api:
+    build:
+      context: ../apps/api
+      dockerfile: Dockerfile
+    image: gastonomo-api:${IMAGE_TAG:-local}
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      GASTONOMO__SERVER__HOST: 0.0.0.0
+      GASTONOMO__SERVER__PORT: '8080'
+      GASTONOMO__DATABASE__URL: postgres://${POSTGRES_USER:-gastonomo}:${POSTGRES_PASSWORD:-gastonomo}@db:5432/${POSTGRES_DB:-gastonomo}
+      GASTONOMO__TELEMETRY__LOG_LEVEL: ${GASTONOMO__TELEMETRY__LOG_LEVEL:-info}
+      GASTONOMO__AUTH__ACCESS_TOKEN_SECRET: ${GASTONOMO__AUTH__ACCESS_TOKEN_SECRET:-development-only-secret-change-me}
+      # Apagada a proposito: sin esto el arranque sale a api.frankfurter.dev en
+      # cada ejecucion de la prueba de humo.
+      GASTONOMO__EXCHANGE_RATES__ENABLED: ${GASTONOMO__EXCHANGE_RATES__ENABLED:-false}
+    expose:
+      - '8080'
+    # El Dockerfile ya trae HEALTHCHECK contra /health/live; aqui solo se ajustan
+    # los tiempos al arranque real.
+    healthcheck:
+      test: ['CMD-SHELL', 'curl --fail --silent http://127.0.0.1:8080/health/live || exit 1']
+      interval: 15s
+      timeout: 3s
+      retries: 5
+      start_period: 20s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 512M
+
+  web:
+    build:
+      # Contexto en la raiz del repositorio: el lockfile de pnpm vive alli.
+      context: ..
+      dockerfile: apps/web/Dockerfile
+      args:
+        # Se compila DENTRO del bundle: hay que fijarla en tiempo de build. Aqui
+        # es el origen del gateway, que es lo que hace que la web y la API
+        # compartan origen. En produccion es el dominio publico de la web.
+        VITE_API_URL: ${WEB_API_URL:-http://localhost:${PUBLIC_PORT:-8080}}
+    image: gastonomo-web:${IMAGE_TAG:-local}
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+    expose:
+      - '8080'
+    healthcheck:
+      test: ['CMD-SHELL', 'wget --quiet --tries=1 --spider http://127.0.0.1:8080/healthz || exit 1']
+      interval: 15s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 256M
+
+  # Unico punto de entrada. La web y la API viven detras, en la red interna.
+  # En apps-01 este papel lo hace Caddy, que es el unico contenedor de la maquina
+  # que publica puertos.
+  gateway:
+    image: nginx:alpine
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+      web:
+        condition: service_healthy
+    ports:
+      - '${PUBLIC_PORT:-8080}:8080'
+    volumes:
+      - ../docker/gateway.prod.conf:/etc/nginx/conf.d/default.conf:ro
+    healthcheck:
+      test:
+        ['CMD-SHELL', 'wget --quiet --tries=1 --spider http://127.0.0.1:8080/health/live || exit 1']
+      interval: 15s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 128M
+
+volumes:
+  postgres-data:

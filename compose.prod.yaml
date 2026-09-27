@@ -1,31 +1,62 @@
-# Pila de PRODUCCION. Imagenes compiladas, sin codigo montado y sin exponer la
-# base de datos al host.
+# Pila de PRODUCCION para apps-01, la instancia de Lightsail compartida.
 #
-#   just prod-up     (docker compose -f compose.prod.yaml up -d --build)
-#   just prod-down
+# Este fichero es autocontenido y es lo UNICO que hace falta en el servidor: sin
+# codigo, sin lockfile y sin clonar el repositorio. Se copia junto a un .env
+# como /srv/apps/gastonomo/compose.yaml y:
 #
-# En un despliegue real la contrasena de Postgres viene del gestor de secretos,
-# no de .env. Aqui hay valor por defecto solo para poder probar la pila en local.
+#   docker compose pull
+#   docker compose up -d --wait
+#
+# Las imagenes las publica la CI y van fijadas por SHA de commit. GASTONOMO_TAG
+# no tiene valor por defecto a proposito: desplegar lo que apunte `latest` es
+# como se acaba sin poder decir que esta corriendo, y el rollback deja de existir.
+#
+# AQUI NADIE PUBLICA PUERTOS. El unico contenedor de la maquina que los publica
+# es Caddy, que termina TLS y reparte por nombre de contenedor sobre la red
+# externa `edge`:
+#
+#   gastonomo.bahoque.com      -> gastonomo-web:8080  (la SPA)
+#                              -> gastonomo-api:8080  en /v1/, /health/ y
+#                                 /openapi.json, que son las rutas de la API
+#   api.gastonomo.bahoque.com  -> gastonomo-api:8080  (la app Android necesita
+#                                 una URL absoluta)
+#
+# Ese reparto por prefijo en Caddy es lo que sustituye al gateway de nginx que
+# tenia la pila local, y es lo que mantiene a la web y a la API en el MISMO
+# origen. Importa: la API no manda cabeceras CORS, asi que si la SPA llamase a
+# api.gastonomo.bahoque.com el navegador bloquearia todas las llamadas. Con el
+# reparto por prefijo el bundle apunta a su propio origen y no hay CORS que
+# configurar. La lista de prefijos es la misma que enruta docker/gateway.prod.conf
+# en la pila local, y las dos tienen que decir lo mismo: si se anade un prefijo a
+# la API hay que anadirlo tambien en caddy/conf/apps/gastonomo.caddy del
+# repositorio de infraestructura, o caera al nginx de la SPA, que contesta el
+# index.html con 200 a un GET y 405 a un POST. /swagger-ui no esta en ninguna de
+# las dos: solo se sirve en api.gastonomo.bahoque.com.
+#
+# La pila local completa, con build y gateway, vive en infra/compose.smoke.yaml.
 
-name: gastonomo-prod
+name: gastonomo
 
 services:
   db:
     image: postgres:18-alpine
+    container_name: gastonomo-db
     restart: unless-stopped
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-gastonomo}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-gastonomo}
-      POSTGRES_DB: ${POSTGRES_DB:-gastonomo}
-    # Sin puertos publicados: solo se llega desde la red interna de compose.
-    expose:
-      - '5432'
+      # Obligatorias, al contrario que en desarrollo: el par por defecto del
+      # repositorio lo conoce cualquiera y no puede ser el de una maquina publica.
+      POSTGRES_USER: ${POSTGRES_USER:?ponlo en .env}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?ponlo en .env, y que sea aleatorio}
+      POSTGRES_DB: ${POSTGRES_DB:?ponlo en .env}
+    # Sin puertos y solo en la red privada de este compose: la base de datos no
+    # entra en `edge`, asi que ningun otro inquilino de la maquina la alcanza.
     volumes:
       # postgres:18 guarda los datos en un subdirectorio por version mayor: el
-      # volumen va en /var/lib/postgresql, no en /var/lib/postgresql/data.
+      # volumen va en /var/lib/postgresql, NO en /var/lib/postgresql/data. Con
+      # la ruta antigua el contenedor no arranca.
       - postgres-data:/var/lib/postgresql
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-gastonomo} -d ${POSTGRES_DB:-gastonomo}']
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}']
       interval: 10s
       timeout: 3s
       retries: 10
@@ -33,14 +64,21 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '1.0'
+          # La maquina tiene 4 GB y ya hay otro inquilino. Con limite, un pico
+          # de esta base de datos no se lleva por delante a Caddy ni a Grimdex.
           memory: 512M
+    logging:
+      # El disco es de 80 GB y json-file sin limite se lo come. El servidor ya
+      # lo tiene puesto en daemon.json; aqui se repite para que el fichero no
+      # dependa de como este configurada la maquina.
+      driver: json-file
+      options:
+        max-size: '10m'
+        max-file: '3'
 
   api:
-    build:
-      context: ./apps/api
-      dockerfile: Dockerfile
-    image: gastonomo-api:${IMAGE_TAG:-local}
+    image: ghcr.io/eabl0306/gastonomo-api:${GASTONOMO_TAG:?ponlo al SHA del commit que se despliega}
+    container_name: gastonomo-api
     restart: unless-stopped
     depends_on:
       db:
@@ -48,41 +86,81 @@ services:
     environment:
       GASTONOMO__SERVER__HOST: 0.0.0.0
       GASTONOMO__SERVER__PORT: '8080'
-      GASTONOMO__DATABASE__URL: postgres://${POSTGRES_USER:-gastonomo}:${POSTGRES_PASSWORD:-gastonomo}@db:5432/${POSTGRES_DB:-gastonomo}
+      GASTONOMO__DATABASE__URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      GASTONOMO__DATABASE__MAX_CONNECTIONS: ${GASTONOMO__DATABASE__MAX_CONNECTIONS:-10}
+      GASTONOMO__DATABASE__ACQUIRE_TIMEOUT_MS: ${GASTONOMO__DATABASE__ACQUIRE_TIMEOUT_MS:-3000}
       GASTONOMO__TELEMETRY__LOG_LEVEL: ${GASTONOMO__TELEMETRY__LOG_LEVEL:-info}
-    expose:
-      - '8080'
-    # El Dockerfile ya trae HEALTHCHECK contra /health/live; aqui solo se ajustan
-    # los tiempos al arranque real de produccion.
+
+      # Firma los access token. Sin valor por defecto: el del repositorio es
+      # publico y con el cualquiera se firma un token de cualquier cuenta.
+      #   openssl rand -hex 32
+      GASTONOMO__AUTH__ACCESS_TOKEN_SECRET: ${GASTONOMO__AUTH__ACCESS_TOKEN_SECRET:?generalo con openssl rand -hex 32}
+      GASTONOMO__AUTH__ACCESS_TOKEN_MINUTES: ${GASTONOMO__AUTH__ACCESS_TOKEN_MINUTES:-15}
+      GASTONOMO__AUTH__REFRESH_TOKEN_DAYS: ${GASTONOMO__AUTH__REFRESH_TOKEN_DAYS:-30}
+      # El enlace que viaja en el correo de recuperacion. Se compone del origen
+      # publico para que el `{token}` que la API exige no se pueda olvidar.
+      GASTONOMO__AUTH__RESET_LINK_TEMPLATE: ${PUBLIC_WEB_ORIGIN:?e.g. https://gastonomo.bahoque.com}/reset-password?token={token}
+      # Ventana en memoria del proceso, por IP. Detras de Caddy la IP sale de la
+      # ULTIMA entrada de X-Forwarded-For, que es la que anade el proxy; Caddy la
+      # anade por defecto en reverse_proxy. Si algun dia la API se expusiera sin
+      # proxy delante, el borde tendria que sobreescribir esa cabecera.
+      GASTONOMO__AUTH__RATE_LIMIT_MAX_REQUESTS: ${GASTONOMO__AUTH__RATE_LIMIT_MAX_REQUESTS:-10}
+      GASTONOMO__AUTH__RATE_LIMIT_WINDOW_SECONDS: ${GASTONOMO__AUTH__RATE_LIMIT_WINDOW_SECONDS:-60}
+
+      # Correo saliente. En produccion driver=smtp: con `log` el correo de
+      # recuperacion se queda en el log del contenedor y nadie recupera nada.
+      # El transporte solo sabe hacer STARTTLS o texto en claro, asi que el
+      # puerto es el 587 y STARTTLS va en true. El 465 (TLS implicito) NO vale.
+      GASTONOMO__MAIL__DRIVER: ${GASTONOMO__MAIL__DRIVER:-smtp}
+      GASTONOMO__MAIL__HOST: ${GASTONOMO__MAIL__HOST:?e.g. smtp.resend.com}
+      GASTONOMO__MAIL__PORT: ${GASTONOMO__MAIL__PORT:-587}
+      GASTONOMO__MAIL__USERNAME: ${GASTONOMO__MAIL__USERNAME:?el usuario SMTP del proveedor}
+      GASTONOMO__MAIL__PASSWORD: ${GASTONOMO__MAIL__PASSWORD:?la clave API del proveedor}
+      GASTONOMO__MAIL__FROM: ${GASTONOMO__MAIL__FROM:?e.g. Gastonomo <no-reply@bahoque.com>}
+      GASTONOMO__MAIL__STARTTLS: ${GASTONOMO__MAIL__STARTTLS:-true}
+
+      # Aqui SI sale a Frankfurter: es el unico sitio donde se quiere. La tarea
+      # refresca a las 06:00 y 18:00 UTC y al arrancar si hace falta. Apagada,
+      # /v1/exchange-rates responde 503 y el catalogo de monedas sale vacio.
+      GASTONOMO__EXCHANGE_RATES__ENABLED: ${GASTONOMO__EXCHANGE_RATES__ENABLED:-true}
+      GASTONOMO__EXCHANGE_RATES__BASE_URL: ${GASTONOMO__EXCHANGE_RATES__BASE_URL:-https://api.frankfurter.dev/v2}
+      GASTONOMO__EXCHANGE_RATES__REFRESH_HOURS_UTC: ${GASTONOMO__EXCHANGE_RATES__REFRESH_HOURS_UTC:-6,18}
+      GASTONOMO__EXCHANGE_RATES__REQUEST_TIMEOUT_MS: ${GASTONOMO__EXCHANGE_RATES__REQUEST_TIMEOUT_MS:-10000}
+      GASTONOMO__EXCHANGE_RATES__RETRY_ATTEMPTS: ${GASTONOMO__EXCHANGE_RATES__RETRY_ATTEMPTS:-3}
+      GASTONOMO__EXCHANGE_RATES__RETRY_BACKOFF_MS: ${GASTONOMO__EXCHANGE_RATES__RETRY_BACKOFF_MS:-2000}
+    # `default` es la red privada de este compose, por donde habla con db.
+    # `edge` es la compartida, por donde la alcanza Caddy. Nada mas.
+    networks: [default, edge]
     healthcheck:
+      # /health/live no toca la base de datos: responde 200 mientras el proceso
+      # este vivo. La imagen trae curl.
       test: ['CMD-SHELL', 'curl --fail --silent http://127.0.0.1:8080/health/live || exit 1']
       interval: 15s
       timeout: 3s
       retries: 5
-      start_period: 20s
+      start_period: 30s
     deploy:
       resources:
         limits:
-          cpus: '2.0'
           memory: 512M
+    logging:
+      driver: json-file
+      options:
+        max-size: '10m'
+        max-file: '3'
 
   web:
-    build:
-      # Contexto en la raiz: el lockfile de pnpm vive aqui.
-      context: .
-      dockerfile: apps/web/Dockerfile
-      args:
-        # Se compila DENTRO del bundle: hay que fijarla en tiempo de build.
-        # Por defecto, el origen publico del gateway. En un despliegue real se
-        # pasa el dominio: WEB_API_URL=https://gastonomo.example
-        VITE_API_URL: ${WEB_API_URL:-http://localhost:${PUBLIC_PORT:-8080}}
-    image: gastonomo-web:${IMAGE_TAG:-local}
+    image: ghcr.io/eabl0306/gastonomo-web:${GASTONOMO_TAG:?ponlo al SHA del commit que se despliega}
+    container_name: gastonomo-web
     restart: unless-stopped
     depends_on:
       api:
         condition: service_healthy
-    expose:
-      - '8080'
+    # VITE_API_URL se compila DENTRO del bundle, en la CI, y aqui no se puede
+    # cambiar: la imagen tiene que estar construida con el origen publico de la
+    # web (https://gastonomo.bahoque.com), porque es Caddy quien manda /v1/ a la
+    # API bajo ese mismo origen. Cambiarlo significa reconstruir la imagen.
+    networks: [default, edge]
     healthcheck:
       test: ['CMD-SHELL', 'wget --quiet --tries=1 --spider http://127.0.0.1:8080/healthz || exit 1']
       interval: 15s
@@ -92,34 +170,20 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '1.0'
-          memory: 256M
-
-  # Unico punto de entrada. La web y la API viven detras, en la red interna.
-  gateway:
-    image: nginx:alpine
-    restart: unless-stopped
-    depends_on:
-      api:
-        condition: service_healthy
-      web:
-        condition: service_healthy
-    ports:
-      - '${PUBLIC_PORT:-8080}:8080'
-    volumes:
-      - ./docker/gateway.prod.conf:/etc/nginx/conf.d/default.conf:ro
-    healthcheck:
-      test:
-        ['CMD-SHELL', 'wget --quiet --tries=1 --spider http://127.0.0.1:8080/health/live || exit 1']
-      interval: 15s
-      timeout: 3s
-      retries: 5
-      start_period: 10s
-    deploy:
-      resources:
-        limits:
-          cpus: '1.0'
           memory: 128M
+    logging:
+      driver: json-file
+      options:
+        max-size: '10m'
+        max-file: '3'
+
+networks:
+  # Creada a mano una vez en la maquina y compartida por todas las apps:
+  #   docker network create edge
+  # External a proposito: un `docker compose down` aqui no puede borrar la red a
+  # la que siguen enganchados Caddy y Grimdex.
+  edge:
+    external: true
 
 volumes:
   postgres-data:
