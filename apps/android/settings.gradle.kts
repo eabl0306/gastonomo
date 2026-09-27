@@ -45,9 +45,9 @@ include(":core:screenshot")
 // Adaptadores driven: hablan con la API y con el almacenamiento del dispositivo.
 include(":data:network")
 include(":data:session")
-// Cache en memoria: decora los puertos, no conoce ni Ktor ni el SDK de Android.
-include(":data:cache")
+// La base local y la politica de leer de ella con la red solo refrescando.
 include(":data:database")
+include(":data:offline")
 include(":data:auth")
 include(":data:finance")
 include(":data:catalog")

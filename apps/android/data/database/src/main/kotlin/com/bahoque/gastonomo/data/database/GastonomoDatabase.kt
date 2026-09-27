@@ -68,5 +68,9 @@ internal abstract class GastonomoDatabase : RoomDatabase() {
 
         fun open(context: Context): GastonomoDatabase =
             Room.databaseBuilder(context, GastonomoDatabase::class.java, FILE_NAME).build()
+
+        /** Sin fichero: lo que se guarda se va con el proceso. Para tests. */
+        fun inMemory(context: Context): GastonomoDatabase =
+            Room.inMemoryDatabaseBuilder(context, GastonomoDatabase::class.java).build()
     }
 }

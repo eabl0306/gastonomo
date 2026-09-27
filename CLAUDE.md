@@ -31,7 +31,7 @@ framework, ni HTTP, ni SQL, ni React, ni Android. Los detalles estan en
   `infrastructure`, `ui`, `app`). Lo verifica `eslint-plugin-boundaries` con denegacion
   por defecto. `src/domain` no puede importar ni siquiera un paquete de npm. La raiz de
   composicion es `src/app/composition-root.ts`.
-- **Android**: un modulo por capa, veintidos en total. `core:domain`, `core:application` y
+- **Android**: un modulo por capa, veintitres en total. `core:domain`, `core:application` y
   `core:common` son `kotlin("jvm")` puros, asi que el SDK de Android no esta en su classpath.
   `feature:*` nunca depende de `data:*` ni de otra `feature:*`: las une `:app`, con un fichero
   de cableado por feature en `app/src/main/kotlin/com/bahoque/gastonomo/wiring/`. Lo vigilan
@@ -78,15 +78,14 @@ framework, ni HTTP, ni SQL, ni React, ni Android. Los detalles estan en
   aplicacion **no hace copia de seguridad de nada**: ver el
   [ADR 0018](docs/adr/0018-datos-locales-en-reposo.md).
 
-  **Los seis gateways van envueltos en una cache en memoria** (`:data:cache`), que se cablea en
-  `AppContainer` y es invisible para los casos de uso y las features. Sirve lo guardado durante
-  45 segundos, revalida en segundo plano hasta los 5 minutos y luego espera a la red. Cada
-  escritura invalida a mano lo que dejo desfasado, y hay dos reglas que se olvidan facil: toda
-  escritura de dinero invalida tambien las **categorias** (su `movementCount` cambia), y cambiar
-  la moneda principal **no** invalida los registros (los importes se guardan sin convertir).
-  Entrar, registrarse y salir la vacian entera. Es codigo provisional: cuando exista la base de
-  datos local hay que borrar el modulo. El detalle esta en el
-  [ADR 0016](docs/adr/0016-cache-en-memoria-en-el-cliente.md).
+  **Los seis gateways leen de la base local y la red solo la rellena** (`:data:offline` sobre
+  `:data:database`), y se cablea en `AppContainer`. Ninguna feature se entera. Dos reglas que se
+  olvidan facil: toda escritura de dinero deja desfasadas tambien las **categorias** (su
+  `movementCount` cambia), y cambiar la moneda principal **no** toca los registros (los importes
+  se guardan sin convertir y la conversion se hace al pintar). Entrar, registrarse y salir vacian
+  la base entera. Lo que decide cuando volver a pedir algo es `RefreshGate`, que **no guarda
+  datos**: solo recuerda cuando se refresco cada cosa. El detalle esta en el
+  [ADR 0019](docs/adr/0019-leer-de-la-base-local.md).
 
   Y una trampa que va con eso: **un formulario guarda y vuelve atras, y la entrada de la pila de
   la pantalla de destino nunca se destruyo**, asi que su ViewModel sigue vivo con la lista de

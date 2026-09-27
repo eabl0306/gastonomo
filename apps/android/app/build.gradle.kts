@@ -36,7 +36,8 @@ dependencies {
     implementation(project(":core:navigation"))
 
     implementation(project(":data:auth"))
-    implementation(project(":data:cache"))
+    implementation(project(":data:database"))
+    implementation(project(":data:offline"))
     implementation(project(":data:catalog"))
     implementation(project(":data:finance"))
     implementation(project(":data:network"))
