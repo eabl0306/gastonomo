@@ -3,10 +3,13 @@ package com.bahoque.gastonomo.data.network
 /**
  * Donde esta la API y si se registra el trafico.
  *
- * En debug apunta a `http://10.0.2.2:8080`, que es el host de la maquina visto desde el
- * emulador, y en release a `https://api.gastonomo.bahoque.com`. Los dos valores se fijan por
- * buildType en el `build.gradle.kts` de este modulo. El registro de peticiones solo se
- * enciende en debug: en release imprimiria tokens en el log.
+ * Los dos buildType apuntan por defecto a la API desplegada,
+ * `https://api.gastonomo.bahoque.com`. Debug se puede redirigir a una API local sin tocar
+ * codigo, con `-PgastonomoApiUrl=...`; el `build.gradle.kts` de este modulo lo explica.
+ *
+ * El registro de peticiones solo se enciende en debug: en release imprimiria tokens en el
+ * log. Como debug habla con produccion, ese log lleva tokens de produccion, asi que no se
+ * comparte a la ligera.
  */
 data class ApiConfig(
     val baseUrl: String = BuildConfig.API_BASE_URL,

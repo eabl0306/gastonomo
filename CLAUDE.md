@@ -303,6 +303,13 @@ Lo minimo que hay que saber antes de tocar algo de esto:
   `edge`. Se entra siempre por Caddy.
 - Volver atras es `./rollback.sh` en `/srv/apps/gastonomo`, y no toca la base de datos: las
   migraciones son solo hacia delante.
-- Android apunta a `https://api.gastonomo.bahoque.com` en release y sigue en
-  `http://10.0.2.2:8080` en debug. Cada buildType tiene su `network_security_config.xml`, y
-  el texto claro solo esta permitido en debug y solo para los hosts locales.
+- **Android apunta a `https://api.gastonomo.bahoque.com` en los dos buildType.** Debug lo
+  hacia a `http://10.0.2.2:8080`, que es el alias del host visto desde el EMULADOR: en un
+  telefono real esa direccion no existe y la aplicacion solo dice "no hay conexion".
+  Para desarrollar contra una API local, sin tocar codigo:
+  `./gradlew assembleDebug -PgastonomoApiUrl=http://10.0.2.2:8080`.
+  El texto claro sigue permitido solo en debug y solo para hosts locales, asi que ese
+  override funciona tal cual. Consecuencia a tener presente: por defecto un build de debug
+  escribe en la base de datos de PRODUCCION, y su log de peticiones lleva tokens de
+  produccion. Mientras no haya usuarios de verdad da igual; cuando los haya, hay que montar
+  un entorno propio.
