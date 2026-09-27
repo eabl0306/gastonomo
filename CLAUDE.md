@@ -31,7 +31,7 @@ framework, ni HTTP, ni SQL, ni React, ni Android. Los detalles estan en
   `infrastructure`, `ui`, `app`). Lo verifica `eslint-plugin-boundaries` con denegacion
   por defecto. `src/domain` no puede importar ni siquiera un paquete de npm. La raiz de
   composicion es `src/app/composition-root.ts`.
-- **Android**: un modulo por capa, veinte en total. `core:domain`, `core:application` y
+- **Android**: un modulo por capa, veintiuno en total. `core:domain`, `core:application` y
   `core:common` son `kotlin("jvm")` puros, asi que el SDK de Android no esta en su classpath.
   `feature:*` nunca depende de `data:*` ni de otra `feature:*`: las une `:app`, con un fichero
   de cableado por feature en `app/src/main/kotlin/com/bahoque/gastonomo/wiring/`. Lo vigilan
@@ -56,6 +56,23 @@ framework, ni HTTP, ni SQL, ni React, ni Android. Los detalles estan en
   `values`, ingles en `values-en`, las mismas claves en las dos salvo las `translatable="false"`.
   Las decisiones estan en el [ADR 0013](docs/adr/0013-sistema-de-diseno-en-android.md) y el
   [ADR 0014](docs/adr/0014-sesion-en-el-cliente-android.md).
+
+  **Los seis gateways van envueltos en una cache en memoria** (`:data:cache`), que se cablea en
+  `AppContainer` y es invisible para los casos de uso y las features. Sirve lo guardado durante
+  45 segundos, revalida en segundo plano hasta los 5 minutos y luego espera a la red. Cada
+  escritura invalida a mano lo que dejo desfasado, y hay dos reglas que se olvidan facil: toda
+  escritura de dinero invalida tambien las **categorias** (su `movementCount` cambia), y cambiar
+  la moneda principal **no** invalida los registros (los importes se guardan sin convertir).
+  Entrar, registrarse y salir la vacian entera. Es codigo provisional: cuando exista la base de
+  datos local hay que borrar el modulo. El detalle esta en el
+  [ADR 0016](docs/adr/0016-cache-en-memoria-en-el-cliente.md).
+
+  Y una trampa que va con eso: **un formulario guarda y vuelve atras, y la entrada de la pila de
+  la pantalla de destino nunca se destruyo**, asi que su ViewModel sigue vivo con la lista de
+  antes y nada le dice que ya no esta completa. Inicio y Movimientos recargan con
+  `LifecycleEventEffect(ON_RESUME)`, y Prestamos con su `LoanCreatedSignal`. Si anades una
+  pantalla que ensena una lista, tiene que recargar al volver a primer plano o no vera lo que el
+  usuario acaba de registrar.
 
 Para anadir algo nuevo: dominio, puerto, caso de uso con un fake, adaptador, adaptador
 driving y cableado en el composition root. En ese orden.

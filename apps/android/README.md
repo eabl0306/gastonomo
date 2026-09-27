@@ -19,6 +19,7 @@ completo: 14 pantallas, multimoneda y sesion con refresco de tokens.
 | `:data:auth`          | Android library     | `AuthGateway`                                                         |
 | `:data:finance`       | Android library     | `MovementGateway` y `LoanGateway`                                     |
 | `:data:catalog`       | Android library     | `CategoryGateway`, `SettingsGateway` y `CurrencyGateway`              |
+| `:data:cache`         | Kotlin JVM puro     | Cache en memoria que decora los seis gateways (provisional, ver ADR 0016) |
 | `:feature:*`          | Android library     | Una pantalla o un grupo de pantallas, con su grafo de navegacion      |
 | `:app`                | Android application | Raiz de composicion, `MainActivity` y el NavHost                      |
 
@@ -29,6 +30,11 @@ arquitectura con Konsist y la tarea `moduleGraphGuard`, que lee el grafo real de
 
 Ninguna `:feature:*` depende de `:data:*` ni de otra `:feature:*`. Las une `:app`, con un
 fichero de cableado por feature en `app/src/main/kotlin/com/bahoque/gastonomo/wiring/`.
+
+Los seis gateways van envueltos en un decorador de cache en memoria, y eso tambien se ve solo en
+`AppContainer`: los casos de uso reciben el mismo puerto de siempre. Los plazos, que invalida que
+y por que es provisional estan en el
+[ADR 0016](../../docs/adr/0016-cache-en-memoria-en-el-cliente.md).
 
 ## Las dos reglas del sistema de diseno
 

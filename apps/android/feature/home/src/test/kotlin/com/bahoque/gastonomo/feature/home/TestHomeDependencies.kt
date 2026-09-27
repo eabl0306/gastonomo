@@ -42,8 +42,12 @@ internal class TestHomeDependencies(
     private val page = MovementPage(SampleFinance.movements, null)
     private val currencyGateway = FakeCurrencyGateway(failure = ratesFailure)
 
-    override val loadPeriodMovements =
-        LoadPeriodMovements(FakeMovementGateway(listOf(page), movementsFailure))
+    private val periodGateway = FakeMovementGateway(listOf(page), movementsFailure)
+
+    /** Cuantas veces se pidio el periodo, para contar recargas. */
+    val periodCalls: Int get() = periodGateway.listCalls
+
+    override val loadPeriodMovements = LoadPeriodMovements(periodGateway)
     override val loadRecentMovements =
         LoadRecentMovements(FakeMovementGateway(listOf(page), movementsFailure))
     override val loadLoans = LoadLoans(FakeLoanGateway())

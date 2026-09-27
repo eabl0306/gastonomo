@@ -44,6 +44,9 @@ internal class TestMovementsDependencies(
         failure = movementsFailure,
     )
 
+    /** Cuantas veces se pidio la lista del periodo, para contar recargas. */
+    val listCalls: Int get() = listGateway.listCalls
+
     override val loadPeriodMovements = LoadPeriodMovements(listGateway)
     override val createMovement = CreateMovement(movementGateway)
     override val loadCategories = LoadCategories(FakeCategoryGateway())

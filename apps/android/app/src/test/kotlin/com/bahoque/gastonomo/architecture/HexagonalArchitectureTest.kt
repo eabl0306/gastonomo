@@ -86,6 +86,7 @@ class HexagonalArchitectureTest {
             "core/application/src/main/kotlin",
         )
         val DATA = listOf(
+            "data/cache/src/main/kotlin",
             "data/network/src/main/kotlin",
             "data/session/src/main/kotlin",
             "data/auth/src/main/kotlin",

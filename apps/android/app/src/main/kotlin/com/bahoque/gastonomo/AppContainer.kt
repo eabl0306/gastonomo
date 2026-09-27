@@ -6,6 +6,13 @@ import com.bahoque.gastonomo.core.application.port.SessionStore
 import com.bahoque.gastonomo.core.application.port.SystemClock
 import com.bahoque.gastonomo.core.application.state.UserPreferences
 import com.bahoque.gastonomo.data.auth.createAuthGateway
+import com.bahoque.gastonomo.data.cache.GatewayCaches
+import com.bahoque.gastonomo.data.cache.cachedAuthGateway
+import com.bahoque.gastonomo.data.cache.cachedCategoryGateway
+import com.bahoque.gastonomo.data.cache.cachedCurrencyGateway
+import com.bahoque.gastonomo.data.cache.cachedLoanGateway
+import com.bahoque.gastonomo.data.cache.cachedMovementGateway
+import com.bahoque.gastonomo.data.cache.cachedSettingsGateway
 import com.bahoque.gastonomo.data.catalog.createCategoryGateway
 import com.bahoque.gastonomo.data.catalog.createCurrencyGateway
 import com.bahoque.gastonomo.data.catalog.createSettingsGateway
@@ -58,13 +65,24 @@ class AppContainer(context: Context) {
 
     private val apiClient = createApiClient(devices.sessionStore)
 
+    /**
+     * La cache en memoria, compartida por los seis adaptadores porque la invalidacion cruza
+     * recursos: un movimiento nuevo cambia tambien el contador de uso de las categorias.
+     */
+    private val caches = GatewayCaches()
+
+    /**
+     * Cada adaptador de red va envuelto en su decorador de cache. Los casos de uso reciben el
+     * mismo puerto que antes, asi que ninguna feature se entera de que hay una cache: quitarla
+     * cuando exista la base de datos local es borrar estas seis llamadas.
+     */
     private val gateways = Gateways(
-        auth = createAuthGateway(apiClient, devices.sessionStore),
-        movements = createMovementGateway(apiClient),
-        loans = createLoanGateway(apiClient),
-        categories = createCategoryGateway(apiClient),
-        settings = createSettingsGateway(apiClient),
-        currencies = createCurrencyGateway(apiClient),
+        auth = cachedAuthGateway(createAuthGateway(apiClient, devices.sessionStore), caches),
+        movements = cachedMovementGateway(createMovementGateway(apiClient), caches),
+        loans = cachedLoanGateway(createLoanGateway(apiClient), caches),
+        categories = cachedCategoryGateway(createCategoryGateway(apiClient), caches),
+        settings = cachedSettingsGateway(createSettingsGateway(apiClient), caches),
+        currencies = cachedCurrencyGateway(createCurrencyGateway(apiClient), caches),
     )
 
     private val useCases = UseCases(gateways, devices, sharedUserPreferences)

@@ -34,6 +34,9 @@ class MovementsViewModel(private val dependencies: MovementsDependencies) : View
 
     private var loaded: List<Movement> = emptyList()
 
+    /** Si ya paso por primer plano una vez. Ver [onResumed]. */
+    private var resumedBefore = false
+
     private val mutable = MutableStateFlow(
         MovementsUiState(
             today = dependencies.clock.today(),
@@ -62,6 +65,28 @@ class MovementsViewModel(private val dependencies: MovementsDependencies) : View
     /** Las pills no vuelven a pedir nada: la lista ya esta en memoria sin filtrar. */
     fun onFilter(filter: MovementFilter) {
         mutable.update { it.copy(filter = filter, groups = groupsOf(it.copy(filter = filter))) }
+    }
+
+    /**
+     * La pantalla volvio a primer plano, asi que se vuelve a cargar.
+     *
+     * Hace falta porque los formularios guardan y **vuelven atras**, y esta entrada de la pila
+     * nunca se destruyo: su ViewModel sigue vivo con la lista que cargo antes. Sin esto,
+     * registrar un gasto ensena el toast "Gasto guardado" y la lista de abajo no cambia.
+     *
+     * Con la cache en memoria detras no cuesta nada: si nada se escribio, la recarga se sirve
+     * de memoria y no sale ni una peticion. Si se escribio, la escritura ya invalido lo que
+     * toca y esta recarga trae lo nuevo.
+     *
+     * La primera vez no hace nada: el bloque de inicializacion ya esta cargando, y cargar dos
+     * veces a la vez en arranque frio son dos peticiones de todo.
+     */
+    fun onResumed() {
+        if (!resumedBefore) {
+            resumedBefore = true
+            return
+        }
+        viewModelScope.launch { reload(mutable.value.selection) }
     }
 
     fun onRetry() {

@@ -29,6 +29,9 @@ class HomeViewModel(private val dependencies: HomeDependencies) : ViewModel() {
 
     private val loader = HomeLoader(dependencies)
 
+    /** Si ya paso por primer plano una vez. Ver [onResumed]. */
+    private var resumedBefore = false
+
     /** El selector de mes y el sheet de rango, compartidos con Movimientos. */
     val period = PeriodFilterEditor(dependencies.periodFilter, dependencies.clock)
 
@@ -66,6 +69,28 @@ class HomeViewModel(private val dependencies: HomeDependencies) : ViewModel() {
     fun onToggleHiddenAmounts() {
         val hidden = !mutable.value.hideAmounts
         viewModelScope.launch { dependencies.setHideAmounts(hidden) }
+    }
+
+    /**
+     * La pantalla volvio a primer plano, asi que se vuelve a cargar.
+     *
+     * Hace falta porque los formularios guardan y **vuelven atras**, y esta entrada de la pila
+     * nunca se destruyo: su ViewModel sigue vivo con la lista que cargo antes. Sin esto,
+     * registrar un gasto ensena el toast "Gasto guardado" y el balance de arriba no cambia.
+     *
+     * Con la cache en memoria detras no cuesta nada: si nada se escribio, la recarga se sirve
+     * de memoria y no sale ni una peticion. Si se escribio, la escritura ya invalido lo que
+     * toca y esta recarga trae lo nuevo.
+     *
+     * La primera vez no hace nada: el bloque de inicializacion ya esta cargando, y cargar dos
+     * veces a la vez en arranque frio son dos peticiones de todo.
+     */
+    fun onResumed() {
+        if (!resumedBefore) {
+            resumedBefore = true
+            return
+        }
+        viewModelScope.launch { reload(mutable.value.selection) }
     }
 
     fun onRetry() {

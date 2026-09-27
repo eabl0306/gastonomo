@@ -150,4 +150,28 @@ class HomeViewModelTest {
         advanceUntilIdle()
         assertNull(viewModel.state.value.toast)
     }
+
+    @Test
+    fun `the first time the screen shows there is a single load`() = runTest {
+        val dependencies = TestHomeDependencies()
+        val viewModel = HomeViewModel(dependencies)
+
+        viewModel.onResumed()
+        advanceUntilIdle()
+
+        assertEquals(1, dependencies.periodCalls)
+    }
+
+    @Test
+    fun `coming back to the screen loads again, so the balance follows what was saved`() = runTest {
+        val dependencies = TestHomeDependencies()
+        val viewModel = HomeViewModel(dependencies)
+        viewModel.onResumed()
+        advanceUntilIdle()
+
+        viewModel.onResumed()
+        advanceUntilIdle()
+
+        assertEquals(2, dependencies.periodCalls)
+    }
 }

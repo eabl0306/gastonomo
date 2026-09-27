@@ -118,4 +118,29 @@ class MovementsViewModelTest {
         advanceUntilIdle()
         assertNull(viewModel.state.value.toast)
     }
+
+    @Test
+    fun `the first time the screen shows there is a single load`() = runTest {
+        val dependencies = TestMovementsDependencies()
+        val viewModel = MovementsViewModel(dependencies)
+
+        viewModel.onResumed()
+        advanceUntilIdle()
+
+        assertEquals(1, dependencies.listCalls)
+    }
+
+    @Test
+    fun `coming back to the screen loads again, so what was just saved shows up`() = runTest {
+        val dependencies = TestMovementsDependencies()
+        val viewModel = MovementsViewModel(dependencies)
+        viewModel.onResumed()
+        advanceUntilIdle()
+
+        // El formulario guardo y volvio atras: esta entrada de la pila nunca se destruyo.
+        viewModel.onResumed()
+        advanceUntilIdle()
+
+        assertEquals(2, dependencies.listCalls)
+    }
 }

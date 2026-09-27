@@ -4,6 +4,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.bahoque.gastonomo.core.domain.movement.MovementKind
@@ -16,6 +18,9 @@ internal fun MovementsRoute(
 ) {
     val viewModel: MovementsViewModel = viewModel(factory = MovementsViewModel.factory(dependencies))
     val state by viewModel.state.collectAsStateWithLifecycle()
+    // Volver del formulario no recrea esta entrada de la pila, asi que sin esto el movimiento
+    // que se acaba de guardar no saldria en la lista.
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { viewModel.onResumed() }
     val actions = remember(viewModel) {
         MovementsActions(
             onPreviousMonth = viewModel.period::previousMonth,

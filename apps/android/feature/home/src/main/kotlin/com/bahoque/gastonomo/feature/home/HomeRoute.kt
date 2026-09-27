@@ -3,6 +3,8 @@ package com.bahoque.gastonomo.feature.home
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.bahoque.gastonomo.core.domain.movement.MovementKind
@@ -22,6 +24,9 @@ internal fun HomeRoute(
 ) {
     val viewModel: HomeViewModel = viewModel(factory = HomeViewModel.factory(dependencies))
     val state by viewModel.state.collectAsStateWithLifecycle()
+    // Volver de un formulario no recrea esta entrada de la pila, asi que sin esto lo que se
+    // acaba de registrar no saldria.
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { viewModel.onResumed() }
     val actions = remember(viewModel) {
         HomeActions(
             onPreviousMonth = viewModel.period::previousMonth,
