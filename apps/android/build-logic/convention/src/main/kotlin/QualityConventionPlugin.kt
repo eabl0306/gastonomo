@@ -104,7 +104,6 @@ private fun Project.configureKover(quality: QualityExtension) {
                         "hilt_aggregated_deps.*",
                         "dagger.hilt.*",
                     )
-                    classes(quality.untestableOnJvm.get())
                     annotatedBy("androidx.compose.ui.tooling.preview.Preview")
                 }
             }
@@ -115,6 +114,19 @@ private fun Project.configureKover(quality: QualityExtension) {
                         coverageUnits.set(CoverageUnit.LINE)
                         aggregationForGroup.set(AggregationType.COVERED_PERCENTAGE)
                     }
+                }
+            }
+        }
+    }
+    // Lo que el modulo excluye va en afterEvaluate porque su bloque `quality { }` todavia no se
+    // ha leido cuando se aplica el plugin. Leerlo antes devuelve la lista vacia y la exclusion
+    // no llega a aplicarse nunca, que es lo que pasaba: los modulos declaraban clases
+    // inejecutables en la JVM y seguian contando para su umbral.
+    afterEvaluate {
+        extensions.configure<KoverProjectExtension> {
+            reports {
+                filters {
+                    excludes { classes(quality.untestableOnJvm.get()) }
                 }
             }
         }

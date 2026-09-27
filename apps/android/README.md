@@ -20,6 +20,7 @@ completo: 14 pantallas, multimoneda y sesion con refresco de tokens.
 | `:data:finance`       | Android library     | `MovementGateway` y `LoanGateway`                                     |
 | `:data:catalog`       | Android library     | `CategoryGateway`, `SettingsGateway` y `CurrencyGateway`              |
 | `:data:cache`         | Kotlin JVM puro     | Cache en memoria que decora los seis gateways (provisional, ver ADR 0016) |
+| `:data:database`      | Android library     | Base de datos local con Room: el esquema, los DAO y el mapeo a dominio |
 | `:feature:*`          | Android library     | Una pantalla o un grupo de pantallas, con su grafo de navegacion      |
 | `:app`                | Android application | Raiz de composicion, `MainActivity` y el NavHost                      |
 

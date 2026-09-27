@@ -9,6 +9,8 @@ plugins {
     alias(libs.plugins.kotlin.compose) apply false
     alias(libs.plugins.kotlin.serialization) apply false
     alias(libs.plugins.detekt) apply false
+    alias(libs.plugins.ksp) apply false
+    alias(libs.plugins.room) apply false
     alias(libs.plugins.kover)
 }
 
@@ -22,7 +24,9 @@ dependencies {
     kover(project(":data:session"))
     kover(project(":data:auth"))
     kover(project(":data:finance"))
+    kover(project(":data:cache"))
     kover(project(":data:catalog"))
+    kover(project(":data:database"))
     kover(project(":feature:auth"))
     kover(project(":feature:home"))
     kover(project(":feature:movements"))

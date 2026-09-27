@@ -31,7 +31,7 @@ framework, ni HTTP, ni SQL, ni React, ni Android. Los detalles estan en
   `infrastructure`, `ui`, `app`). Lo verifica `eslint-plugin-boundaries` con denegacion
   por defecto. `src/domain` no puede importar ni siquiera un paquete de npm. La raiz de
   composicion es `src/app/composition-root.ts`.
-- **Android**: un modulo por capa, veintiuno en total. `core:domain`, `core:application` y
+- **Android**: un modulo por capa, veintidos en total. `core:domain`, `core:application` y
   `core:common` son `kotlin("jvm")` puros, asi que el SDK de Android no esta en su classpath.
   `feature:*` nunca depende de `data:*` ni de otra `feature:*`: las une `:app`, con un fichero
   de cableado por feature en `app/src/main/kotlin/com/bahoque/gastonomo/wiring/`. Lo vigilan
@@ -69,6 +69,14 @@ framework, ni HTTP, ni SQL, ni React, ni Android. Los detalles estan en
   sheet que se quita con un `if` no puede animar su salida, porque en cuanto la condicion es falsa
   ya no esta compuesto. El host se queda compuesto mientras baja y retiene el ultimo valor no nulo,
   que es lo que evita que lo que baje sea una hoja vacia.
+
+  **La base de datos local es `:data:database`, con Room.** Dos reglas que rompen el dinero en
+  silencio si se olvidan: **ninguna columna de importe puede ser `REAL`** (un `REAL` es un
+  `double`) y **las fechas de registro van como texto `YYYY-MM-DD`**, no como epoch. Las dos las
+  vigila `ExportedSchemaTest`, que lee el esquema exportado. El esquema se versiona en
+  `apps/android/data/database/schemas/` y cada subida de version trae su migracion y su test. La
+  aplicacion **no hace copia de seguridad de nada**: ver el
+  [ADR 0018](docs/adr/0018-datos-locales-en-reposo.md).
 
   **Los seis gateways van envueltos en una cache en memoria** (`:data:cache`), que se cablea en
   `AppContainer` y es invisible para los casos de uso y las features. Sirve lo guardado durante

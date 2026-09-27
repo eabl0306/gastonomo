@@ -47,6 +47,7 @@ include(":data:network")
 include(":data:session")
 // Cache en memoria: decora los puertos, no conoce ni Ktor ni el SDK de Android.
 include(":data:cache")
+include(":data:database")
 include(":data:auth")
 include(":data:finance")
 include(":data:catalog")
