@@ -241,7 +241,7 @@ just                # lista todas las recetas
 just check          # lint, tipos, tests y cobertura de los tres
 just ci             # check + e2e, cargo deny y builds de release: lo que corre la CI
 just api-test       # cargo test --workspace, sin base de datos
-just api-test-db    # las 7 suites de integracion contra el Postgres de compose
+just api-test-db    # las suites de integracion contra el Postgres de compose
 just web-cov        # vitest con los umbrales de cobertura
 just android-check  # detekt + sourceGuard + lint + tests (con capturas) + kover
 just up / just down # pila de Docker de desarrollo

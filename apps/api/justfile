@@ -36,14 +36,11 @@ test:
 test-db:
     # GASTONOMO_TEST_REQUIRE_DATABASE convierte el salto en fallo: si la base
     # no esta, esto se pone en rojo en vez de pasar sin ejecutar nada.
+    # `--tests` y no una lista de suites: la lista se quedo vieja al partir un
+    # fichero en dos y una bateria entera dejo de correr sin ponerse en rojo.
     GASTONOMO_TEST_DATABASE_URL={{database_url}} \
     GASTONOMO_TEST_REQUIRE_DATABASE=1 \
-      cargo test -p gastonomo-infrastructure --test postgres_integration \
-        --test postgres_auth \
-        --test postgres_loans \
-        --test postgres_exchange_rates --test postgres_movements \
-        --test postgres_categories_and_settings \
-        --test postgres_idempotency -- --nocapture
+      cargo test -p gastonomo-infrastructure --tests -- --nocapture
 
 # Cobertura global: minimo 60% de lineas.
 coverage:
