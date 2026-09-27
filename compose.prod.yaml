@@ -112,10 +112,18 @@ services:
       # El transporte solo sabe hacer STARTTLS o texto en claro, asi que el
       # puerto es el 587 y STARTTLS va en true. El 465 (TLS implicito) NO vale.
       GASTONOMO__MAIL__DRIVER: ${GASTONOMO__MAIL__DRIVER:-smtp}
-      GASTONOMO__MAIL__HOST: ${GASTONOMO__MAIL__HOST:?e.g. smtp.resend.com}
+      # Solo importa con driver smtp.
+      GASTONOMO__MAIL__HOST: ${GASTONOMO__MAIL__HOST:-localhost}
       GASTONOMO__MAIL__PORT: ${GASTONOMO__MAIL__PORT:-587}
-      GASTONOMO__MAIL__USERNAME: ${GASTONOMO__MAIL__USERNAME:?el usuario SMTP del proveedor}
-      GASTONOMO__MAIL__PASSWORD: ${GASTONOMO__MAIL__PASSWORD:?la clave API del proveedor}
+      # Vacio significa sin autenticacion. Solo importa con driver smtp.
+      GASTONOMO__MAIL__USERNAME: ${GASTONOMO__MAIL__USERNAME:-}
+      # Opcional a proposito, aunque parezca lo contrario. Exigirla aqui ata dos
+      # cosas que no van juntas: no se podia desplegar la aplicacion hasta tener
+      # cuenta de correo, y el primer despliegue murio justo por eso. Con
+      # GASTONOMO__MAIL__DRIVER=log no hay SMTP al que autenticarse y esta
+      # variable no pinta nada; cuando el driver pasa a smtp, es la propia API
+      # la que falla al arrancar si falta, que es donde corresponde comprobarlo.
+      GASTONOMO__MAIL__PASSWORD: ${GASTONOMO__MAIL__PASSWORD:-}
       GASTONOMO__MAIL__FROM: ${GASTONOMO__MAIL__FROM:?e.g. Gastonomo <no-reply@bahoque.com>}
       GASTONOMO__MAIL__STARTTLS: ${GASTONOMO__MAIL__STARTTLS:-true}
 
