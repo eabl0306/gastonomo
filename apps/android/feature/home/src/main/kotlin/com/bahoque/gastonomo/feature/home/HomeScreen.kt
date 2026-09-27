@@ -71,7 +71,7 @@ fun HomeScreen(
                         message = stringResource(errorTextOf(state.error)),
                         onRetry = actions.onRetry,
                     )
-                    state.loading && state.content.recent.isEmpty() -> GastonomoLoadingBlock()
+                    state.loading && !state.everLoaded -> GastonomoLoadingBlock()
                     else -> HomeContentBlocks(state = state, actions = actions)
                 }
                 Spacer(Modifier.height(BOTTOM_GAP))

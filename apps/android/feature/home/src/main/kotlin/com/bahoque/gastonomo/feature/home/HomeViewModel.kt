@@ -108,6 +108,7 @@ class HomeViewModel(private val dependencies: HomeDependencies) : ViewModel() {
         mutable.update { state ->
             state.copy(
                 loading = false,
+                everLoaded = state.everLoaded || load.content != null,
                 displayCurrency = load.displayCurrency,
                 rates = load.rates,
                 user = load.user ?: state.user,

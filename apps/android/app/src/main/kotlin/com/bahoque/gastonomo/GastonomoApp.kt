@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.bahoque.gastonomo.core.designsystem.component.GastonomoTabBar
@@ -41,7 +42,10 @@ fun GastonomoApp(container: AppContainer, startDestination: GastonomoRoute) {
             navController = navController,
             container = container,
             startDestination = startDestination,
-            modifier = Modifier.weight(1f),
+            // Recortado a su propia region: un bottom sheet vive dentro de la pantalla, y al
+            // bajarse se salia por debajo. La tab bar es el hermano siguiente de esta Column,
+            // asi que le pasaba por encima y el boton del sheet se veia asomar detras de ella.
+            modifier = Modifier.weight(1f).clipToBounds(),
         )
         if (selectedTab >= 0) {
             GastonomoTabBar(
