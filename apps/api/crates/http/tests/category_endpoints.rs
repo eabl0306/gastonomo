@@ -1,7 +1,8 @@
-//! Tests de integracion de los endpoints de categorias.
+//! Tests de integracion de los endpoints de categorias: listar, crear y editar.
 //!
 //! Atraviesan el router entero: middleware de access token, handler, caso de uso y
-//! DTO, con dobles en memoria en lugar de PostgreSQL.
+//! DTO, con dobles en memoria en lugar de PostgreSQL. El archivado y la
+//! recuperacion estan en `category_archiving.rs`.
 
 #![allow(
     clippy::unwrap_used,
@@ -14,95 +15,15 @@
     reason = "the lint runs per target and an integration test never uses every dependency"
 )]
 
+mod category_client;
 mod support;
 
-use gastonomo_application::port::Clock as _;
-use gastonomo_domain::UserId;
 use salvo::prelude::StatusCode;
-use salvo::test::{ResponseExt as _, TestClient};
-use serde_json::{Value, json};
+use salvo::test::TestClient;
+use serde_json::json;
+
+use category_client::{create, delete, list, new_category, patch, sign_up};
 use support::Harness;
-
-/// Sesion de un usuario recien registrado, con sus 12 predeterminadas sembradas.
-struct Session {
-    token: String,
-    user_id: String,
-}
-
-async fn sign_up(harness: &Harness, email: &str) -> Session {
-    let mut response = TestClient::post("http://localhost/v1/auth/register")
-        .json(&json!({
-            "name": "Camilo Rojas",
-            "email": email,
-            "password": "contrasena-larga",
-            "acceptedTerms": true,
-        }))
-        .send(&harness.service)
-        .await;
-    assert_eq!(response.status_code, Some(StatusCode::CREATED));
-    let body = response.take_json::<Value>().await.unwrap();
-    let user_id = body["user"]["id"].as_str().unwrap().to_owned();
-    // El doble de siembra del registro no escribe categorias: el harness las pone
-    // aqui, igual que hace PostgresUserProvisioning contra la base de verdad.
-    harness
-        .categories
-        .seed_defaults(UserId::parse(&user_id).unwrap(), harness.clock.now());
-    Session {
-        token: body["accessToken"].as_str().unwrap().to_owned(),
-        user_id,
-    }
-}
-
-async fn list(harness: &Harness, session: &Session) -> (Option<StatusCode>, Value) {
-    let mut response = TestClient::get("http://localhost/v1/categories")
-        .add_header("authorization", format!("Bearer {}", session.token), true)
-        .send(&harness.service)
-        .await;
-    let status = response.status_code;
-    let payload = response.take_json::<Value>().await.unwrap_or(Value::Null);
-    (status, payload)
-}
-
-async fn create(harness: &Harness, session: &Session, body: &Value) -> (Option<StatusCode>, Value) {
-    let mut response = TestClient::post("http://localhost/v1/categories")
-        .add_header("authorization", format!("Bearer {}", session.token), true)
-        .json(body)
-        .send(&harness.service)
-        .await;
-    let status = response.status_code;
-    let payload = response.take_json::<Value>().await.unwrap_or(Value::Null);
-    (status, payload)
-}
-
-async fn patch(
-    harness: &Harness,
-    session: &Session,
-    id: &str,
-    body: &Value,
-) -> (Option<StatusCode>, Value) {
-    let mut response = TestClient::patch(format!("http://localhost/v1/categories/{id}"))
-        .add_header("authorization", format!("Bearer {}", session.token), true)
-        .json(body)
-        .send(&harness.service)
-        .await;
-    let status = response.status_code;
-    let payload = response.take_json::<Value>().await.unwrap_or(Value::Null);
-    (status, payload)
-}
-
-async fn delete(harness: &Harness, session: &Session, id: &str) -> (Option<StatusCode>, Value) {
-    let mut response = TestClient::delete(format!("http://localhost/v1/categories/{id}"))
-        .add_header("authorization", format!("Bearer {}", session.token), true)
-        .send(&harness.service)
-        .await;
-    let status = response.status_code;
-    let payload = response.take_json::<Value>().await.unwrap_or(Value::Null);
-    (status, payload)
-}
-
-fn new_category() -> Value {
-    json!({"name": "Mascotas", "kind": "out", "icon": "pets", "color": "#2f7fb5"})
-}
 
 #[tokio::test]
 async fn the_list_carries_the_twelve_defaults_with_their_usage_text_data() {
@@ -244,20 +165,6 @@ async fn a_default_category_answers_conflict_on_edit_and_on_delete() {
     let (delete_status, delete_body) = delete(&harness, &session, &id).await;
     assert_eq!(delete_status, Some(StatusCode::CONFLICT));
     assert_eq!(delete_body["code"], "category_is_default");
-}
-
-#[tokio::test]
-async fn deleting_a_custom_category_answers_no_content() {
-    let harness = Harness::new();
-    let session = sign_up(&harness, "borrar@correo.com").await;
-    let (_, created) = create(&harness, &session, &new_category()).await;
-    let id = created["id"].as_str().unwrap();
-
-    let (status, _) = delete(&harness, &session, id).await;
-
-    assert_eq!(status, Some(StatusCode::NO_CONTENT));
-    let (_, listed) = list(&harness, &session).await;
-    assert_eq!(listed["items"].as_array().unwrap().len(), 12);
 }
 
 #[tokio::test]

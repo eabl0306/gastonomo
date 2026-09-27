@@ -184,6 +184,7 @@ fn a_default_category_refuses_every_change() {
         },
         true,
         Utc::now(),
+        None,
     );
 
     assert!(category.is_default());
@@ -212,6 +213,7 @@ fn a_default_category_can_keep_an_icon_and_a_color_outside_the_sheet() {
         },
         true,
         Utc::now(),
+        None,
     );
 
     assert!(!category.icon().is_offered_to_users());
@@ -234,4 +236,80 @@ fn the_category_identifier_is_the_same_type_in_every_context() {
     let from_movement: gastonomo_domain::movement::CategoryId = from_category;
 
     assert_eq!(from_category, from_movement);
+}
+
+#[test]
+fn archiving_a_category_does_not_change_anything_else_about_it() {
+    let mut category = custom("Mascotas");
+    let before = category.clone();
+    let now = Utc::now();
+
+    category.archive(now).unwrap();
+
+    // Lo unico que cambia es que deja de ofrecerse. Es la diferencia con borrar,
+    // que reescribia la categoria de movimientos pasados.
+    assert!(category.is_archived());
+    assert_eq!(category.id(), before.id());
+    assert_eq!(category.name(), before.name());
+    assert_eq!(category.kind(), before.kind());
+}
+
+#[test]
+fn archiving_twice_keeps_the_first_instant() {
+    let mut category = custom("Mascotas");
+    category.archive(Utc::now()).unwrap();
+    let first = category.archived_at();
+
+    category
+        .archive(Utc::now() + chrono::Duration::hours(1))
+        .unwrap();
+
+    assert_eq!(category.archived_at(), first);
+}
+
+#[test]
+fn an_archived_category_can_come_back() {
+    let mut category = custom("Mascotas");
+    category.archive(Utc::now()).unwrap();
+
+    category.unarchive(Utc::now()).unwrap();
+
+    assert!(!category.is_archived());
+}
+
+#[test]
+fn a_default_category_cannot_be_archived() {
+    let mut category = Category::rehydrate(
+        CategoryId::generate(),
+        NewCategory {
+            user_id: UserId::generate(),
+            name: CategoryName::parse("Salario").unwrap(),
+            kind: CategoryKind::In,
+            icon: CategoryIcon::parse("account_balance_wallet").unwrap(),
+            color: CategoryColor::parse("#2f8a55").unwrap(),
+            created_at: Utc::now(),
+        },
+        true,
+        Utc::now(),
+        None,
+    );
+
+    assert_eq!(
+        category.archive(Utc::now()),
+        Err(CategoryError::DefaultIsReadOnly)
+    );
+    assert!(!category.is_archived());
+}
+
+/// Una categoria del usuario con los valores del sheet.
+fn custom(name: &str) -> Category {
+    Category::create_custom(NewCategory {
+        user_id: UserId::generate(),
+        name: CategoryName::parse(name).unwrap(),
+        kind: CategoryKind::Out,
+        icon: CategoryIcon::parse("pets").unwrap(),
+        color: CategoryColor::parse("#2f7fb5").unwrap(),
+        created_at: Utc::now(),
+    })
+    .unwrap()
 }

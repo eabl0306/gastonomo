@@ -36,6 +36,11 @@ fn timestamp(row: &PgRow, column: &str) -> Result<DateTime<Utc>, AppError> {
         .map_err(|error| database_error(&format!("could not read column {column}"), &error))
 }
 
+fn optional_timestamp(row: &PgRow, column: &str) -> Result<Option<DateTime<Utc>>, AppError> {
+    row.try_get::<Option<DateTime<Utc>>, _>(column)
+        .map_err(|error| database_error(&format!("could not read column {column}"), &error))
+}
+
 /// Reconstruye una categoria desde su fila.
 pub fn category(row: &PgRow) -> Result<Category, AppError> {
     let name = CategoryName::parse(&text(row, "name")?)
@@ -62,6 +67,7 @@ pub fn category(row: &PgRow) -> Result<Category, AppError> {
         },
         is_default,
         timestamp(row, "updated_at")?,
+        optional_timestamp(row, "archived_at")?,
     ))
 }
 

@@ -58,17 +58,42 @@ class CategoriesScreenTest {
     @Test
     fun `the edit button opens the sheet for that category`() {
         val opened = mutableListOf<Category>()
-        setContent(loaded(), CategoriesActions({}, {}, { it?.let(opened::add) }, {}, {}))
+        setContent(loaded(), CategoriesActions({}, {}, { it?.let(opened::add) }, {}, {}, {}))
         compose.onNodeWithContentDescription("Editar").performClick()
         assertEquals(listOf(SampleFinance.pets), opened)
     }
 
     @Test
     fun `the delete button reports the category`() {
-        val deleted = mutableListOf<Category>()
-        setContent(loaded(), CategoriesActions({}, {}, {}, { deleted += it }, {}))
+        val removed = mutableListOf<Category>()
+        setContent(loaded(), CategoriesActions({}, {}, {}, { removed += it }, {}, {}))
         compose.onNodeWithContentDescription("Eliminar").performClick()
-        assertEquals(listOf(SampleFinance.pets), deleted)
+        assertEquals(listOf(SampleFinance.pets), removed)
+    }
+
+    @Test
+    fun `the archived ones have their own group with a reason`() {
+        setContent(withArchived())
+
+        compose.onNodeWithText("ARCHIVADAS").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText("Gimnasio").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText(
+            "Siguen aquí porque algún movimiento las usa. No se ofrecen al registrar.",
+        ).performScrollTo().assertIsDisplayed()
+    }
+
+    @Test
+    fun `an archived one can only be restored`() {
+        val restored = mutableListOf<Category>()
+        setContent(withArchived(), CategoriesActions({}, {}, {}, {}, { restored += it }, {}))
+
+        compose.onNodeWithContentDescription("Recuperar").performScrollTo().performClick()
+
+        assertEquals(listOf(FakeCategoriesDependencies.archived), restored)
+        // Las archivadas no traen editar: hay tantos botones de editar como categorias mias
+        // activas, ni uno mas.
+        compose.onAllNodesWithContentDescription("Editar")
+            .assertCountEquals(withArchived().mine.size)
     }
 
     @Test
@@ -76,7 +101,7 @@ class CategoriesScreenTest {
         var retried = 0
         setContent(
             loaded().copy(loadFailed = true),
-            CategoriesActions({}, {}, {}, {}, { retried++ }),
+            CategoriesActions({}, {}, {}, {}, {}, { retried++ }),
         )
         compose.onNodeWithText("No se pudieron cargar las categorías.").assertIsDisplayed()
         compose.onNodeWithText("Reintentar").performClick()
@@ -101,5 +126,10 @@ class CategoriesScreenTest {
     private fun loaded() = CategoriesUiState(
         loading = false,
         categories = FakeCategoriesDependencies.CATALOG,
+    )
+
+    private fun withArchived() = CategoriesUiState(
+        loading = false,
+        categories = FakeCategoriesDependencies.CATALOG_WITH_ARCHIVED,
     )
 }

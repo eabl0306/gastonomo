@@ -2,8 +2,10 @@ package com.bahoque.gastonomo.core.application.usecase
 
 import com.bahoque.gastonomo.core.application.error.ApiError
 import com.bahoque.gastonomo.core.application.port.CategoryDraft
-import com.bahoque.gastonomo.core.application.usecase.category.DeleteCategory
+import com.bahoque.gastonomo.core.application.port.CategoryRemoval
+import com.bahoque.gastonomo.core.application.usecase.category.ArchiveCategory
 import com.bahoque.gastonomo.core.application.usecase.category.LoadCategories
+import com.bahoque.gastonomo.core.application.usecase.category.RestoreCategory
 import com.bahoque.gastonomo.core.application.usecase.category.SaveCategory
 import com.bahoque.gastonomo.core.application.usecase.currency.LoadCurrencyCatalog
 import com.bahoque.gastonomo.core.application.usecase.currency.LoadExchangeRates
@@ -60,10 +62,32 @@ class CatalogUseCasesTest {
     }
 
     @Test
-    fun `deleting reassigns on the server and only needs the identifier`() = runTest {
+    fun `one with movements comes back archived and one without comes back deleted`() = runTest {
+        val unused = SampleFinance.pets.copy(id = CategoryId("gym"), movementCount = 0)
+        val gateway = FakeCategoryGateway(SampleFinance.categories + unused)
+
+        val withMovements = ArchiveCategory(gateway)(SampleFinance.pets.id)
+        val without = ArchiveCategory(gateway)(unused.id)
+
+        assertEquals(CategoryRemoval.ARCHIVED, (withMovements as Outcome.Success).value)
+        assertEquals(CategoryRemoval.DELETED, (without as Outcome.Success).value)
+    }
+
+    @Test
+    fun `an archived category is not offered, and is once it comes back`() = runTest {
         val gateway = FakeCategoryGateway()
-        DeleteCategory(gateway)(CategoryId("pets"))
-        assertEquals(listOf(CategoryId("pets")), gateway.deleted)
+        ArchiveCategory(gateway)(SampleFinance.pets.id)
+
+        val offered = (LoadCategories(gateway)() as Outcome.Success).value
+
+        assertFalse(offered.any { it.id == SampleFinance.pets.id })
+        // Y sigue estando, archivada: por eso se puede recuperar.
+        val all = (LoadCategories(gateway)(includeArchived = true) as Outcome.Success).value
+        assertTrue(all.single { it.id == SampleFinance.pets.id }.archived)
+
+        RestoreCategory(gateway)(SampleFinance.pets.id)
+        val again = (LoadCategories(gateway)() as Outcome.Success).value
+        assertTrue(again.any { it.id == SampleFinance.pets.id })
     }
 
     @Test

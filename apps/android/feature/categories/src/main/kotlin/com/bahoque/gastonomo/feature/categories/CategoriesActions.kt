@@ -10,11 +10,12 @@ data class CategoriesActions(
     val onBack: () -> Unit,
     val onTab: (MovementKind) -> Unit,
     val onOpenSheet: (Category?) -> Unit,
-    val onDelete: (Category) -> Unit,
+    val onArchive: (Category) -> Unit,
+    val onRestore: (Category) -> Unit,
     val onRetry: () -> Unit,
 ) {
     companion object {
         /** Acciones que no hacen nada, para las capturas y los tests de pintado. */
-        val NONE = CategoriesActions({}, {}, {}, {}, {})
+        val NONE = CategoriesActions({}, {}, {}, {}, {}, {})
     }
 }

@@ -60,6 +60,7 @@ impl InMemoryCategoryRepository {
                 },
                 true,
                 now,
+                None,
             ));
         }
     }
@@ -118,10 +119,15 @@ impl InMemoryCategoryRepository {
 
 #[async_trait]
 impl CategoryRepository for InMemoryCategoryRepository {
-    async fn list_with_usage(&self, user_id: UserId) -> Result<Vec<CategoryUsage>, AppError> {
+    async fn list_with_usage(
+        &self,
+        user_id: UserId,
+        include_archived: bool,
+    ) -> Result<Vec<CategoryUsage>, AppError> {
         let mut found = self.with_rows(|rows| {
             rows.iter()
                 .filter(|category| category.user_id() == user_id)
+                .filter(|category| include_archived || !category.is_archived())
                 .cloned()
                 .collect::<Vec<_>>()
         });
@@ -193,33 +199,25 @@ impl CategoryRepository for InMemoryCategoryRepository {
         })
     }
 
-    async fn delete_reassigning_movements(
+    async fn delete_unused(
         &self,
         user_id: UserId,
         category_id: CategoryId,
-        fallback_id: CategoryId,
-    ) -> Result<u32, AppError> {
-        let removed = self.with_rows(|rows| {
+    ) -> Result<(), AppError> {
+        self.with_rows(|rows| {
             let Some(position) = rows
                 .iter()
                 .position(|category| category.user_id() == user_id && category.id() == category_id)
             else {
                 return Err(AppError::not_found("category"));
             };
-            Ok(rows.remove(position))
+            rows.remove(position);
+            Ok(())
         })?;
-        removed.check_writable().map_err(|_| {
-            AppError::conflict(
-                "category_is_default",
-                "Las categorias predeterminadas no se pueden editar ni borrar.",
-            )
-        })?;
-        let moved = self.usage_of(category_id);
         self.with_usage(|usage| {
             usage.remove(&category_id);
-            *usage.entry(fallback_id).or_default() += moved;
         });
-        Ok(moved)
+        Ok(())
     }
 }
 

@@ -3,6 +3,7 @@ package com.bahoque.gastonomo.feature.categories
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bahoque.gastonomo.core.application.port.CategoryDraft
+import com.bahoque.gastonomo.core.application.port.CategoryRemoval
 import com.bahoque.gastonomo.core.common.Outcome
 import com.bahoque.gastonomo.core.domain.category.Category
 import com.bahoque.gastonomo.core.domain.category.CategoryKind
@@ -33,7 +34,8 @@ class CategoriesViewModel(private val dependencies: CategoriesDependencies) : Vi
     fun load() {
         mutableState.update { it.copy(loading = true) }
         viewModelScope.launch {
-            val result = dependencies.loadCategories()
+            // Con las archivadas: esta es la unica pantalla donde se pueden recuperar.
+            val result = dependencies.loadCategories(includeArchived = true)
             mutableState.update { state ->
                 when (result) {
                     is Outcome.Success ->
@@ -98,18 +100,45 @@ class CategoriesViewModel(private val dependencies: CategoriesDependencies) : Vi
         }
     }
 
-    /** Borra una categoria del usuario. La API reasigna sus movimientos a Otros. */
-    fun onDelete(category: Category) {
+    /**
+     * Quita una categoria de la lista.
+     *
+     * La API la archiva si algun movimiento la usa, y solo la borra si no la usa ninguno. **El
+     * aviso dice lo que la API contesto**, no lo que se supone: con el conteo de la ultima carga
+     * se podria decir "eliminada" de algo que sigue ahi.
+     */
+    fun onArchive(category: Category) {
         viewModelScope.launch {
-            when (val result = dependencies.deleteCategory(category.id)) {
+            when (val result = dependencies.archiveCategory(category.id)) {
+                is Outcome.Success -> {
+                    mutableState.update { it.copy(message = removalMessage(result.value, category)) }
+                    load()
+                }
+                is Outcome.Failure -> mutableState.update { it.failedToSave(result.error) }
+            }
+        }
+    }
+
+    /** Devuelve una archivada a la lista. */
+    fun onRestore(category: Category) {
+        viewModelScope.launch {
+            when (val result = dependencies.restoreCategory(category.id)) {
                 is Outcome.Success -> {
                     mutableState.update {
-                        it.copy(message = CategoriesMessage.Deleted(category.name))
+                        it.copy(message = CategoriesMessage.Restored(category.name))
                     }
                     load()
                 }
                 is Outcome.Failure -> mutableState.update { it.failedToSave(result.error) }
             }
         }
+    }
+
+    private fun removalMessage(
+        removal: CategoryRemoval,
+        category: Category,
+    ): CategoriesMessage = when (removal) {
+        CategoryRemoval.ARCHIVED -> CategoriesMessage.Archived(category.name)
+        CategoryRemoval.DELETED -> CategoriesMessage.Deleted(category.name)
     }
 }

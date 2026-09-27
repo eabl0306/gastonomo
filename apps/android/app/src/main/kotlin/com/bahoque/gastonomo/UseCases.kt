@@ -12,8 +12,9 @@ import com.bahoque.gastonomo.core.application.usecase.auth.SignOut
 import com.bahoque.gastonomo.core.application.usecase.auth.SignUp
 import com.bahoque.gastonomo.core.application.usecase.auth.UnlockWithBiometrics
 import com.bahoque.gastonomo.core.application.usecase.auth.UnlockWithPin
-import com.bahoque.gastonomo.core.application.usecase.category.DeleteCategory
+import com.bahoque.gastonomo.core.application.usecase.category.ArchiveCategory
 import com.bahoque.gastonomo.core.application.usecase.category.LoadCategories
+import com.bahoque.gastonomo.core.application.usecase.category.RestoreCategory
 import com.bahoque.gastonomo.core.application.usecase.category.SaveCategory
 import com.bahoque.gastonomo.core.application.usecase.currency.LoadCurrencyCatalog
 import com.bahoque.gastonomo.core.application.usecase.currency.LoadExchangeRates
@@ -71,7 +72,8 @@ internal class UseCases(
 
     val loadCategories = LoadCategories(gateways.categories)
     val saveCategory = SaveCategory(gateways.categories)
-    val deleteCategory = DeleteCategory(gateways.categories)
+    val archiveCategory = ArchiveCategory(gateways.categories)
+    val restoreCategory = RestoreCategory(gateways.categories)
 
     val loadSettings = LoadSettings(gateways.settings, preferences)
     val updateSettings = UpdateSettings(gateways.settings, preferences)

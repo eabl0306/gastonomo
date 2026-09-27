@@ -17,6 +17,7 @@ internal data class CategoryEntity(
     @ColumnInfo(name = "color") val color: String,
     @ColumnInfo(name = "is_default") val isDefault: Boolean,
     @ColumnInfo(name = "movement_count") val movementCount: Int,
+    @ColumnInfo(name = "archived") val archived: Boolean,
 ) {
     fun toDomain(): Category = Category(
         id = CategoryId(id),
@@ -26,6 +27,7 @@ internal data class CategoryEntity(
         color = color,
         isDefault = isDefault,
         movementCount = movementCount,
+        archived = archived,
     )
 
     companion object {
@@ -37,6 +39,7 @@ internal data class CategoryEntity(
             color = category.color,
             isDefault = category.isDefault,
             movementCount = category.movementCount,
+            archived = category.archived,
         )
     }
 }

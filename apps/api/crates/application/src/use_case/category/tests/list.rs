@@ -16,7 +16,7 @@ use crate::testing::block_on;
 fn a_new_account_lists_the_twelve_default_categories() {
     let harness = Harness::new();
 
-    let listed = block_on(harness.list.execute(harness.user)).expect("should list");
+    let listed = block_on(harness.list.execute(harness.user, false)).expect("should list");
 
     assert_eq!(listed.len(), DEFAULT_CATEGORIES.len());
     assert!(listed.iter().all(|entry| entry.category.is_default()));
@@ -28,7 +28,7 @@ fn the_defaults_come_before_the_ones_the_user_created() {
     let harness = Harness::new();
     harness.seed_custom(harness.user, "Mascotas");
 
-    let listed = block_on(harness.list.execute(harness.user)).expect("should list");
+    let listed = block_on(harness.list.execute(harness.user, false)).expect("should list");
 
     let custom_position = listed
         .iter()
@@ -44,7 +44,7 @@ fn the_usage_count_travels_with_the_list() {
     let mascotas = harness.seed_custom(harness.user, "Mascotas");
     harness.categories.set_usage(mascotas, 3);
 
-    let listed = block_on(harness.list.execute(harness.user)).expect("should list");
+    let listed = block_on(harness.list.execute(harness.user, false)).expect("should list");
 
     let entry = listed
         .iter()
@@ -58,7 +58,7 @@ fn the_list_only_has_the_categories_of_the_account_asking() {
     let harness = Harness::new();
     harness.seed_custom(harness.other_user, "Ajena");
 
-    let listed = block_on(harness.list.execute(harness.user)).expect("should list");
+    let listed = block_on(harness.list.execute(harness.user, false)).expect("should list");
 
     assert!(
         listed
@@ -80,7 +80,8 @@ fn the_use_cases_never_print_their_adapters() {
         format!("{:?}", harness.list),
         format!("{:?}", harness.create),
         format!("{:?}", harness.update),
-        format!("{:?}", harness.delete),
+        format!("{:?}", harness.archive),
+        format!("{:?}", harness.restore),
     ] {
         assert!(rendered.contains("Categor"), "{rendered}");
         assert!(rendered.ends_with(".. }"), "{rendered}");

@@ -17,8 +17,8 @@ use crate::port::Clock as _;
 use crate::port::category::CategoryRepository as _;
 use crate::testing::{FixedClock, InMemoryCategoryRepository, block_on};
 use crate::use_case::category::{
-    CreateCategory, CreateCategoryCommand, DeleteCategory, ListCategories, UpdateCategory,
-    UpdateCategoryCommand,
+    ArchiveCategory, CreateCategory, CreateCategoryCommand, ListCategories, RestoreCategory,
+    UpdateCategory, UpdateCategoryCommand,
 };
 
 /// Todo lo que un test de categorias necesita, ya cableado.
@@ -28,7 +28,8 @@ pub struct Harness {
     pub list: ListCategories,
     pub create: CreateCategory,
     pub update: UpdateCategory,
-    pub delete: DeleteCategory,
+    pub archive: ArchiveCategory,
+    pub restore: RestoreCategory,
     pub user: UserId,
     pub other_user: UserId,
 }
@@ -47,7 +48,8 @@ impl Harness {
             list: ListCategories::new(categories.clone()),
             create: CreateCategory::new(categories.clone(), clock.clone()),
             update: UpdateCategory::new(categories.clone(), clock.clone()),
-            delete: DeleteCategory::new(categories.clone()),
+            archive: ArchiveCategory::new(categories.clone(), clock.clone()),
+            restore: RestoreCategory::new(categories.clone(), clock.clone()),
             categories,
             clock,
             user,

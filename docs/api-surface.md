@@ -108,8 +108,10 @@ user_settings
 
 categories
   id uuid pk, user_id fk, name text, kind text ('in'|'out'|'both'),
-  icon text, color text, is_default bool, created_at, updated_at
+  icon text, color text, is_default bool, created_at, updated_at,
+  archived_at timestamptz null
   unique (user_id, lower(name))
+  check (archived_at is null or is_default = false)
 
 movements
   id uuid pk, user_id fk, occurred_on date, kind text ('in'|'out'),
@@ -148,7 +150,7 @@ idempotency_keys
 
 Indices que el diseno pide de forma directa: `movements (user_id, occurred_on desc, id
 desc)` para el filtro de periodo, la lista agrupada por dia y el cursor;
-`movements (category_id)` para el conteo de uso y la reasignacion al borrar;
+`movements (category_id)` para el conteo de uso;
 `loans (user_id, direction)` para las pills; `loan_payments (loan_id, paid_on desc)`
 para el historial del detalle.
 
@@ -243,10 +245,11 @@ POST   /v1/loans                     201  acepta Idempotency-Key
 GET    /v1/loans/{id}                200
 POST   /v1/loans/{id}/payments       201  acepta Idempotency-Key
 
-GET    /v1/categories                200
+GET    /v1/categories                200  ?includeArchived=
 POST   /v1/categories                201
 PATCH  /v1/categories/{id}           200
-DELETE /v1/categories/{id}           204
+DELETE /v1/categories/{id}           200  archiva si tiene movimientos
+POST   /v1/categories/{id}/restore   200
 
 GET    /v1/settings                  200
 PATCH  /v1/settings                  200
@@ -442,12 +445,16 @@ movimientos; esa asimetria no la pedia el diseno y se ha igualado.
 
 ### Categorias
 
-| Metodo | Ruta                  | Para que                                      |
-| ------ | --------------------- | --------------------------------------------- |
-| GET    | `/v1/categories`      | Todas, con `isDefault` y el conteo de uso.    |
-| POST   | `/v1/categories`      | Crear.                                        |
-| PATCH  | `/v1/categories/{id}` | Editar nombre, icono, color y tipo.           |
-| DELETE | `/v1/categories/{id}` | Borrar y reasignar sus movimientos a `Otros`. |
+| Metodo | Ruta                          | Para que                                            |
+| ------ | ----------------------------- | --------------------------------------------------- |
+| GET    | `/v1/categories`              | Las activas, con `isDefault` y el conteo.           |
+| POST   | `/v1/categories`              | Crear.                                              |
+| PATCH  | `/v1/categories/{id}`         | Editar nombre, icono, color y tipo.                 |
+| DELETE | `/v1/categories/{id}`         | Archiva, o borra si no la usa nadie. Dice cual fue. |
+| POST   | `/v1/categories/{id}/restore` | Devolver una archivada a la lista.                  |
+
+`GET /v1/categories?includeArchived=true` trae tambien las archivadas. Solo cuenta el
+valor exacto `true`; cualquier otra cosa se lee como que no.
 
 ```json
 {
@@ -459,7 +466,8 @@ movimientos; esa asimetria no la pedia el diseno y se ha igualado.
       "icon": "restaurant",
       "color": "#cf5f35",
       "isDefault": true,
-      "movementCount": 12
+      "movementCount": 12,
+      "archived": false
     }
   ]
 }
@@ -481,12 +489,38 @@ pantalla necesita para marcar el campo. Quedan asi:
   malos en la misma respuesta, no solo el primero.
 - **409** con `code: category_name_taken`: el nombre ya existe en la cuenta, sin
   distinguir tipo ni mayusculas.
-- **409** con `code: category_is_default`: se intento editar o borrar una predeterminada.
+- **409** con `code: category_is_default`: se intento editar, archivar o recuperar una
+  predeterminada.
 - **404**: la categoria no existe, es de otra cuenta, o el identificador del camino no
   es un UUID.
 
-El borrado es una transaccion: reasignar los movimientos a `Otros` y despues borrar la
-fila. Responde 204 sin cuerpo.
+#### El `DELETE` archiva, no destruye
+
+Antes reasignaba los movimientos de la categoria a `Otros` y despues borraba la fila.
+Eso escribia en movimientos ya registrados: un gasto de hace dos anos dejaba de leerse
+con la categoria que tenia el dia que se creo. Es exactamente lo que la regla del
+historico de solo anadir existe para impedir, por el mismo camino de siempre pero desde
+otro endpoint.
+
+Ahora:
+
+- Si **algun movimiento la usa**, se archiva. Deja de ofrecerse al registrar y sale de la
+  lista, pero la fila se queda y los movimientos siguen apuntando a ella. Archivar una ya
+  archivada responde igual, y se recupera con `POST /v1/categories/{id}/restore`, que
+  devuelve 200 con la categoria.
+- Si **no la usa nadie**, se borra de verdad. Una categoria que nunca se uso no tiene
+  historico que proteger, y guardarlas archivadas llenaria la lista de ruido.
+
+La respuesta es **200** con `{"outcome": "archived"}` o `{"outcome": "deleted"}`, no un 204
+vacio. El cliente tiene que decirle al usuario cual de las dos cosas paso, y deducirlo de su
+`movementCount` significaria deducirlo de un conteo de la ultima carga, que puede estar viejo.
+
+La condicion del conteo va tambien en el `WHERE` del `DELETE`, no solo en el caso de uso:
+entre comprobar y borrar puede entrar un movimiento, y entonces quedaria apuntando a una
+fila que ya no esta.
+
+La recuperacion no es un lujo: el nombre sigue siendo unico incluyendo las archivadas, asi
+que sin ella archivar por error dejaria el nombre cogido para siempre.
 
 ### Ajustes
 

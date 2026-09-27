@@ -3,6 +3,7 @@ package com.bahoque.gastonomo.data.offline
 import com.bahoque.gastonomo.core.application.error.ApiError
 import com.bahoque.gastonomo.core.application.port.CategoryDraft
 import com.bahoque.gastonomo.core.application.port.CategoryGateway
+import com.bahoque.gastonomo.core.application.port.CategoryRemoval
 import com.bahoque.gastonomo.core.application.port.CurrencyGateway
 import com.bahoque.gastonomo.core.application.port.SettingsGateway
 import com.bahoque.gastonomo.core.common.Outcome
@@ -36,15 +37,18 @@ internal class OfflineCategoryGateway(
     }
 
     override suspend fun create(draft: CategoryDraft): Outcome<Category, ApiError> =
-        remote.create(draft).alsoRefreshing()
+        remote.create(draft).alsoRefreshingCategories()
 
     override suspend fun update(
         id: CategoryId,
         draft: CategoryDraft,
-    ): Outcome<Category, ApiError> = remote.update(id, draft).alsoRefreshing()
+    ): Outcome<Category, ApiError> = remote.update(id, draft).alsoForgettingEverything()
 
-    override suspend fun delete(id: CategoryId): Outcome<Unit, ApiError> =
-        remote.delete(id).alsoRefreshing()
+    override suspend fun archive(id: CategoryId): Outcome<CategoryRemoval, ApiError> =
+        remote.archive(id).alsoRefreshingCategories()
+
+    override suspend fun restore(id: CategoryId): Outcome<Category, ApiError> =
+        remote.restore(id).alsoRefreshingCategories()
 
     private suspend fun refresh(): Outcome<Unit, ApiError> = remote.list().map { categories ->
         local.replaceAll(categories)
@@ -52,12 +56,24 @@ internal class OfflineCategoryGateway(
     }
 
     /**
-     * Borrar una categoria reasigna sus movimientos a Otros y renombrarla cambia como se leen,
-     * asi que tras escribir hay que olvidarlo todo, no solo las categorias.
+     * Renombrar una categoria, o cambiarle el color, cambia como se lee un movimiento que ya
+     * estaba guardado, porque cada movimiento trae su categoria entera. Asi que tras editar hay
+     * que olvidarlo todo, no solo las categorias.
      */
-    private suspend fun <V> Outcome<V, ApiError>.alsoRefreshing(): Outcome<V, ApiError> {
+    private suspend fun <V> Outcome<V, ApiError>.alsoForgettingEverything(): Outcome<V, ApiError> {
         if (this is Outcome.Success) {
             gate.forget()
+            refresh()
+        }
+        return this
+    }
+
+    /**
+     * Crear, archivar y recuperar **no tocan ningun movimiento**: solo cambia que categorias se
+     * ofrecen. Basta con volver a bajar la lista, y asi lo guardado no se tira por nada.
+     */
+    private suspend fun <V> Outcome<V, ApiError>.alsoRefreshingCategories(): Outcome<V, ApiError> {
+        if (this is Outcome.Success) {
             refresh()
         }
         return this

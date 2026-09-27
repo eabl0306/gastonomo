@@ -7,8 +7,36 @@
 //! tile, el nombre y el conteo de uso, y nada mas.
 
 use gastonomo_application::port::category::CategoryUsage;
+use gastonomo_application::use_case::category::CategoryRemoval;
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
+
+/// Lo que `DELETE /v1/categories/{id}` hizo de verdad.
+///
+/// Va en el cuerpo y no se deduce del codigo, porque de esto depende el texto que
+/// lee el usuario: "archivada" y "eliminada" no son lo mismo. El cliente podria
+/// adivinarlo por su `movementCount`, pero ese conteo es de la ultima carga y puede
+/// estar viejo, asi que adivinar significa a veces decirle al usuario algo que no
+/// paso.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct CategoryRemovalDto {
+    /// `archived` si algun movimiento la usa, `deleted` si no la usaba nadie.
+    #[schema(example = "archived")]
+    pub outcome: String,
+}
+
+impl From<CategoryRemoval> for CategoryRemovalDto {
+    fn from(removal: CategoryRemoval) -> Self {
+        Self {
+            outcome: match removal {
+                CategoryRemoval::Archived => "archived",
+                CategoryRemoval::Deleted => "deleted",
+            }
+            .to_owned(),
+        }
+    }
+}
 
 /// Una categoria tal y como la pinta la pantalla.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
@@ -34,8 +62,11 @@ pub struct CategoryDto {
     /// Color del tile, en `#rrggbb`.
     #[schema(example = "#2f7fb5")]
     pub color: String,
-    /// Indica si es una de las 12 predeterminadas, que no se editan ni se borran.
+    /// Indica si es una de las 12 predeterminadas, que no se editan ni se archivan.
     pub is_default: bool,
+    /// Indica si esta archivada: ya no se ofrece, pero sus movimientos la siguen
+    /// usando y por eso se puede seguir resolviendo.
+    pub archived: bool,
     /// Movimientos que la usan, para el texto "N movimientos".
     #[schema(example = 3)]
     pub movement_count: u32,
@@ -51,6 +82,7 @@ impl From<&CategoryUsage> for CategoryDto {
             icon: category.icon().to_string(),
             color: category.color().to_string(),
             is_default: category.is_default(),
+            archived: category.is_archived(),
             movement_count: usage.movements,
         }
     }

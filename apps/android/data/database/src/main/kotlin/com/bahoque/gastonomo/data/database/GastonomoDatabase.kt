@@ -69,7 +69,7 @@ internal abstract class GastonomoDatabase : RoomDatabase() {
 
     companion object {
         /** Sube con cada cambio de esquema, y cada subida trae su migracion y su test. */
-        const val VERSION = 2
+        const val VERSION = 3
 
         /** El fichero, dentro del almacenamiento privado de la aplicacion. */
         const val FILE_NAME = "gastonomo.db"

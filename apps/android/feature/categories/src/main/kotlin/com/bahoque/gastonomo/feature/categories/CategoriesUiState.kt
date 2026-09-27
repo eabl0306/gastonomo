@@ -10,6 +10,9 @@ import com.bahoque.gastonomo.core.domain.movement.MovementKind
  *
  * Las categorias se guardan sin partir: el tab decide cuales se ensenan, y una de tipo
  * `both` (Prestamo, Abono prestamo y Otros) sale en los dos.
+ *
+ * Esta lista es la unica de la aplicacion que llega **con las archivadas dentro**, porque es la
+ * unica pantalla donde se pueden recuperar. Los tres grupos las reparten y ninguno las mezcla.
  */
 data class CategoriesUiState(
     val loading: Boolean = true,
@@ -20,13 +23,26 @@ data class CategoriesUiState(
     val loadFailed: Boolean = false,
 ) {
     /** Las del usuario que caben en el tab activo, que son las unicas editables. */
-    val mine: List<Category> get() = categories.filter { !it.isDefault && it.kind.accepts(tab) }
+    val mine: List<Category> get() = active.filter { !it.isDefault && it.kind.accepts(tab) }
 
     /** Las 12 predeterminadas que caben en el tab activo. */
-    val defaults: List<Category> get() = categories.filter { it.isDefault && it.kind.accepts(tab) }
+    val defaults: List<Category> get() = active.filter { it.isDefault && it.kind.accepts(tab) }
 
-    /** El conteo que ensena cada segmento del control de arriba. */
-    fun countOf(kind: MovementKind): Int = categories.count { it.kind.accepts(kind) }
+    /**
+     * Las archivadas del tab activo. Solo se pueden recuperar: ni se editan ni se vuelven a
+     * archivar.
+     */
+    val archived: List<Category> get() = categories.filter { it.archived && it.kind.accepts(tab) }
+
+    /**
+     * El conteo que ensena cada segmento del control de arriba.
+     *
+     * Cuenta solo las activas: es el numero de categorias que se pueden elegir al registrar, que
+     * es lo que el usuario entiende por "cuantas tengo".
+     */
+    fun countOf(kind: MovementKind): Int = active.count { it.kind.accepts(kind) }
+
+    private val active: List<Category> get() = categories.filterNot { it.archived }
 }
 
 /**
@@ -71,7 +87,13 @@ sealed interface CategoriesMessage {
 
     data object Updated : CategoriesMessage
 
+    /** Se archivo: sigue ahi porque algun movimiento la usa. */
+    data class Archived(val name: String) : CategoriesMessage
+
+    /** No la usaba nadie, asi que se borro de verdad. */
     data class Deleted(val name: String) : CategoriesMessage
+
+    data class Restored(val name: String) : CategoriesMessage
 
     /** 409 `category_is_default`: se intento tocar una de las 12. */
     data object IsDefault : CategoriesMessage {

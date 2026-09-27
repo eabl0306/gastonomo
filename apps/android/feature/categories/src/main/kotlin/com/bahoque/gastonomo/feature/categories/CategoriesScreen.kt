@@ -15,6 +15,7 @@ import com.bahoque.gastonomo.core.designsystem.component.GastonomoAppBar
 import com.bahoque.gastonomo.core.designsystem.component.GastonomoCard
 import com.bahoque.gastonomo.core.designsystem.component.GastonomoEmptyStateRetry
 import com.bahoque.gastonomo.core.designsystem.component.GastonomoScreen
+import com.bahoque.gastonomo.core.designsystem.component.GastonomoText
 import com.bahoque.gastonomo.core.designsystem.component.Overline
 import com.bahoque.gastonomo.core.designsystem.component.PrimaryButton
 import com.bahoque.gastonomo.core.designsystem.component.Segment
@@ -99,7 +100,7 @@ private fun CategoryGroups(state: CategoriesUiState, actions: CategoriesActions)
             MyCategoryRow(
                 category = category,
                 onEdit = { actions.onOpenSheet(category) },
-                onDelete = { actions.onDelete(category) },
+                onArchive = { actions.onArchive(category) },
                 showDivider = !last,
             )
         }
@@ -109,6 +110,41 @@ private fun CategoryGroups(state: CategoriesUiState, actions: CategoriesActions)
         categories = state.defaults,
     ) { category, last ->
         DefaultCategoryRow(category = category, showDivider = !last)
+    }
+    if (state.archived.isNotEmpty()) {
+        ArchivedGroup(state.archived, actions.onRestore)
+    }
+}
+
+/**
+ * Las archivadas, al final y con su explicacion.
+ *
+ * Va debajo de las predeterminadas porque es lo que menos se mira: solo se entra aqui a recuperar
+ * algo. La nota de arriba es la que evita la pregunta de por que sigue en la lista una categoria
+ * que se borro.
+ */
+@Composable
+private fun ArchivedGroup(archived: List<Category>, onRestore: (Category) -> Unit) {
+    Column {
+        Overline(
+            stringResource(R.string.categories_archived),
+            modifier = Modifier.padding(bottom = OVERLINE_GAP),
+        )
+        GastonomoText(
+            text = stringResource(R.string.categories_archived_note),
+            style = GastonomoTheme.typography.secondarySmall,
+            color = GastonomoTheme.colors.muted,
+            modifier = Modifier.padding(start = NOTE_PADDING, end = NOTE_PADDING, bottom = OVERLINE_GAP),
+        )
+        GastonomoCard {
+            archived.forEachIndexed { index, category ->
+                ArchivedCategoryRow(
+                    category = category,
+                    onRestore = { onRestore(category) },
+                    showDivider = index != archived.lastIndex,
+                )
+            }
+        }
     }
 }
 
@@ -137,5 +173,6 @@ private fun MovementKind.tabLabelRes(): Int = when (this) {
 private val SECTION_GAP = 14.dp
 private val TABS_TOP = 4.dp
 private val OVERLINE_GAP = 8.dp
+private val NOTE_PADDING = 4.dp
 private val BUTTON_TOP = 12.dp
 private val BUTTON_BOTTOM = 24.dp

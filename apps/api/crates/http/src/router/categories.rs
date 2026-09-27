@@ -7,12 +7,13 @@ use std::fmt;
 use std::sync::Arc;
 
 use gastonomo_application::use_case::category::{
-    CreateCategory, DeleteCategory, ListCategories, UpdateCategory,
+    ArchiveCategory, CreateCategory, ListCategories, RestoreCategory, UpdateCategory,
 };
 use salvo::prelude::Router;
 
 use crate::handler::category::{
-    CreateCategoryHandler, DeleteCategoryHandler, ListCategoriesHandler, UpdateCategoryHandler,
+    CreateCategoryHandler, DeleteCategoryHandler, ListCategoriesHandler, RestoreCategoryHandler,
+    UpdateCategoryHandler,
 };
 
 /// Casos de uso que necesita el router de categorias.
@@ -24,8 +25,10 @@ pub struct CategoryDependencies {
     pub create: Arc<CreateCategory>,
     /// Edicion.
     pub update: Arc<UpdateCategory>,
-    /// Borrado con reasignacion a "Otros".
-    pub delete: Arc<DeleteCategory>,
+    /// Archivado, o borrado de verdad si no la usa ningun movimiento.
+    pub archive: Arc<ArchiveCategory>,
+    /// Vuelta a la lista de una archivada.
+    pub restore: Arc<RestoreCategory>,
 }
 
 impl fmt::Debug for CategoryDependencies {
@@ -45,7 +48,11 @@ pub fn router(dependencies: CategoryDependencies) -> Router {
             .push(
                 Router::with_path("{id}")
                     .patch(UpdateCategoryHandler::new(dependencies.update))
-                    .delete(DeleteCategoryHandler::new(dependencies.delete)),
+                    .delete(DeleteCategoryHandler::new(dependencies.archive))
+                    .push(
+                        Router::with_path("restore")
+                            .post(RestoreCategoryHandler::new(dependencies.restore)),
+                    ),
             ),
     )
 }

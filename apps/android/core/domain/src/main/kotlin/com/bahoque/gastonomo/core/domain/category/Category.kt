@@ -8,6 +8,7 @@ package com.bahoque.gastonomo.core.domain.category
  * @property color color del tile, en `#rrggbb`.
  * @property isDefault las 12 predeterminadas: no se pueden editar ni borrar.
  * @property movementCount alimenta el texto "Sin movimientos / 1 movimiento / N movimientos".
+ * @property archived ya no se ofrece al registrar, pero sus movimientos la siguen usando.
  */
 data class Category(
     val id: CategoryId,
@@ -17,6 +18,7 @@ data class Category(
     val color: String,
     val isDefault: Boolean,
     val movementCount: Int = 0,
+    val archived: Boolean = false,
 ) {
     companion object {
         /** Maximo de caracteres del nombre, el mismo que valida la API. */
@@ -33,7 +35,13 @@ data class Category(
         val COLOR_CHOICES: List<String> =
             "#cf5f35 #c48f12 #2f8a55 #2f7fb5 #3f6fc4 #7a52c7 #b84a86 #5b6573".split(' ')
 
-        /** Nombre de la categoria a la que se reasignan los movimientos al borrar una. */
+        /**
+         * La predeterminada que recoge lo que no cabe en otra.
+         *
+         * Antes era a donde la API mandaba los movimientos al borrar su categoria. Ya no: borrar
+         * archiva, y un movimiento nunca cambia de categoria. Se queda porque es una de las 12 y
+         * el diseno la ensena en los dos grids.
+         */
         const val FALLBACK_NAME = "Otros"
     }
 }

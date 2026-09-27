@@ -68,6 +68,26 @@ class MigrationTest {
         assertEquals(0, pending)
     }
 
+    @Test
+    fun `from 2 to 3 the categories survive and arrive as active`() = runTest {
+        createVersion(2) { db ->
+            db.execSQL(INSERT_CATEGORY)
+        }
+
+        val database = openWithMigrations()
+        val category = try {
+            database.categories().all().single()
+        } finally {
+            database.close()
+        }
+
+        assertEquals("Mascotas", category.name)
+        assertEquals(4, category.movementCount)
+        // Lo que ya estaba guardado queda como lo que es: activo. Una categoria que apareciera
+        // archivada de la nada desapareceria de la rejilla de Nuevo movimiento sin motivo.
+        assertEquals(false, category.archived)
+    }
+
     /** Abrir con Room ejecuta la migracion y **valida el esquema resultante** contra el esperado. */
     private fun openWithMigrations(): GastonomoDatabase =
         Room.databaseBuilder(context, GastonomoDatabase::class.java, file.absolutePath)
@@ -111,6 +131,11 @@ class MigrationTest {
             "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY, identity_hash TEXT)"
         const val INSERT_MASTER =
             "INSERT OR REPLACE INTO room_master_table (id, identity_hash) VALUES(42, ?)"
+
+        val INSERT_CATEGORY = """
+            INSERT INTO categories (id, name, kind, icon, color, is_default, movement_count)
+            VALUES ('pets', 'Mascotas', 'out', 'pets', '#2f7fb5', 0, 4)
+        """.trimIndent()
 
         val INSERT_MOVEMENT = """
             INSERT INTO movements (id, occurred_on, kind, title, amount, currency, base,

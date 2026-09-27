@@ -8,8 +8,6 @@ import com.bahoque.gastonomo.core.testing.fake.FakeSessionStore
 import com.bahoque.gastonomo.core.testing.fake.SampleAuth
 import com.bahoque.gastonomo.data.network.MockApi.Companion.json
 import com.bahoque.gastonomo.data.network.MockApi.Companion.problem
-import io.ktor.client.engine.mock.respondError
-import io.ktor.http.HttpStatusCode
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -109,9 +107,12 @@ class ApiClientTest {
     }
 
     @Test
-    fun `a delete answers without a body`() = runTest {
-        val api = MockApi { respondError(HttpStatusCode.NoContent) }
-        assertTrue(api.client.delete("categories/x").isSuccess)
+    fun `a delete reads the body it answers with`() = runTest {
+        val api = MockApi { json("""{"name":"archived"}""") }
+
+        val result = api.client.delete<Probe>("categories/x")
+
+        assertEquals("archived", (result as Outcome.Success).value.name)
     }
 
     @Test

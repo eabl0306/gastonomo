@@ -1,5 +1,6 @@
 package com.bahoque.gastonomo.data.catalog
 
+import com.bahoque.gastonomo.core.application.port.CategoryRemoval
 import com.bahoque.gastonomo.core.domain.category.Category
 import com.bahoque.gastonomo.core.domain.category.CategoryId
 import com.bahoque.gastonomo.core.domain.category.CategoryKind
@@ -23,6 +24,7 @@ internal data class CategoryDto(
     @SerialName("color") val color: String,
     @SerialName("isDefault") val isDefault: Boolean = false,
     @SerialName("movementCount") val movementCount: Int = 0,
+    @SerialName("archived") val archived: Boolean = false,
 ) {
     fun toDomain(): Category = Category(
         id = CategoryId(id),
@@ -32,7 +34,25 @@ internal data class CategoryDto(
         color = color,
         isDefault = isDefault,
         movementCount = movementCount,
+        archived = archived,
     )
+}
+
+/**
+ * Lo que contesta `DELETE /v1/categories/{id}`: `archived` o `deleted`.
+ *
+ * Un valor que no se reconozca se lee como `ARCHIVED`, que es lo prudente: decir "archivada"
+ * de algo que se borro solo cuesta un aviso; decir "eliminada" de algo que sigue ahi hace que
+ * el usuario la busque donde no esta.
+ */
+@Serializable
+internal data class CategoryRemovalDto(
+    @SerialName("outcome") val outcome: String,
+) {
+    // Sin `companion object`: kotlinx.serialization genera el serializador sobre el Companion, y
+    // uno privado en una clase internal le deja sin acceso. Falla al deserializar, no al compilar.
+    fun toDomain(): CategoryRemoval =
+        if (outcome == "deleted") CategoryRemoval.DELETED else CategoryRemoval.ARCHIVED
 }
 
 @Serializable
