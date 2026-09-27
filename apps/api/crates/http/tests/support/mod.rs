@@ -21,7 +21,7 @@ use gastonomo_application::testing::{
     RecordingMailer, RecordingUserProvisioning, StubMovementCategoryReader,
 };
 use gastonomo_application::use_case::category::{
-    CreateCategory, DeleteCategory, ListCategories, UpdateCategory,
+    ArchiveCategory, CreateCategory, ListCategories, RestoreCategory, UpdateCategory,
 };
 use gastonomo_application::use_case::currency::{GetExchangeRates, ListCurrencies};
 use gastonomo_application::use_case::loan::testing::InMemoryLoanRepository;
@@ -173,7 +173,11 @@ fn category_dependencies(doubles: &Doubles, parts: &Parts) -> CategoryDependenci
         list: Arc::new(ListCategories::new(categories.clone())),
         create: Arc::new(CreateCategory::new(categories.clone(), parts.clock.clone())),
         update: Arc::new(UpdateCategory::new(categories.clone(), parts.clock.clone())),
-        delete: Arc::new(DeleteCategory::new(categories)),
+        archive: Arc::new(ArchiveCategory::new(
+            categories.clone(),
+            parts.clock.clone(),
+        )),
+        restore: Arc::new(RestoreCategory::new(categories, parts.clock.clone())),
     }
 }
 

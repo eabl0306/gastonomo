@@ -21,8 +21,8 @@ pub enum CategoryError {
     /// El color no esta entre los 8 del sheet.
     #[error("the color is not one of the eight the app offers")]
     ColorNotOffered,
-    /// Se intento editar o borrar una predeterminada.
-    #[error("a default category cannot be edited or deleted")]
+    /// Se intento editar o archivar una predeterminada.
+    #[error("a default category cannot be edited or archived")]
     DefaultIsReadOnly,
 }
 
@@ -81,6 +81,7 @@ pub struct Category {
     is_default: bool,
     created_at: DateTime<Utc>,
     updated_at: DateTime<Utc>,
+    archived_at: Option<DateTime<Utc>>,
 }
 
 impl Category {
@@ -103,6 +104,7 @@ impl Category {
             is_default: false,
             created_at: new_category.created_at,
             updated_at: new_category.created_at,
+            archived_at: None,
         })
     }
 
@@ -113,6 +115,7 @@ impl Category {
         new_category: NewCategory,
         is_default: bool,
         updated_at: DateTime<Utc>,
+        archived_at: Option<DateTime<Utc>>,
     ) -> Self {
         Self {
             id,
@@ -124,6 +127,7 @@ impl Category {
             is_default,
             created_at: new_category.created_at,
             updated_at,
+            archived_at,
         }
     }
 
@@ -155,7 +159,51 @@ impl Category {
         Ok(())
     }
 
-    /// Comprueba que la categoria se puede editar o borrar.
+    /// Archiva la categoria: deja de ofrecerse y no se borra nada.
+    ///
+    /// Es idempotente: archivar una ya archivada no cambia el instante, porque lo
+    /// que importa es cuando dejo de usarse, no cuantas veces se pidio.
+    ///
+    /// # Errors
+    ///
+    /// Devuelve [`CategoryError::DefaultIsReadOnly`] si es una predeterminada.
+    pub fn archive(&mut self, now: DateTime<Utc>) -> Result<(), CategoryError> {
+        self.check_writable()?;
+        if self.archived_at.is_none() {
+            self.archived_at = Some(now);
+            self.updated_at = now;
+        }
+        Ok(())
+    }
+
+    /// La devuelve a la lista. Sin esto, archivar por error no tendria vuelta atras:
+    /// crear otra con el mismo nombre chocaria con la unicidad.
+    ///
+    /// # Errors
+    ///
+    /// Devuelve [`CategoryError::DefaultIsReadOnly`] si es una predeterminada.
+    pub fn unarchive(&mut self, now: DateTime<Utc>) -> Result<(), CategoryError> {
+        self.check_writable()?;
+        if self.archived_at.is_some() {
+            self.archived_at = None;
+            self.updated_at = now;
+        }
+        Ok(())
+    }
+
+    /// Indica si esta archivada.
+    #[must_use]
+    pub const fn is_archived(&self) -> bool {
+        self.archived_at.is_some()
+    }
+
+    /// Cuando se archivo, si lo esta.
+    #[must_use]
+    pub const fn archived_at(&self) -> Option<DateTime<Utc>> {
+        self.archived_at
+    }
+
+    /// Comprueba que la categoria se puede editar o archivar.
     ///
     /// # Errors
     ///

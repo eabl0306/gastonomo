@@ -141,8 +141,9 @@ POST   /v1/movements
 GET    /v1/loans?direction=          GET /v1/loans/{id}
 POST   /v1/loans                     POST /v1/loans/{id}/payments
 
-GET    /v1/categories                POST /v1/categories
-PATCH  /v1/categories/{id}           DELETE /v1/categories/{id}
+GET    /v1/categories?includeArchived=   POST /v1/categories
+PATCH  /v1/categories/{id}               DELETE /v1/categories/{id}
+POST   /v1/categories/{id}/restore
 
 GET    /v1/settings                  PATCH /v1/settings
 GET    /v1/currencies                GET /v1/exchange-rates
@@ -178,7 +179,10 @@ Todo `/v1` exige `Authorization: Bearer {accessToken}` menos `auth/register`,
    error se corrige registrando un movimiento que lo compense, y para eso cada movimiento
    lleva nota. **No lo trates como un hueco ni propongas anadir esos endpoints.** De aqui
    sale que la idempotencia sea imprescindible (un duplicado es permanente) y que
-   sincronizar no tenga conflictos que resolver.
+   sincronizar no tenga conflictos que resolver. Tampoco vale por la puerta de atras:
+   borrar una categoria **archiva** en vez de destruir, porque reasignar sus movimientos a
+   "Otros" era escribir en movimientos ya registrados. Solo se borra de verdad la que no
+   usa nadie. Ver [ADR 0022](docs/adr/0022-archivar-categorias.md).
 8. **Las fechas de registro son `DATE`** (`YYYY-MM-DD`), sin hora ni zona. Los instantes
    tecnicos si son `timestamptz`.
 
@@ -237,7 +241,7 @@ just                # lista todas las recetas
 just check          # lint, tipos, tests y cobertura de los tres
 just ci             # check + e2e, cargo deny y builds de release: lo que corre la CI
 just api-test       # cargo test --workspace, sin base de datos
-just api-test-db    # las 7 suites de integracion contra el Postgres de compose
+just api-test-db    # las suites de integracion contra el Postgres de compose
 just web-cov        # vitest con los umbrales de cobertura
 just android-check  # detekt + sourceGuard + lint + tests (con capturas) + kover
 just up / just down # pila de Docker de desarrollo

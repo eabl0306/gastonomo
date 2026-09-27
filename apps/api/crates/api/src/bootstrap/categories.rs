@@ -3,7 +3,7 @@
 use std::sync::Arc;
 
 use gastonomo_application::use_case::category::{
-    CreateCategory, DeleteCategory, ListCategories, UpdateCategory,
+    ArchiveCategory, CreateCategory, ListCategories, RestoreCategory, UpdateCategory,
 };
 use gastonomo_http::CategoryDependencies;
 use gastonomo_infrastructure::persistence::PostgresCategoryRepository;
@@ -24,6 +24,10 @@ pub fn dependencies(wiring: &Wiring) -> CategoryDependencies {
             categories.clone(),
             wiring.clock.clone(),
         )),
-        delete: Arc::new(DeleteCategory::new(categories)),
+        archive: Arc::new(ArchiveCategory::new(
+            categories.clone(),
+            wiring.clock.clone(),
+        )),
+        restore: Arc::new(RestoreCategory::new(categories, wiring.clock.clone())),
     }
 }

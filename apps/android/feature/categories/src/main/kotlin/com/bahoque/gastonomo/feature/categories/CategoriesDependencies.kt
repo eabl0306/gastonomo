@@ -1,7 +1,8 @@
 package com.bahoque.gastonomo.feature.categories
 
-import com.bahoque.gastonomo.core.application.usecase.category.DeleteCategory
+import com.bahoque.gastonomo.core.application.usecase.category.ArchiveCategory
 import com.bahoque.gastonomo.core.application.usecase.category.LoadCategories
+import com.bahoque.gastonomo.core.application.usecase.category.RestoreCategory
 import com.bahoque.gastonomo.core.application.usecase.category.SaveCategory
 
 /**
@@ -17,5 +18,7 @@ interface CategoriesDependencies {
 
     val saveCategory: SaveCategory
 
-    val deleteCategory: DeleteCategory
+    val archiveCategory: ArchiveCategory
+
+    val restoreCategory: RestoreCategory
 }

@@ -6,10 +6,12 @@
 mod create;
 mod delete;
 mod list;
+mod restore;
 mod support;
 mod update;
 
 pub use create::CreateCategoryHandler;
 pub use delete::DeleteCategoryHandler;
 pub use list::ListCategoriesHandler;
+pub use restore::RestoreCategoryHandler;
 pub use update::UpdateCategoryHandler;

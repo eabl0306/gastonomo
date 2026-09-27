@@ -36,8 +36,3 @@ pub fn path_category_id(req: &Request) -> Result<CategoryId, AppError> {
 pub fn write_json<T: Serialize + Send + 'static>(res: &mut Response, status: StatusCode, body: T) {
     res.render_with_status(status, Json(body));
 }
-
-/// Escribe una respuesta sin cuerpo.
-pub fn write_empty(res: &mut Response, status: StatusCode) {
-    res.status_code(status);
-}

@@ -13,5 +13,6 @@ internal fun categoriesDependencies(useCases: UseCases): CategoriesDependencies 
     object : CategoriesDependencies {
         override val loadCategories = useCases.loadCategories
         override val saveCategory = useCases.saveCategory
-        override val deleteCategory = useCases.deleteCategory
+        override val archiveCategory = useCases.archiveCategory
+        override val restoreCategory = useCases.restoreCategory
     }

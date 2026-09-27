@@ -4,6 +4,7 @@ import com.bahoque.gastonomo.core.application.error.ApiError
 import com.bahoque.gastonomo.core.application.port.AuthGateway
 import com.bahoque.gastonomo.core.application.port.CategoryDraft
 import com.bahoque.gastonomo.core.application.port.CategoryGateway
+import com.bahoque.gastonomo.core.application.port.CategoryRemoval
 import com.bahoque.gastonomo.core.application.port.CurrencyGateway
 import com.bahoque.gastonomo.core.application.port.IdempotencyKey
 import com.bahoque.gastonomo.core.application.port.IdempotentResult
@@ -135,8 +136,11 @@ internal class SpyCategoryGateway : CategoryGateway {
     override suspend fun update(id: CategoryId, draft: CategoryDraft): Outcome<Category, ApiError> =
         failure?.let { Outcome.Failure(it) } ?: Outcome.Success(SampleFinance.pets)
 
-    override suspend fun delete(id: CategoryId): Outcome<Unit, ApiError> =
-        failure?.let { Outcome.Failure(it) } ?: Outcome.Success(Unit)
+    override suspend fun archive(id: CategoryId): Outcome<CategoryRemoval, ApiError> =
+        failure?.let { Outcome.Failure(it) } ?: Outcome.Success(CategoryRemoval.ARCHIVED)
+
+    override suspend fun restore(id: CategoryId): Outcome<Category, ApiError> =
+        failure?.let { Outcome.Failure(it) } ?: Outcome.Success(SampleFinance.pets)
 }
 
 internal class SpySettingsGateway : SettingsGateway {

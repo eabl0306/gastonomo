@@ -21,12 +21,12 @@ import com.bahoque.gastonomo.core.designsystem.theme.GastonomoTheme
 import com.bahoque.gastonomo.core.designsystem.theme.categoryColorOf
 import com.bahoque.gastonomo.core.domain.category.Category
 
-/** Una categoria del usuario: tile, nombre, uso y los botones de editar y borrar. */
+/** Una categoria del usuario: tile, nombre, uso y los botones de editar y quitar. */
 @Composable
 internal fun MyCategoryRow(
     category: Category,
     onEdit: () -> Unit,
-    onDelete: () -> Unit,
+    onArchive: () -> Unit,
     showDivider: Boolean,
     modifier: Modifier = Modifier,
 ) {
@@ -44,7 +44,7 @@ internal fun MyCategoryRow(
             RowAction(
                 icon = GastonomoIcons.DELETE,
                 description = stringResource(GastonomoStrings.actionDelete),
-                onClick = onDelete,
+                onClick = onArchive,
                 tint = GastonomoTheme.colors.red,
             )
         },
@@ -71,6 +71,37 @@ internal fun DefaultCategoryRow(
                 size = LOCK_SIZE,
                 tint = GastonomoTheme.colors.radioOff,
                 contentDescription = stringResource(R.string.categories_locked),
+            )
+        },
+    )
+}
+
+/**
+ * Una archivada: se ensena apagada y con un solo boton, recuperar.
+ *
+ * No lleva editar: mientras esta archivada no se ofrece, asi que cambiarle el nombre o el color no
+ * cambiaria nada de lo que el usuario ve. Se recupera y luego se edita.
+ */
+@Composable
+internal fun ArchivedCategoryRow(
+    category: Category,
+    onRestore: () -> Unit,
+    showDivider: Boolean,
+    modifier: Modifier = Modifier,
+) {
+    ListRow(
+        title = category.name,
+        modifier = modifier,
+        subtitle = usesLabel(category.movementCount),
+        showDivider = showDivider,
+        minHeight = GastonomoTheme.dimens.listRowTall,
+        endPadding = ACTIONS_PADDING,
+        leading = { CategoryTile(category) },
+        trailing = {
+            RowAction(
+                icon = GastonomoIcons.UNARCHIVE,
+                description = stringResource(R.string.categories_restore),
+                onClick = onRestore,
             )
         },
     )

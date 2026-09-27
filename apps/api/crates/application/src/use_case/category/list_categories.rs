@@ -8,7 +8,10 @@ use gastonomo_domain::value_object::UserId;
 use crate::error::AppError;
 use crate::port::category::{CategoryRepository, CategoryUsage};
 
-/// Devuelve todas las categorias de la cuenta con su conteo de uso.
+/// Devuelve las categorias de la cuenta con su conteo de uso.
+///
+/// Por defecto solo las activas. Las archivadas se piden a proposito, para resolver
+/// la categoria de un movimiento viejo o para recuperarla.
 ///
 /// El orden que llega es estable (las predeterminadas primero y luego por nombre)
 /// pero el cliente lo reordena: la rejilla del diseno ensena las predeterminadas en
@@ -36,7 +39,13 @@ impl ListCategories {
     /// # Errors
     ///
     /// Devuelve [`AppError::Dependency`] si falla la base de datos.
-    pub async fn execute(&self, user_id: UserId) -> Result<Vec<CategoryUsage>, AppError> {
-        self.categories.list_with_usage(user_id).await
+    pub async fn execute(
+        &self,
+        user_id: UserId,
+        include_archived: bool,
+    ) -> Result<Vec<CategoryUsage>, AppError> {
+        self.categories
+            .list_with_usage(user_id, include_archived)
+            .await
     }
 }

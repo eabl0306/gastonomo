@@ -10,7 +10,8 @@ use utoipa::openapi::schema::{ObjectBuilder, Type};
 use utoipa::openapi::{ComponentsBuilder, Required};
 
 use crate::dto::category::{
-    CategoryDto, CategoryListDto, CreateCategoryRequestDto, UpdateCategoryRequestDto,
+    CategoryDto, CategoryListDto, CategoryRemovalDto, CreateCategoryRequestDto,
+    UpdateCategoryRequestDto,
 };
 
 /// Etiqueta comun de los endpoints de categorias.
@@ -33,6 +34,7 @@ pub fn paths(builder: PathsBuilder) -> PathsBuilder {
     builder
         .path("/v1/categories", collection())
         .path("/v1/categories/{id}", item())
+        .path("/v1/categories/{id}/restore", restore_item())
 }
 
 /// Anade los esquemas de categorias.
@@ -41,6 +43,7 @@ pub fn schemas(builder: ComponentsBuilder) -> ComponentsBuilder {
     builder
         .schema_from::<CategoryDto>()
         .schema_from::<CategoryListDto>()
+        .schema_from::<CategoryRemovalDto>()
         .schema_from::<CreateCategoryRequestDto>()
         .schema_from::<UpdateCategoryRequestDto>()
 }
@@ -119,11 +122,37 @@ fn list() -> Operation {
         description: "Devuelve las 12 predeterminadas mas las del usuario, cada una con \
                       `movementCount`, que es lo que pinta \"Sin movimientos / 1 movimiento / \
                       N movimientos\". El orden que llega es estable (predeterminadas primero \
-                      y luego por nombre) y el cliente lo reordena como pinta la rejilla.",
+                      y luego por nombre) y el cliente lo reordena como pinta la rejilla. \
+                      **Las archivadas no salen por defecto**: para traerlas hay que pedir \
+                      `?includeArchived=true`, que es lo que hace falta para resolver la \
+                      categoria de un movimiento viejo o para recuperarla.",
         request: None,
         success: ("200", "Categorias de la cuenta.", Some("CategoryListDto")),
         errors: &[],
         with_path_id: false,
+    })
+}
+
+fn restore_item() -> PathItem {
+    PathItemBuilder::new()
+        .operation(HttpMethod::Post, restore())
+        .build()
+}
+
+fn restore() -> Operation {
+    operation(&Endpoint {
+        id: "restoreCategory",
+        summary: "Recuperar una categoria archivada",
+        description: "La devuelve a la lista. Hace falta porque el nombre sigue siendo unico \
+                      incluyendo las archivadas: sin esto, archivar por error no tendria \
+                      vuelta atras. Recuperar una que ya estaba activa responde igual.",
+        request: None,
+        success: ("200", "Categoria recuperada.", Some("CategoryDto")),
+        errors: &[
+            ("404", "No existe o es de otra cuenta."),
+            ("409", "Es predeterminada: codigo `category_is_default`."),
+        ],
+        with_path_id: true,
     })
 }
 
@@ -171,11 +200,22 @@ fn update() -> Operation {
 fn delete() -> Operation {
     operation(&Endpoint {
         id: "deleteCategory",
-        summary: "Borrar una categoria",
-        description: "Pasa sus movimientos a \"Otros\" y despues borra la fila, todo en una \
-                      transaccion. Las predeterminadas responden 409.",
+        summary: "Quitar una categoria de la lista",
+        description: "**No destruye nada si algun movimiento la usa.** En ese caso la archiva: \
+                      deja de ofrecerse, pero sigue ahi y los movimientos la siguen usando, \
+                      asi que un gasto de hace dos anos se lee con la categoria que tenia el \
+                      dia que se registro. Solo se borra de verdad cuando no la usa ningun \
+                      movimiento. Archivar una ya archivada responde igual. Las \
+                      predeterminadas responden 409. Se recupera con \
+                      `POST /v1/categories/{id}/restore`. Responde 200 con \
+                      `{\"outcome\": \"archived\"|\"deleted\"}`, y no 204, porque de eso \
+                      depende el texto que lee el usuario.",
         request: None,
-        success: ("204", "Categoria borrada.", None),
+        success: (
+            "204",
+            "Categoria archivada, o borrada si no la usaba nadie.",
+            None,
+        ),
         errors: &[
             ("404", "No existe o es de otra cuenta."),
             ("409", "Es predeterminada: codigo `category_is_default`."),

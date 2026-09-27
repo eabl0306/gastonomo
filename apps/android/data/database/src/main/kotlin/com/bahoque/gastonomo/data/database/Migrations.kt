@@ -13,7 +13,7 @@ import androidx.sqlite.execSQL
  * produccion. Cada entrada de esta lista tiene su test, que la ejecuta sobre una base de la
  * version anterior con datos dentro.
  */
-internal val MIGRATIONS: List<Migration> = listOf(MigrationFrom1To2)
+internal val MIGRATIONS: List<Migration> = listOf(MigrationFrom1To2, MigrationFrom2To3)
 
 /** Las anade una a una. Un `addMigrations(*MIGRATIONS)` copiaria el array en cada llamada. */
 internal fun <T : RoomDatabase> RoomDatabase.Builder<T>.addGastonomoMigrations():
@@ -46,4 +46,29 @@ internal object MigrationFrom1To2 : Migration(1, 2) {
     }
 
     private val PENDING_COLUMNS = listOf("movements", "loans", "loan_payments")
+}
+
+// Con nombre y no en la firma: detekt cuenta el 3 como numero magico, y tiene razon en que un
+// numero suelto en un `Migration(a, b)` no dice de que version a que version se va.
+private const val VERSION_2 = 2
+private const val VERSION_3 = 3
+
+/**
+ * Version 3: las categorias archivadas.
+ *
+ * Borrar una categoria ya no reasigna sus movimientos: si algun movimiento la usa, la API la
+ * archiva. `DEFAULT 0` deja lo que ya estaba guardado como lo que es, activo.
+ *
+ * **Son dos columnas, no una.** Cada movimiento lleva su categoria incrustada (`category_*`), asi
+ * que anadir un campo a la categoria anade tambien una columna a `movements`. Con solo la primera
+ * la aplicacion arrancaba y se caia al validar el esquema.
+ */
+internal object MigrationFrom2To3 : Migration(VERSION_2, VERSION_3) {
+
+    override fun migrate(connection: SQLiteConnection) {
+        connection.execSQL("ALTER TABLE `categories` ADD COLUMN `archived` INTEGER NOT NULL DEFAULT 0")
+        connection.execSQL(
+            "ALTER TABLE `movements` ADD COLUMN `category_archived` INTEGER NOT NULL DEFAULT 0",
+        )
+    }
 }

@@ -142,13 +142,59 @@ class CategoriesViewModelTest {
     }
 
     @Test
-    fun `deleting one announces it and reloads`() = runTest {
-        val dependencies = FakeCategoriesDependencies.working()
+    fun `one with movements is archived, not deleted, and the toast says so`() = runTest {
+        val dependencies = FakeCategoriesDependencies.withArchived()
         val viewModel = loaded(dependencies)
-        viewModel.onDelete(SampleFinance.pets)
+
+        viewModel.onArchive(SampleFinance.pets)
         advanceUntilIdle()
-        assertEquals(CategoriesMessage.Deleted("Mascotas"), viewModel.state.value.message)
-        assertEquals(listOf(SampleFinance.pets.id), dependencies.gateway.deleted)
+
+        assertEquals(CategoriesMessage.Archived("Mascotas"), viewModel.state.value.message)
+        assertEquals(listOf(SampleFinance.pets.id), dependencies.gateway.removed)
+        // Recargo, y ahora esta en el grupo de archivadas y no en el de las mias.
+        assertTrue(viewModel.state.value.archived.any { it.id == SampleFinance.pets.id })
+        assertTrue(viewModel.state.value.mine.none { it.id == SampleFinance.pets.id })
+    }
+
+    @Test
+    fun `one nobody used is deleted for real and the toast says that instead`() = runTest {
+        val dependencies = FakeCategoriesDependencies.withArchived()
+        val viewModel = loaded(dependencies)
+
+        viewModel.onArchive(FakeCategoriesDependencies.unused)
+        advanceUntilIdle()
+
+        assertEquals(CategoriesMessage.Deleted("Suscripciones"), viewModel.state.value.message)
+        val id = FakeCategoriesDependencies.unused.id
+        assertTrue(viewModel.state.value.categories.none { it.id == id })
+    }
+
+    @Test
+    fun `restoring one puts it back among mine`() = runTest {
+        val dependencies = FakeCategoriesDependencies.withArchived()
+        val viewModel = loaded(dependencies)
+        val gym = FakeCategoriesDependencies.archived
+
+        viewModel.onRestore(gym)
+        advanceUntilIdle()
+
+        assertEquals(CategoriesMessage.Restored("Gimnasio"), viewModel.state.value.message)
+        assertEquals(listOf(gym.id), dependencies.gateway.restored)
+        assertTrue(viewModel.state.value.mine.any { it.id == gym.id })
+        assertTrue(viewModel.state.value.archived.isEmpty())
+    }
+
+    @Test
+    fun `the archived ones arrive apart and never count`() = runTest {
+        val viewModel = loaded(FakeCategoriesDependencies.withArchived())
+        val state = viewModel.state.value
+
+        assertEquals(listOf("Gimnasio"), state.archived.map { it.name })
+        assertTrue(state.mine.none { it.archived })
+        assertEquals(
+            state.categories.count { !it.archived && it.kind.accepts(MovementKind.OUT) },
+            state.countOf(MovementKind.OUT),
+        )
     }
 
     @Test

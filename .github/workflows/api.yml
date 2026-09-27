@@ -11,6 +11,12 @@ permissions:
 env:
   CARGO_TERM_COLOR: always
   RUSTFLAGS: -D warnings
+  # Sin informacion de depuracion completa en los binarios de test. `cargo llvm-cov`
+  # solo necesita las tablas de lineas, y con el workspace entero mas una docena de
+  # binarios de integracion la diferencia son varios gigas de `target/`. El runner se
+  # quedo sin disco por esto, a mitad del paso de cobertura, en dos ramas a la vez.
+  CARGO_PROFILE_DEV_DEBUG: line-tables-only
+  CARGO_PROFILE_TEST_DEBUG: line-tables-only
 
 defaults:
   run:
@@ -36,6 +42,18 @@ jobs:
           --health-retries 10
     steps:
       - uses: actions/checkout@v7
+
+      # El runner viene con unos 30 GB de SDKs que este job no usa, y `target/` con
+      # instrumentacion de cobertura no cabe con ellos dentro. Se borran a mano y no con
+      # una accion de terceros: son cuatro rutas conocidas y no hace falta meter otra
+      # dependencia en la cadena de la CI.
+      - name: Hacer sitio en el disco
+        working-directory: /
+        run: |
+          df -h / | tail -1
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc \
+            /usr/local/share/boost /opt/hostedtoolcache/CodeQL
+          df -h / | tail -1
 
       # rust-toolchain.toml fija el canal y los componentes; aqui solo se
       # asegura que rustup los tiene antes del primer cargo.
@@ -75,15 +93,10 @@ jobs:
         env:
           GASTONOMO_TEST_DATABASE_URL: postgres://gastonomo:gastonomo@localhost:5432/gastonomo
           GASTONOMO_TEST_REQUIRE_DATABASE: '1'
-        run: >-
-          cargo test -p gastonomo-infrastructure
-          --test postgres_integration
-          --test postgres_auth
-          --test postgres_loans
-          --test postgres_movements
-          --test postgres_exchange_rates
-          --test postgres_categories_and_settings
-          --test postgres_idempotency
+        # `--tests` y no una lista de suites: la lista existia y se quedo vieja al
+        # partir un fichero en dos, asi que una bateria entera dejo de correr en la
+        # CI sin que nada se pusiera rojo. Con `--tests` una suite nueva entra sola.
+        run: cargo test -p gastonomo-infrastructure --tests
 
       - name: Cobertura del nucleo (minimo 80%)
         run: >-

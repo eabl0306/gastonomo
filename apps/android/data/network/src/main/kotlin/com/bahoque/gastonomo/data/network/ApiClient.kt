@@ -62,9 +62,14 @@ class ApiClient internal constructor(
         noinline block: HttpRequestBuilder.() -> Unit = {},
     ): Outcome<T, ApiError> = call(HttpMethod.Patch, path, body, null, false, block).decode()
 
-    /** Un DELETE autenticado. Responde 204 sin cuerpo. */
-    suspend fun delete(path: String): Outcome<Unit, ApiError> =
-        call(HttpMethod.Delete, path, null, null, false) {}.map { }
+    /**
+     * Un DELETE autenticado, con el cuerpo que responda.
+     *
+     * `DELETE /v1/categories/{id}` contesta 200 diciendo si archivo o borro, y de eso depende el
+     * texto que lee el usuario.
+     */
+    suspend inline fun <reified T> delete(path: String): Outcome<T, ApiError> =
+        call(HttpMethod.Delete, path, null, null, false) {}.decode()
 
     /** Un POST sin cuerpo de respuesta, como logout o los de contrasena. */
     suspend fun postEmpty(

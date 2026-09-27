@@ -1,9 +1,12 @@
 //! Adaptador driven del contexto de categorias.
 //!
 //! Todas las consultas filtran por `user_id`: una categoria de otra cuenta se
-//! comporta como si no existiera. El borrado va en una transaccion, porque el
-//! diseno dice que los movimientos de la categoria borrada pasan a "Otros" y a
-//! medias quedarian apuntando a una fila que ya no esta.
+//! comporta como si no existiera.
+//!
+//! **Aqui ya no hay ningun `UPDATE movements SET category_id`.** Era el ultimo
+//! camino por el que se podia alterar como se lee el historico. Ahora la categoria
+//! se archiva y se queda donde esta, y solo se borra de verdad cuando no la usa
+//! ningun movimiento.
 //!
 //! sqlx 0.9 solo acepta SQL literal, asi que la lista de columnas se repite en cada
 //! consulta en vez de salir de una constante.
@@ -15,7 +18,7 @@ use gastonomo_application::error::AppError;
 use gastonomo_application::port::category::{CategoryRepository, CategoryUsage};
 use gastonomo_domain::category::{Category, CategoryId};
 use gastonomo_domain::value_object::UserId;
-use sqlx::{PgPool, Postgres, Transaction};
+use sqlx::PgPool;
 
 use super::mapping::{database_error, is_unique_violation};
 
@@ -31,63 +34,29 @@ impl PostgresCategoryRepository {
     pub const fn new(pool: PgPool) -> Self {
         Self { pool }
     }
-
-    async fn reassign_movements(
-        transaction: &mut Transaction<'_, Postgres>,
-        user_id: UserId,
-        category_id: CategoryId,
-        fallback_id: CategoryId,
-    ) -> Result<u32, AppError> {
-        let moved = sqlx::query(
-            "UPDATE movements SET category_id = $3, updated_at = now() \
-             WHERE user_id = $1 AND category_id = $2",
-        )
-        .bind(user_id.as_uuid())
-        .bind(category_id.as_uuid())
-        .bind(fallback_id.as_uuid())
-        .execute(&mut **transaction)
-        .await
-        .map_err(|error| database_error("could not reassign the movements", &error))?
-        .rows_affected();
-        Ok(u32::try_from(moved).unwrap_or(u32::MAX))
-    }
-
-    async fn delete_row(
-        transaction: &mut Transaction<'_, Postgres>,
-        user_id: UserId,
-        category_id: CategoryId,
-    ) -> Result<(), AppError> {
-        let deleted = sqlx::query(
-            "DELETE FROM categories \
-             WHERE id = $2 AND user_id = $1 AND is_default = FALSE",
-        )
-        .bind(user_id.as_uuid())
-        .bind(category_id.as_uuid())
-        .execute(&mut **transaction)
-        .await
-        .map_err(|error| database_error("could not delete the category", &error))?
-        .rows_affected();
-        if deleted == 0 {
-            return Err(AppError::not_found("category"));
-        }
-        Ok(())
-    }
 }
 
 #[async_trait]
 impl CategoryRepository for PostgresCategoryRepository {
-    async fn list_with_usage(&self, user_id: UserId) -> Result<Vec<CategoryUsage>, AppError> {
+    async fn list_with_usage(
+        &self,
+        user_id: UserId,
+        include_archived: bool,
+    ) -> Result<Vec<CategoryUsage>, AppError> {
+        // sqlx 0.9 solo acepta SQL literal, asi que el filtro va como parametro en
+        // vez de como dos consultas distintas.
         let rows = sqlx::query(
             "SELECT c.id, c.user_id, c.name, c.kind, c.icon, c.color, c.is_default, \
-                    c.created_at, c.updated_at, \
+                    c.created_at, c.updated_at, c.archived_at, \
                     (SELECT count(*) FROM movements m \
                       WHERE m.category_id = c.id AND m.user_id = c.user_id) \
                       AS movement_count \
              FROM categories c \
-             WHERE c.user_id = $1 \
+             WHERE c.user_id = $1 AND ($2 OR c.archived_at IS NULL) \
              ORDER BY c.is_default DESC, lower(c.name)",
         )
         .bind(user_id.as_uuid())
+        .bind(include_archived)
         .fetch_all(&self.pool)
         .await
         .map_err(|error| database_error("could not list the categories", &error))?;
@@ -101,7 +70,7 @@ impl CategoryRepository for PostgresCategoryRepository {
     ) -> Result<Option<CategoryUsage>, AppError> {
         let found = sqlx::query(
             "SELECT c.id, c.user_id, c.name, c.kind, c.icon, c.color, c.is_default, \
-                    c.created_at, c.updated_at, \
+                    c.created_at, c.updated_at, c.archived_at, \
                     (SELECT count(*) FROM movements m \
                       WHERE m.category_id = c.id AND m.user_id = c.user_id) \
                       AS movement_count \
@@ -122,7 +91,8 @@ impl CategoryRepository for PostgresCategoryRepository {
         name: &str,
     ) -> Result<Option<Category>, AppError> {
         let found = sqlx::query(
-            "SELECT id, user_id, name, kind, icon, color, is_default, created_at, updated_at \
+            "SELECT id, user_id, name, kind, icon, color, is_default, created_at, updated_at, \
+                    archived_at \
              FROM categories \
              WHERE user_id = $1 AND lower(name) = lower($2)",
         )
@@ -164,7 +134,8 @@ impl CategoryRepository for PostgresCategoryRepository {
     async fn update(&self, category: &Category) -> Result<(), AppError> {
         let updated = sqlx::query(
             "UPDATE categories \
-             SET name = $3, kind = $4, icon = $5, color = $6, updated_at = $7 \
+             SET name = $3, kind = $4, icon = $5, color = $6, updated_at = $7, \
+                 archived_at = $8 \
              WHERE id = $1 AND user_id = $2 AND is_default = FALSE",
         )
         .bind(category.id().as_uuid())
@@ -174,6 +145,7 @@ impl CategoryRepository for PostgresCategoryRepository {
         .bind(category.icon().as_str())
         .bind(category.color().as_str())
         .bind(category.updated_at())
+        .bind(category.archived_at())
         .execute(&self.pool)
         .await
         .map_err(|error| {
@@ -190,25 +162,31 @@ impl CategoryRepository for PostgresCategoryRepository {
         Ok(())
     }
 
-    async fn delete_reassigning_movements(
+    async fn delete_unused(
         &self,
         user_id: UserId,
         category_id: CategoryId,
-        fallback_id: CategoryId,
-    ) -> Result<u32, AppError> {
-        let mut transaction = self
-            .pool
-            .begin()
-            .await
-            .map_err(|error| database_error("could not open a transaction", &error))?;
-        let moved =
-            Self::reassign_movements(&mut transaction, user_id, category_id, fallback_id).await?;
-        Self::delete_row(&mut transaction, user_id, category_id).await?;
-        transaction
-            .commit()
-            .await
-            .map_err(|error| database_error("could not commit the deletion", &error))?;
-        Ok(moved)
+    ) -> Result<(), AppError> {
+        // La condicion del conteo va en el `WHERE`, no solo en el caso de uso: entre
+        // la comprobacion y el borrado puede llegar un movimiento, y borrar entonces
+        // dejaria movimientos apuntando a una fila que ya no esta.
+        let deleted = sqlx::query(
+            "DELETE FROM categories \
+             WHERE id = $2 AND user_id = $1 AND is_default = FALSE \
+               AND NOT EXISTS ( \
+                   SELECT 1 FROM movements m \
+                    WHERE m.category_id = categories.id AND m.user_id = categories.user_id)",
+        )
+        .bind(user_id.as_uuid())
+        .bind(category_id.as_uuid())
+        .execute(&self.pool)
+        .await
+        .map_err(|error| database_error("could not delete the category", &error))?
+        .rows_affected();
+        if deleted == 0 {
+            return Err(AppError::not_found("category"));
+        }
+        Ok(())
     }
 }
 

@@ -6,6 +6,9 @@
     <string name="categories_tab_income">Ingresos</string>
     <string name="categories_mine">Mis categorías</string>
     <string name="categories_default">Predeterminadas</string>
+    <string name="categories_archived">Archivadas</string>
+    <string name="categories_archived_note">Siguen aquí porque algún movimiento las usa. No se ofrecen al registrar.</string>
+    <string name="categories_restore">Recuperar</string>
     <string name="categories_new">Nueva categoría</string>
     <string name="categories_locked">No se puede editar</string>
     <string name="categories_uses_none">Sin movimientos</string>
@@ -29,7 +32,9 @@
     <string name="category_error_duplicate">Ya existe una categoría con ese nombre</string>
 
     <!-- Avisos -->
+    <string name="categories_toast_archived">“%1$s” archivada: sus movimientos la siguen usando</string>
     <string name="categories_toast_deleted">“%1$s” eliminada</string>
+    <string name="categories_toast_restored">“%1$s” recuperada</string>
     <string name="categories_toast_created">Categoría “%1$s” creada</string>
     <string name="categories_toast_updated">Categoría actualizada</string>
     <string name="categories_error_load">No se pudieron cargar las categorías.</string>

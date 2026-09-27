@@ -30,10 +30,18 @@ pub struct CategoryUsage {
 pub trait CategoryRepository: Send + Sync {
     /// Lista las categorias de la cuenta con su conteo de uso.
     ///
+    /// Con `include_archived` en false solo devuelve las activas, que es lo que
+    /// pinta la pantalla. Las archivadas se piden a proposito, para resolver la
+    /// categoria de un movimiento viejo o para recuperarla.
+    ///
     /// # Errors
     ///
     /// Devuelve [`AppError::Dependency`] si falla la base de datos.
-    async fn list_with_usage(&self, user_id: UserId) -> Result<Vec<CategoryUsage>, AppError>;
+    async fn list_with_usage(
+        &self,
+        user_id: UserId,
+        include_archived: bool,
+    ) -> Result<Vec<CategoryUsage>, AppError>;
 
     /// Busca una categoria de la cuenta con su conteo de uso.
     ///
@@ -48,8 +56,9 @@ pub trait CategoryRepository: Send + Sync {
 
     /// Busca una categoria de la cuenta por nombre, sin distinguir mayusculas.
     ///
-    /// Sirve para resolver "Otros", que es donde acaban los movimientos de una
-    /// categoria borrada.
+    /// El nombre es unico incluyendo las archivadas, asi que esto encuentra una
+    /// archivada igual que una activa. Es deliberado: el nombre tiene que seguir
+    /// resolviendo a la categoria que lo llevaba.
     ///
     /// # Errors
     ///
@@ -66,7 +75,12 @@ pub trait CategoryRepository: Send + Sync {
     /// de datos.
     async fn insert(&self, category: &Category) -> Result<(), AppError>;
 
-    /// Guarda los cambios de una categoria que ya existe.
+    /// Guarda los cambios de una categoria que ya existe, incluido si esta
+    /// archivada.
+    ///
+    /// Archivar y desarchivar pasan por aqui y no por un metodo propio: son un
+    /// campo mas del agregado, y un solo camino de escritura es un sitio menos
+    /// donde olvidarse de algo.
     ///
     /// # Errors
     ///
@@ -75,21 +89,16 @@ pub trait CategoryRepository: Send + Sync {
     /// [`AppError::Dependency`] si falla la base de datos.
     async fn update(&self, category: &Category) -> Result<(), AppError>;
 
-    /// Reasigna los movimientos de una categoria y despues la borra.
+    /// Borra de verdad una categoria **sin movimientos**.
     ///
-    /// Las dos escrituras van en la misma transaccion: si el borrado falla, los
-    /// movimientos no pueden quedarse reasignados a una categoria que sigue viva.
-    /// Devuelve cuantos movimientos cambiaron de categoria.
+    /// Es el unico borrado que queda, y solo porque una categoria que nadie uso no
+    /// tiene historico que proteger. Quien llama comprueba el conteo antes: este
+    /// metodo no reasigna nada ni puede hacerlo.
     ///
     /// # Errors
     ///
     /// Devuelve [`AppError::NotFound`] si la categoria ya no existe o es de otra
-    /// cuenta, [`AppError::Conflict`] si resulto ser una predeterminada y
-    /// [`AppError::Dependency`] si falla la base de datos.
-    async fn delete_reassigning_movements(
-        &self,
-        user_id: UserId,
-        category_id: CategoryId,
-        fallback_id: CategoryId,
-    ) -> Result<u32, AppError>;
+    /// cuenta, y [`AppError::Dependency`] si falla la base de datos.
+    async fn delete_unused(&self, user_id: UserId, category_id: CategoryId)
+    -> Result<(), AppError>;
 }

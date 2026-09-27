@@ -6,6 +6,9 @@
     <string name="categories_tab_income">Income</string>
     <string name="categories_mine">My categories</string>
     <string name="categories_default">Defaults</string>
+    <string name="categories_archived">Archived</string>
+    <string name="categories_archived_note">They are still here because some movement uses them. They are not offered when recording.</string>
+    <string name="categories_restore">Restore</string>
     <string name="categories_new">New category</string>
     <string name="categories_locked">Cannot be edited</string>
     <string name="categories_uses_none">No movements</string>
@@ -27,7 +30,9 @@
     <string name="category_error_duplicate">A category with that name already exists</string>
 
     <!-- Messages -->
+    <string name="categories_toast_archived">“%1$s” archived: its movements still use it</string>
     <string name="categories_toast_deleted">“%1$s” deleted</string>
+    <string name="categories_toast_restored">“%1$s” restored</string>
     <string name="categories_toast_created">Category “%1$s” created</string>
     <string name="categories_toast_updated">Category updated</string>
     <string name="categories_error_load">Categories could not be loaded.</string>

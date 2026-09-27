@@ -2,6 +2,7 @@ package com.bahoque.gastonomo.data.catalog
 
 import com.bahoque.gastonomo.core.application.error.ApiError
 import com.bahoque.gastonomo.core.application.port.CategoryDraft
+import com.bahoque.gastonomo.core.application.port.CategoryRemoval
 import com.bahoque.gastonomo.core.common.Outcome
 import com.bahoque.gastonomo.core.domain.category.CategoryId
 import com.bahoque.gastonomo.core.domain.category.CategoryKind
@@ -25,6 +26,7 @@ import java.math.BigDecimal
 import java.time.LocalDate
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class CatalogGatewaysTest {
@@ -67,11 +69,38 @@ class CatalogGatewaysTest {
     }
 
     @Test
-    fun `deleting a category answers without a body`() = runTest {
+    fun `archiving a category reads what the API says it did`() = runTest {
         val requests = mutableListOf<HttpRequestData>()
-        val gateway = createCategoryGateway(clientOf(requests) { respond("", HttpStatusCode.NoContent) })
-        assertTrue(gateway.delete(CategoryId("c1")).isSuccess)
+        val gateway = createCategoryGateway(
+            clientOf(requests) { respondJson("""{"outcome":"archived"}""") },
+        )
+
+        val result = gateway.archive(CategoryId("c1"))
+
+        assertEquals(CategoryRemoval.ARCHIVED, (result as Outcome.Success).value)
         assertEquals("/v1/categories/c1", requests.single().url.encodedPath)
+    }
+
+    @Test
+    fun `a deleted outcome is not read as archived`() = runTest {
+        val gateway = createCategoryGateway(
+            clientOf(mutableListOf()) { respondJson("""{"outcome":"deleted"}""") },
+        )
+
+        val result = gateway.archive(CategoryId("c1"))
+
+        assertEquals(CategoryRemoval.DELETED, (result as Outcome.Success).value)
+    }
+
+    @Test
+    fun `restoring a category comes back active`() = runTest {
+        val requests = mutableListOf<HttpRequestData>()
+        val gateway = createCategoryGateway(clientOf(requests) { respondJson(CATEGORY) })
+
+        val category = (gateway.restore(CategoryId("c1")) as Outcome.Success).value
+
+        assertFalse(category.archived)
+        assertEquals("/v1/categories/c1/restore", requests.single().url.encodedPath)
     }
 
     @Test

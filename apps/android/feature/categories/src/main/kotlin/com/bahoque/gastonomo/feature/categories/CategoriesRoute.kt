@@ -28,7 +28,8 @@ fun CategoriesRoute(
             onBack = onBack,
             onTab = viewModel::onTabSelected,
             onOpenSheet = viewModel::onOpenSheet,
-            onDelete = viewModel::onDelete,
+            onArchive = viewModel::onArchive,
+            onRestore = viewModel::onRestore,
             onRetry = viewModel::load,
         )
     }
@@ -62,7 +63,9 @@ fun CategoriesRoute(
 private fun CategoriesMessage.text(): String = when (this) {
     is CategoriesMessage.Created -> stringResource(R.string.categories_toast_created, name)
     CategoriesMessage.Updated -> stringResource(R.string.categories_toast_updated)
+    is CategoriesMessage.Archived -> stringResource(R.string.categories_toast_archived, name)
     is CategoriesMessage.Deleted -> stringResource(R.string.categories_toast_deleted, name)
+    is CategoriesMessage.Restored -> stringResource(R.string.categories_toast_restored, name)
     CategoriesMessage.IsDefault -> stringResource(R.string.categories_error_default)
     CategoriesMessage.SaveFailed -> stringResource(R.string.categories_error_save)
 }

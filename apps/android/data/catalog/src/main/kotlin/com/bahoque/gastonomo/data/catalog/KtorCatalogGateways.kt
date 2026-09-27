@@ -3,6 +3,7 @@ package com.bahoque.gastonomo.data.catalog
 import com.bahoque.gastonomo.core.application.error.ApiError
 import com.bahoque.gastonomo.core.application.port.CategoryDraft
 import com.bahoque.gastonomo.core.application.port.CategoryGateway
+import com.bahoque.gastonomo.core.application.port.CategoryRemoval
 import com.bahoque.gastonomo.core.application.port.CurrencyGateway
 import com.bahoque.gastonomo.core.application.port.SettingsGateway
 import com.bahoque.gastonomo.core.common.Outcome
@@ -20,7 +21,8 @@ import com.bahoque.gastonomo.data.network.ApiClient
 internal class KtorCategoryGateway(private val client: ApiClient) : CategoryGateway {
 
     override suspend fun list(): Outcome<List<Category>, ApiError> =
-        client.get<CategoryListDto>("categories").map { list -> list.items.map { it.toDomain() } }
+        client.get<CategoryListDto>("categories?includeArchived=true")
+            .map { list -> list.items.map { it.toDomain() } }
 
     override suspend fun create(draft: CategoryDraft): Outcome<Category, ApiError> =
         client.post<CategoryDto>("categories", draft.toDto()).map { it.toDomain() }
@@ -31,8 +33,11 @@ internal class KtorCategoryGateway(private val client: ApiClient) : CategoryGate
     ): Outcome<Category, ApiError> =
         client.patch<CategoryDto>("categories/${id.value}", draft.toDto()).map { it.toDomain() }
 
-    override suspend fun delete(id: CategoryId): Outcome<Unit, ApiError> =
-        client.delete("categories/${id.value}")
+    override suspend fun archive(id: CategoryId): Outcome<CategoryRemoval, ApiError> =
+        client.delete<CategoryRemovalDto>("categories/${id.value}").map { it.toDomain() }
+
+    override suspend fun restore(id: CategoryId): Outcome<Category, ApiError> =
+        client.post<CategoryDto>("categories/${id.value}/restore", null).map { it.toDomain() }
 
     private fun CategoryDraft.toDto() = CategoryRequestDto(
         name = name,
