@@ -1,0 +1,67 @@
+# Esta en pie, y va a seguir estandolo?
+#
+# Cada hora y no cada cinco minutos, y es una decision de coste, no tecnica:
+# Actions factura por minuto empezado en un repo privado, asi que cada hora son
+# unos 720 minutos al mes y cada cinco serian unos 8600. Para detectar caidas mas
+# rapido, un servicio de uptime externo delante no cuesta minutos de Actions.
+#
+# El minuto 43 a proposito: Grimdex, que vive en la misma instancia, hace su
+# comprobacion en el 17. Asi las dos no llaman a la vez a la misma maquina.
+#
+# Este workflow NO entra por SSH. La salud de la maquina (disco, contenedores,
+# frescura de las copias) la mira el healthcheck del servidor, que es de la
+# infraestructura y no de esta app, y ademas el usuario deploy no tiene sudo.
+# Aqui solo se comprueba lo que es de gastonomo, y desde fuera.
+name: healthcheck
+
+on:
+  schedule:
+    - cron: '43 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: healthcheck-gastonomo
+  cancel-in-progress: true
+
+jobs:
+  health:
+    name: produccion responde
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      # Desde internet, porque una maquina no puede avisar de su propia muerte.
+      # /health/ready es el que importa: da 503 si la API no llega a PostgreSQL.
+      - name: Los endpoints contestan
+        run: |
+          fallo=0
+          # La tercera es la que vigila el enrutado de Caddy: los prefijos de la
+          # API se sirven tambien bajo el dominio de la web, y es de ahi de donde
+          # salen todas las llamadas de la SPA.
+          for url in https://gastonomo.bahoque.com/ \
+                     https://gastonomo.bahoque.com/health/live \
+                     https://api.gastonomo.bahoque.com/health/live \
+                     https://api.gastonomo.bahoque.com/health/ready ; do
+            # Sin `|| echo 000`: curl ya escribe 000 cuando no conecta, y el
+            # fallback solo esta para que el `bash -e` del paso no lo mate.
+            code="$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 --retry 2 --retry-delay 5 "$url" || true)"
+            echo "$code  $url"
+            [ "$code" = "200" ] || fallo=1
+          done
+          exit $fallo
+
+      # Una renovacion que dejo de funcionar en silencio se ve bien hasta el dia
+      # que ya no. Dos semanas dan tiempo a arreglarlo sin prisa.
+      - name: Los certificados no estan a punto de caducar
+        run: |
+          fallo=0
+          for host in gastonomo.bahoque.com api.gastonomo.bahoque.com ; do
+            fin="$(echo | openssl s_client -connect "$host:443" -servername "$host" 2>/dev/null \
+                   | openssl x509 -noout -enddate | cut -d= -f2)"
+            dias=$(( ( $(date -d "$fin" +%s) - $(date +%s) ) / 86400 ))
+            echo "$dias dias  $host"
+            [ "$dias" -gt 14 ] || fallo=1
+          done
+          exit $fallo

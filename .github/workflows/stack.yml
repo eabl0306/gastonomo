@@ -2,7 +2,13 @@
 # enrutaba /health, /openapi.json y la web, pero no /v1, asi que las 24 rutas de
 # la API acababan en el nginx de la SPA. Los jobs de api.yml y web.yml pasaban
 # igual, porque cada uno prueba su imagen por separado y ninguno miraba como
-# encajan. Este job levanta la pila de produccion entera y entra por la puerta.
+# encajan. Este job levanta la pila entera y entra por la puerta.
+#
+# La pila es infra/compose.smoke.yaml, no compose.prod.yaml: ese ultimo es el
+# fichero de despliegue de apps-01, donde no hay gateway (lo sustituye Caddy),
+# nadie publica puertos y la red `edge` es externa. Los dos tienen que enrutar
+# los mismos prefijos; aqui lo hace docker/gateway.prod.conf y alli el Caddyfile
+# del repositorio de infraestructura.
 name: stack
 
 on:
@@ -32,20 +38,20 @@ jobs:
             echo "GASTONOMO__AUTH__ACCESS_TOKEN_SECRET=$(openssl rand -hex 32)"
           } >> "$GITHUB_ENV"
 
-      - name: Levantar la pila de produccion
+      - name: Levantar la pila
         env:
           PUBLIC_PORT: '8080'
           # Sin esto el arranque sale a api.frankfurter.dev en cada ejecucion.
           GASTONOMO__EXCHANGE_RATES__ENABLED: 'false'
-        run: docker compose -f compose.prod.yaml up -d --build --wait
+        run: docker compose -f infra/compose.smoke.yaml up -d --build --wait
 
       - name: Prueba de humo por el gateway
         run: bash tools/scripts/smoke-stack.sh http://127.0.0.1:8080
 
       - name: Logs si algo fallo
         if: failure()
-        run: docker compose -f compose.prod.yaml logs --tail 200
+        run: docker compose -f infra/compose.smoke.yaml logs --tail 200
 
       - name: Tumbar la pila
         if: always()
-        run: docker compose -f compose.prod.yaml down -v
+        run: docker compose -f infra/compose.smoke.yaml down -v

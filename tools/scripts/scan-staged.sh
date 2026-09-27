@@ -50,11 +50,16 @@ for file in "$@"; do
   [ -f "${file}" ] || continue
 
   case "${file##*/}" in
+    # Las plantillas si se commitean: son la documentacion de que variables hay
+    # y no llevan valores. Antes la excepcion era solo ".env.example" literal, y
+    # eso bloqueaba ".env.production.example", que es igual de plantilla. Ojo: lo
+    # que esto salta es la comprobacion del NOMBRE. El contenido se sigue
+    # escaneando mas abajo, asi que una clave de verdad dentro de una plantilla
+    # se caza igual.
+    *.example) ;;
     .env | .env.*)
-      if [ "${file##*/}" != ".env.example" ]; then
-        echo "  ${file}  los ficheros .env no se commitean (usa .env.example)" >&2
-        status=1
-      fi
+      echo "  ${file}  los ficheros .env no se commitean (usa una plantilla .example)" >&2
+      status=1
       ;;
   esac
 

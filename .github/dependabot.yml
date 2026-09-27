@@ -171,6 +171,9 @@ updates:
   # -------------------------------------------------------------- Imagenes de compose
   # El ecosistema docker solo mira Dockerfile, asi que las pilas de compose se quedaban
   # sin cubrir: compose.yaml, compose.prod.yaml y apps/api/docker-compose.yml.
+  # infra/compose.smoke.yaml no entra aqui: dependabot busca por nombre de fichero y ese no
+  # es uno de los que reconoce. Sus imagenes son las mismas que las de compose.yaml, asi que
+  # lo que se pierde es solo el aviso duplicado.
   # nginx:alpine y axllent/mailpit:latest son etiquetas flotantes, asi que ahi no hay
   # nada que subir; en la practica esta entrada existe por postgres.
   - package-ecosystem: docker-compose

@@ -13,8 +13,8 @@ android {
             buildConfigField("boolean", "HTTP_LOGGING", "true")
         }
         getByName("release") {
-            // Placeholder: se sustituye por el host real cuando exista despliegue.
-            buildConfigField("String", "API_BASE_URL", "\"https://api.gastonomo.invalid\"")
+            // Produccion: la API detras del proxy de apps-01. Ver docs/despliegue.md.
+            buildConfigField("String", "API_BASE_URL", "\"https://api.gastonomo.bahoque.com\"")
             buildConfigField("boolean", "HTTP_LOGGING", "false")
         }
     }
