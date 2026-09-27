@@ -8,6 +8,7 @@ license.workspace = true
 publish.workspace = true
 
 [dependencies]
+base64 = { workspace = true }
 chrono = { workspace = true }
 gastonomo-application = { workspace = true }
 gastonomo-domain = { workspace = true }

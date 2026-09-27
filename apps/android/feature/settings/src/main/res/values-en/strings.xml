@@ -27,6 +27,19 @@
     <string name="settings_categories">Categories</string>
     <string name="settings_export">Export data</string>
     <string name="settings_export_value">CSV · Excel</string>
+    <string name="settings_resync">Resync everything</string>
+    <string name="settings_resync_value">If something looks off</string>
+    <string name="settings_resync_running">Downloading…</string>
+    <string name="settings_resync_unfinished">Left unfinished</string>
+    <string name="settings_resync_title">Resync everything</string>
+    <string name="settings_resync_explains">Deletes what is on the phone and downloads it again. It can take a while and a stable connection helps. Nothing is lost: the history lives on the server.</string>
+    <string name="settings_resync_confirm">Delete and download again</string>
+    <plurals name="settings_resync_blocked">
+        <item quantity="one">%1$d record has not been uploaded. Upload it first: deleting now would lose it.</item>
+        <item quantity="other">%1$d records have not been uploaded. Upload them first: deleting now would lose them.</item>
+    </plurals>
+    <string name="settings_toast_resync_done">Everything up to date</string>
+    <string name="settings_toast_resync_failed">It stopped halfway. Reopening the app finishes it.</string>
 
     <string name="settings_sign_out">Sign out</string>
 

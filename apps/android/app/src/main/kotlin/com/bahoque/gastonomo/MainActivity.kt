@@ -3,6 +3,7 @@ package com.bahoque.gastonomo
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
@@ -35,6 +36,9 @@ class MainActivity : FragmentActivity() {
                 val start by produceState<GastonomoRoute?>(initialValue = null) {
                     value = authStartDestination(container.auth)
                 }
+                // Al abrir se pide solo lo que ha cambiado, no el historico entero. No bloquea a
+                // nadie: la aplicacion pinta de la base local y esto la va rellenando.
+                LaunchedEffect(Unit) { container.syncOnStart() }
                 start?.let { GastonomoApp(container = container, startDestination = it) }
             }
         }

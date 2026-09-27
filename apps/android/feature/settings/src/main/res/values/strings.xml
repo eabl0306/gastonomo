@@ -27,6 +27,20 @@
     <string name="settings_categories">Categorías</string>
     <string name="settings_export">Exportar datos</string>
     <string name="settings_export_value">CSV · Excel</string>
+    <string name="settings_resync">Resincronizar todo</string>
+    <string name="settings_resync_value">Si algo no cuadra</string>
+    <string name="settings_resync_running">Bajando…</string>
+    <string name="settings_resync_unfinished">Quedó a medias</string>
+    <string name="settings_resync_title">Resincronizar todo</string>
+    <string name="settings_resync_explains">Borra lo que hay en el teléfono y lo baja otra vez. Puede tardar y conviene tener red estable. No se pierde nada: el historial está en el servidor.</string>
+    <string name="settings_resync_confirm">Borrar y bajar de nuevo</string>
+    <plurals name="settings_resync_blocked">
+        <item quantity="one">Hay %1$d registro sin subir. Súbelo antes: borrar ahora lo perdería.</item>
+        <item quantity="many">Hay %1$d registros sin subir. Súbelos antes: borrar ahora los perdería.</item>
+        <item quantity="other">Hay %1$d registros sin subir. Súbelos antes: borrar ahora los perdería.</item>
+    </plurals>
+    <string name="settings_toast_resync_done">Todo al día</string>
+    <string name="settings_toast_resync_failed">Se cortó a la mitad. Al volver a abrir se termina.</string>
 
     <string name="settings_sign_out">Cerrar sesión</string>
 

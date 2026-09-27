@@ -29,6 +29,9 @@ data class SettingsUiState(
 
     /** Cuantos registros siguen sin salir del telefono. */
     val pendingCount: Int = 0,
+
+    /** Como va la resincronizacion completa. */
+    val resync: ResyncProgress = ResyncProgress.IDLE,
     val sheet: SettingsSheet? = null,
     val currencyQuery: String = "",
     val pin: String = "",
@@ -96,6 +99,23 @@ enum class SettingsSheet {
 
     /** Crear el PIN al encender el cerrojo. El diseno no tiene pantalla para esto. */
     PIN,
+
+    /** Confirmacion de borrar lo local y bajarlo otra vez. */
+    RESYNC,
+}
+
+/**
+ * Como va la resincronizacion completa.
+ *
+ * [UNFINISHED] sale de la base local, no de esta sesion: si la aplicacion murio a la mitad, la
+ * marca sigue puesta al volver. Es lo que evita confundir medio historico con el historico entero.
+ */
+enum class ResyncProgress {
+    IDLE,
+    RUNNING,
+
+    /** Quedo a medias. El siguiente arranque la termina. */
+    UNFINISHED,
 }
 
 /** Lo que Ajustes cuenta por el toast. Se resuelve a texto en la pantalla, no en el ViewModel. */
@@ -106,6 +126,14 @@ sealed interface SettingsMessage {
 
     /** "Mostrando todo en {COD}". */
     data class CurrencyChanged(val currency: CurrencyCode) : SettingsMessage
+
+    /** La resincronizacion completa acabo. */
+    data object ResyncDone : SettingsMessage
+
+    /** Se corto a la mitad. La marca sigue puesta y el siguiente arranque la termina. */
+    data object ResyncFailed : SettingsMessage {
+        override val isError: Boolean get() = true
+    }
 
     /** El cerrojo local quedo encendido con su PIN nuevo. */
     data object LockEnabled : SettingsMessage

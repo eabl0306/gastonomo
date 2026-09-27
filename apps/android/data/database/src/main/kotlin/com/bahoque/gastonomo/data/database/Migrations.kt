@@ -13,7 +13,8 @@ import androidx.sqlite.execSQL
  * produccion. Cada entrada de esta lista tiene su test, que la ejecuta sobre una base de la
  * version anterior con datos dentro.
  */
-internal val MIGRATIONS: List<Migration> = listOf(MigrationFrom1To2, MigrationFrom2To3)
+internal val MIGRATIONS: List<Migration> =
+    listOf(MigrationFrom1To2, MigrationFrom2To3, MigrationFrom3To4)
 
 /** Las anade una a una. Un `addMigrations(*MIGRATIONS)` copiaria el array en cada llamada. */
 internal fun <T : RoomDatabase> RoomDatabase.Builder<T>.addGastonomoMigrations():
@@ -52,6 +53,7 @@ internal object MigrationFrom1To2 : Migration(1, 2) {
 // numero suelto en un `Migration(a, b)` no dice de que version a que version se va.
 private const val VERSION_2 = 2
 private const val VERSION_3 = 3
+private const val VERSION_4 = 4
 
 /**
  * Version 3: las categorias archivadas.
@@ -69,6 +71,22 @@ internal object MigrationFrom2To3 : Migration(VERSION_2, VERSION_3) {
         connection.execSQL("ALTER TABLE `categories` ADD COLUMN `archived` INTEGER NOT NULL DEFAULT 0")
         connection.execSQL(
             "ALTER TABLE `movements` ADD COLUMN `category_archived` INTEGER NOT NULL DEFAULT 0",
+        )
+    }
+}
+
+/**
+ * Version 4: por donde va la sincronizacion.
+ *
+ * La fila no se crea aqui. Sin fila, el cursor es `null`, que es exactamente lo que significa
+ * "nunca sincronizo": quien actualiza pide el primer lote desde el principio.
+ */
+internal object MigrationFrom3To4 : Migration(VERSION_3, VERSION_4) {
+
+    override fun migrate(connection: SQLiteConnection) {
+        connection.execSQL(
+            "CREATE TABLE IF NOT EXISTS `sync_state` (`id` INTEGER NOT NULL, `cursor` TEXT, " +
+                "`full_resync` INTEGER NOT NULL, PRIMARY KEY(`id`))",
         )
     }
 }

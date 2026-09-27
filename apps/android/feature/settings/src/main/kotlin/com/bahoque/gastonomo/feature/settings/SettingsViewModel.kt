@@ -3,6 +3,7 @@ package com.bahoque.gastonomo.feature.settings
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bahoque.gastonomo.core.application.port.LocalLock
+import com.bahoque.gastonomo.core.application.state.ResyncResult
 import com.bahoque.gastonomo.core.common.Outcome
 import com.bahoque.gastonomo.core.domain.money.CurrencyCode
 import com.bahoque.gastonomo.core.domain.settings.AppLanguage
@@ -41,6 +42,12 @@ class SettingsViewModel(private val dependencies: SettingsDependencies) : ViewMo
                 mutableState.update { it.copy(online = online) }
             }
         }
+        viewModelScope.launch {
+            // Si la aplicacion murio a la mitad de una resincronizacion, la marca sigue puesta.
+            if (dependencies.syncStore.fullResyncPending()) {
+                mutableState.update { it.copy(resync = ResyncProgress.UNFINISHED) }
+            }
+        }
         load()
     }
 
@@ -53,6 +60,34 @@ class SettingsViewModel(private val dependencies: SettingsDependencies) : ViewMo
         }
     }
 
+    /**
+     * Borra lo local y lo baja otra vez.
+     *
+     * El caso de uso comprueba lo pendiente antes de borrar nada; si hay algo sin subir vuelve sin
+     * haber tocado la base, y la hoja ya lo dice. Un fallo a la mitad deja la marca puesta, y la
+     * fila lo cuenta: el siguiente arranque la termina.
+     */
+    fun resync() {
+        if (mutableState.value.resync == ResyncProgress.RUNNING) return
+        mutableState.update { it.copy(resync = ResyncProgress.RUNNING) }
+        viewModelScope.launch {
+            val message = when (val result = dependencies.resyncAccount()) {
+                ResyncResult.Done -> SettingsMessage.ResyncDone
+                is ResyncResult.HasPendingWrites -> null
+                is ResyncResult.Failed -> SettingsMessage.ResyncFailed
+            }
+            val unfinished = dependencies.syncStore.fullResyncPending()
+            mutableState.update {
+                it.copy(
+                    sheet = null,
+                    resync = if (unfinished) ResyncProgress.UNFINISHED else ResyncProgress.IDLE,
+                    message = message ?: it.message,
+                )
+            }
+            if (message == SettingsMessage.ResyncDone) load()
+        }
+    }
+
     /** Abre una hoja, o la cierra con null. Cambiar de hoja limpia lo que se estaba buscando. */
     fun showSheet(sheet: SettingsSheet?) {
         mutableState.update { it.copy(sheet = sheet, currencyQuery = "", pin = "") }
@@ -62,30 +97,26 @@ class SettingsViewModel(private val dependencies: SettingsDependencies) : ViewMo
 
     fun onMessageShown() = mutableState.update { it.copy(message = null) }
 
-    /** Cambia la moneda principal. Ningun registro guardado se toca: solo como se ensena. */
-    fun onCurrencySelected(currency: CurrencyCode) {
+    /**
+     * Cambia la moneda principal o el idioma. Son una sola funcion porque el camino es el mismo, y
+     * `PATCH /v1/settings` ya acepta los dos campos sueltos.
+     *
+     * Cambiar la moneda **no toca ningun registro guardado**: solo como se ensenan.
+     */
+    fun onSettingChanged(currency: CurrencyCode? = null, language: AppLanguage? = null) {
         val previous = mutableState.value.settings.displayCurrency
         viewModelScope.launch {
-            when (val result = dependencies.updateSettings(displayCurrency = currency)) {
+            when (val result = dependencies.updateSettings(currency, language)) {
                 is Outcome.Success -> mutableState.update {
                     it.copy(
                         settings = result.value,
                         sheet = null,
-                        message = SettingsMessage.CurrencyChanged(currency)
-                            .takeIf { currency != previous },
+                        // Solo se avisa del cambio de moneda, y solo si cambio de verdad.
+                        message = currency
+                            ?.takeIf { it != previous }
+                            ?.let(SettingsMessage::CurrencyChanged),
                     )
                 }
-                is Outcome.Failure ->
-                    mutableState.update { it.failedWith(result.error) }
-            }
-        }
-    }
-
-    fun onLanguageSelected(language: AppLanguage) {
-        viewModelScope.launch {
-            when (val result = dependencies.updateSettings(language = language)) {
-                is Outcome.Success ->
-                    mutableState.update { it.copy(settings = result.value, sheet = null) }
                 is Outcome.Failure ->
                     mutableState.update { it.failedWith(result.error) }
             }

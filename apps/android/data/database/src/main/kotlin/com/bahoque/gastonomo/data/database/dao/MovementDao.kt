@@ -61,4 +61,13 @@ internal interface MovementDao {
 
     @Query("DELETE FROM movements")
     suspend fun clear()
+
+    /**
+     * Borra lo que ya esta subido y **deja lo pendiente**.
+     *
+     * Es lo que usa la resincronizacion completa. Un `DELETE` sin el filtro se llevaria por
+     * delante movimientos que el usuario registro y que todavia no ha visto nadie mas.
+     */
+    @Query("DELETE FROM movements WHERE pending = 0")
+    suspend fun deleteSynced()
 }

@@ -2,6 +2,7 @@ package com.bahoque.gastonomo.feature.settings
 
 import com.bahoque.gastonomo.core.application.error.ApiError
 import com.bahoque.gastonomo.core.application.port.CategoryGateway
+import com.bahoque.gastonomo.core.application.port.ChangeGateway
 import com.bahoque.gastonomo.core.application.port.CurrencyGateway
 import com.bahoque.gastonomo.core.application.port.SettingsGateway
 import com.bahoque.gastonomo.core.application.usecase.auth.ChangePassword
@@ -18,9 +19,12 @@ import com.bahoque.gastonomo.core.application.usecase.sync.CorrectPendingWrite
 import com.bahoque.gastonomo.core.application.usecase.sync.DiscardPendingWrite
 import com.bahoque.gastonomo.core.application.usecase.sync.ObserveConnection
 import com.bahoque.gastonomo.core.application.usecase.sync.ObservePendingWrites
+import com.bahoque.gastonomo.core.application.usecase.sync.ResyncAccount
 import com.bahoque.gastonomo.core.application.usecase.sync.RetryPendingWrites
+import com.bahoque.gastonomo.core.application.usecase.sync.SyncAccount
 import com.bahoque.gastonomo.core.testing.fake.FakeAuthGateway
 import com.bahoque.gastonomo.core.testing.fake.FakeCategoryGateway
+import com.bahoque.gastonomo.core.testing.fake.FakeChangeGateway
 import com.bahoque.gastonomo.core.testing.fake.FakeCurrencyGateway
 import com.bahoque.gastonomo.core.testing.fake.FakeDeviceSettingsStore
 import com.bahoque.gastonomo.core.testing.fake.FakeLocalLock
@@ -28,6 +32,7 @@ import com.bahoque.gastonomo.core.testing.fake.FakeNetworkMonitor
 import com.bahoque.gastonomo.core.testing.fake.FakePendingWritesGateway
 import com.bahoque.gastonomo.core.testing.fake.FakeSessionStore
 import com.bahoque.gastonomo.core.testing.fake.FakeSettingsGateway
+import com.bahoque.gastonomo.core.testing.fake.FakeSyncStore
 
 /**
  * Dobles de todo lo que necesita Ajustes. Cada puerta se puede sustituir para probar el
@@ -43,6 +48,8 @@ internal class FakeSettingsDependencies(
     val deviceSettings: FakeDeviceSettingsStore = FakeDeviceSettingsStore(),
     val pendingGateway: FakePendingWritesGateway = FakePendingWritesGateway(),
     val network: FakeNetworkMonitor = FakeNetworkMonitor(),
+    val sync: FakeSyncStore = FakeSyncStore(),
+    changeGateway: ChangeGateway = FakeChangeGateway(),
 ) : SettingsDependencies {
     override val loadSettings = LoadSettings(settingsGateway)
     override val updateSettings = UpdateSettings(settingsGateway)
@@ -58,6 +65,8 @@ internal class FakeSettingsDependencies(
     override val correctPendingWrite = CorrectPendingWrite(pendingGateway)
     override val discardPendingWrite = DiscardPendingWrite(pendingGateway)
     override val retryPendingWrites = RetryPendingWrites(pendingGateway)
+    override val syncStore = sync
+    override val resyncAccount = ResyncAccount(sync, SyncAccount(changeGateway, sync))
     override val observeConnection = ObserveConnection(network)
 
     companion object {

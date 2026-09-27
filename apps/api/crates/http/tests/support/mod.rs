@@ -15,14 +15,16 @@ use std::sync::Arc;
 
 use gastonomo_application::testing::{
     FakeDisplayCurrencyCatalog, FakeHealthProbe, FakeOpaqueTokenFactory, FakePasswordHasher,
-    FakeTokenIssuer, FixedClock, InMemoryCategoryRepository, InMemoryExchangeRateRepository,
-    InMemoryIdempotencyStore, InMemoryMovementRepository, InMemoryPasswordResetTokenRepository,
-    InMemoryRefreshTokenRepository, InMemoryUserRepository, InMemoryUserSettingsRepository,
-    RecordingMailer, RecordingUserProvisioning, StubMovementCategoryReader,
+    FakeTokenIssuer, FixedClock, InMemoryCategoryRepository, InMemoryChangeFeed,
+    InMemoryExchangeRateRepository, InMemoryIdempotencyStore, InMemoryMovementRepository,
+    InMemoryPasswordResetTokenRepository, InMemoryRefreshTokenRepository, InMemoryUserRepository,
+    InMemoryUserSettingsRepository, RecordingMailer, RecordingUserProvisioning,
+    StubMovementCategoryReader,
 };
 use gastonomo_application::use_case::category::{
     ArchiveCategory, CreateCategory, ListCategories, RestoreCategory, UpdateCategory,
 };
+use gastonomo_application::use_case::changes::GetChanges;
 use gastonomo_application::use_case::currency::{GetExchangeRates, ListCurrencies};
 use gastonomo_application::use_case::loan::testing::InMemoryLoanRepository;
 use gastonomo_application::use_case::loan::{
@@ -39,8 +41,9 @@ use gastonomo_domain::movement::{CategoryId, MovementCategory};
 use gastonomo_domain::{CategoryKind, ServiceVersion, UserId};
 use gastonomo_http::build_service;
 use gastonomo_http::router::{
-    AuthDependencies, CategoryDependencies, CurrencyDependencies, HealthDependencies,
-    LoanDependencies, MovementDependencies, RouterDependencies, SettingsDependencies,
+    AuthDependencies, CategoryDependencies, ChangesDependencies, CurrencyDependencies,
+    HealthDependencies, LoanDependencies, MovementDependencies, RouterDependencies,
+    SettingsDependencies,
 };
 
 /// Version que anuncian las respuestas de salud.
@@ -55,6 +58,7 @@ pub struct Harness {
     pub loans: Arc<InMemoryLoanRepository>,
     pub movement_categories: Arc<StubMovementCategoryReader>,
     pub exchange_rates: Arc<InMemoryExchangeRateRepository>,
+    pub changes: Arc<InMemoryChangeFeed>,
     pub idempotency: Arc<InMemoryIdempotencyStore>,
     pub mailer: Arc<RecordingMailer>,
     pub users: Arc<InMemoryUserRepository>,
@@ -85,6 +89,7 @@ impl Harness {
             categories: category_dependencies(&doubles, &parts),
             settings: settings_dependencies(&doubles, &parts),
             currencies: currency_dependencies(&doubles, &parts),
+            changes: changes_dependencies(&doubles),
         })
         .expect("service should build");
 
@@ -96,6 +101,7 @@ impl Harness {
             movement_categories: doubles.movement_categories,
             loans: doubles.loans,
             exchange_rates: doubles.exchange_rates,
+            changes: doubles.changes,
             idempotency: doubles.idempotency,
             mailer: parts.mailer,
             users: parts.users,
@@ -114,6 +120,7 @@ struct Doubles {
     loans: Arc<InMemoryLoanRepository>,
     exchange_rates: Arc<InMemoryExchangeRateRepository>,
     idempotency: Arc<InMemoryIdempotencyStore>,
+    changes: Arc<InMemoryChangeFeed>,
     loan_ports: LoanPorts,
 }
 
@@ -132,7 +139,14 @@ impl Doubles {
             loans,
             exchange_rates: Arc::new(InMemoryExchangeRateRepository::new()),
             idempotency: Arc::new(InMemoryIdempotencyStore::new()),
+            changes: Arc::new(InMemoryChangeFeed::new()),
         }
+    }
+}
+
+fn changes_dependencies(doubles: &Doubles) -> ChangesDependencies {
+    ChangesDependencies {
+        read: Arc::new(GetChanges::new(doubles.changes.clone())),
     }
 }
 

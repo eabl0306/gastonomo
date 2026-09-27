@@ -15,6 +15,10 @@ dependencies {
     api(project(":core:application"))
     api(project(":data:network"))
 
+    // Por el feed de cambios: trae categorias y ajustes en el mismo cuerpo, y sus DTO viven ahi.
+    // Declararlos otra vez aqui dejaria dos mapeos del mismo tipo.
+    implementation(project(":data:catalog"))
+
     implementation(libs.kotlinx.serialization.json)
 
     testImplementation(project(":core:testing"))

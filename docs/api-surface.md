@@ -254,6 +254,8 @@ POST   /v1/categories/{id}/restore   200
 GET    /v1/settings                  200
 PATCH  /v1/settings                  200
 
+GET    /v1/changes                   200  ?since=&limit=
+
 GET    /v1/currencies                200
 GET    /v1/exchange-rates            200, o 503 sin ninguna pasada guardada
 ```
@@ -521,6 +523,64 @@ fila que ya no esta.
 
 La recuperacion no es un lujo: el nombre sigue siendo unico incluyendo las archivadas, asi
 que sin ella archivar por error dejaria el nombre cogido para siempre.
+
+### Cambios incrementales
+
+| Metodo | Ruta          | Para que                                   |
+| ------ | ------------- | ------------------------------------------ |
+| GET    | `/v1/changes` | Lo que ha cambiado desde el ultimo cursor. |
+
+```json
+{
+  "cursor": "djE6NDI",
+  "hasMore": false,
+  "movements": [],
+  "loans": [],
+  "loanPayments": [],
+  "categories": [],
+  "settings": { "displayCurrency": "COP", "language": "es" }
+}
+```
+
+Existe para que un arranque no tenga que bajarse el historico entero. Con cien
+movimientos da igual; con tres anos de uso, no.
+
+Como el historico es de solo anadir, "cambios" es casi siempre "cosas creadas despues
+de esta marca": no hay conflictos que resolver, ni tombstones, ni versiones que
+comparar. Lo unico que muta son las **categorias** (renombrar, archivar y recuperar) y
+los **ajustes**. Las tasas de cambio no entran aqui: tienen su propio endpoint y
+cambian a diario para todos.
+
+Las colecciones reutilizan los DTO de siempre. Un movimiento del feed es el mismo
+movimiento que devuelve `GET /v1/movements`, asi que el cliente tiene un solo mapeo por
+tipo. `settings` solo aparece si cambio.
+
+#### El cursor, que es donde se falla
+
+**No es una marca de tiempo.** Es un numero de cambio por cuenta. Dos filas creadas en
+el mismo milisegundo, o un reloj que se ajusta hacia atras, harian que el cliente se
+saltara registros sin enterarse, y saltarse un movimiento es un balance que no cuadra y
+ninguna pista de por que.
+
+El numero lo reparte la base de datos con un contador por usuario, y el reparto toma un
+cerrojo de fila. De ahi sale la propiedad que hace falta: **cuando el numero N es
+visible, ninguno menor que N esta todavia por confirmar**, asi que un cliente que va por
+N no puede perderse nada.
+
+Viaja **opaco**: se guarda tal cual y se devuelve tal cual. Un cursor que no sea de esta
+API se responde con 422, no se lee como "desde el principio": eso haria que el cliente se
+bajara el historico entero sin saber por que. El `nextCursor` de movimientos si es
+legible (`YYYY-MM-DD_uuid`), y es precisamente lo que no se quiere repetir.
+
+**El cliente avanza su cursor despues de guardar el lote**, nunca al recibirlo. Si la
+escritura local falla y el cursor ya subio, ese lote se pierde para siempre.
+
+`since` ausente es el arranque en frio. `limit` cuenta las cinco colecciones juntas: 200
+por defecto, 1000 como tope, y por encima se acota sin fallar.
+
+Un abono puede llegar dos veces en el mismo lote, dentro de su prestamo y en
+`loanPayments`, si los dos cambiaron en el rango. Todo se guarda por identificador, asi
+que guardarlo dos veces deja lo mismo que guardarlo una.
 
 ### Ajustes
 

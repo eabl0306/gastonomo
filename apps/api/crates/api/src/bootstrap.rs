@@ -7,6 +7,7 @@
 
 mod auth;
 mod categories;
+mod changes;
 mod currencies;
 mod health;
 mod loans;
@@ -96,6 +97,7 @@ fn router_dependencies(wiring: &Wiring) -> Result<RouterDependencies, StartupErr
         categories: categories::dependencies(wiring),
         settings: settings::dependencies(wiring),
         currencies: currencies::dependencies(wiring),
+        changes: changes::dependencies(wiring),
     })
 }
 

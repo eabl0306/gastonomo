@@ -6,8 +6,8 @@
 //! primera no queda. Sin eso el balance de Inicio saldria mal y el usuario no
 //! tendria como arreglarlo: el diseno no tiene pantalla de edicion.
 
-mod rows;
-mod statements;
+pub(super) mod rows;
+pub(super) mod statements;
 
 use std::collections::HashMap;
 

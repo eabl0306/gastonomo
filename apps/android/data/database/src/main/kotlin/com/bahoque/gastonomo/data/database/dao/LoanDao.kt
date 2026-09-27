@@ -53,6 +53,10 @@ internal interface LoanDao {
 
     @Query("DELETE FROM loans")
     suspend fun clear()
+
+    /** Borra los prestamos ya subidos y deja los pendientes. Para la resincronizacion completa. */
+    @Query("DELETE FROM loans WHERE pending = 0")
+    suspend fun deleteSynced()
 }
 
 /**
@@ -77,4 +81,8 @@ internal interface LoanPaymentDao {
 
     @Query("DELETE FROM loan_payments WHERE id = :id")
     suspend fun deleteById(id: String)
+
+    /** Borra los abonos ya subidos y deja los pendientes. Para la resincronizacion completa. */
+    @Query("DELETE FROM loan_payments WHERE pending = 0")
+    suspend fun deleteSyncedPayments()
 }
