@@ -88,6 +88,22 @@ class MigrationTest {
         assertEquals(false, category.archived)
     }
 
+    @Test
+    fun `from 3 to 4 there is no cursor, which is what a cold start means`() = runTest {
+        createVersion(3) { }
+
+        val database = openWithMigrations()
+        val state = try {
+            database.sync().state()
+        } finally {
+            database.close()
+        }
+
+        // Sin fila: el cursor es null, que significa "nunca sincronizo". Quien actualiza pide el
+        // primer lote desde el principio, que es lo correcto.
+        assertEquals(null, state)
+    }
+
     /** Abrir con Room ejecuta la migracion y **valida el esquema resultante** contra el esperado. */
     private fun openWithMigrations(): GastonomoDatabase =
         Room.databaseBuilder(context, GastonomoDatabase::class.java, file.absolutePath)

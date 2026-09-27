@@ -5,11 +5,14 @@ import androidx.fragment.app.FragmentActivity
 import com.bahoque.gastonomo.core.application.port.SessionStore
 import com.bahoque.gastonomo.core.application.port.SystemClock
 import com.bahoque.gastonomo.core.application.state.UserPreferences
+import com.bahoque.gastonomo.core.application.usecase.sync.ResyncAccount
+import com.bahoque.gastonomo.core.application.usecase.sync.SyncAccount
 import com.bahoque.gastonomo.data.auth.createAuthGateway
 import com.bahoque.gastonomo.data.catalog.createCategoryGateway
 import com.bahoque.gastonomo.data.catalog.createCurrencyGateway
 import com.bahoque.gastonomo.data.catalog.createSettingsGateway
 import com.bahoque.gastonomo.data.database.local.createLocalStore
+import com.bahoque.gastonomo.data.finance.createChangeGateway
 import com.bahoque.gastonomo.data.finance.createLoanGateway
 import com.bahoque.gastonomo.data.finance.createMovementGateway
 import com.bahoque.gastonomo.data.network.createApiClient
@@ -44,6 +47,7 @@ import com.bahoque.gastonomo.wiring.loansDependencies
 import com.bahoque.gastonomo.wiring.movementsDependencies
 import com.bahoque.gastonomo.wiring.settingsDependencies
 import com.bahoque.gastonomo.wiring.sharedUserPreferences
+import kotlinx.coroutines.flow.first
 
 /**
  * Raiz de composicion. Es el unico sitio del proyecto donde los adaptadores de `:data` se
@@ -97,6 +101,17 @@ class AppContainer(context: Context) {
     /** Sube lo que quedo pendiente. Lo llama el worker en cuanto hay red. */
     val uploader: PendingUploader = pendingUploader(remoteMovements, remoteLoans, store, refresh)
 
+    /**
+     * Pone el dispositivo al dia con lo que haya pasado en otros.
+     *
+     * Va contra la red sin decorar, igual que el que sube lo pendiente: el decorado leeria de la
+     * base local, que es justo lo que este esta rellenando.
+     */
+    private val syncAccount = SyncAccount(createChangeGateway(apiClient), store.sync)
+
+    /** La red de seguridad: borra lo local y lo baja otra vez. */
+    val resyncAccount: ResyncAccount = ResyncAccount(store.sync, syncAccount)
+
     private val gateways = Gateways(
         auth = offlineAuthGateway(
             createAuthGateway(apiClient, devices.sessionStore),
@@ -110,6 +125,21 @@ class AppContainer(context: Context) {
         currencies = offlineCurrencyGateway(createCurrencyGateway(apiClient), store, refresh),
         pending = offlinePendingWrites(store, uploader),
     )
+
+    /**
+     * Pide solo lo nuevo al abrir la aplicacion.
+     *
+     * Sin sesion no hace nada: no hay a quien preguntar. Y si quedo una resincronizacion completa
+     * a medias, esto es lo que la termina, porque terminarla es seguir pidiendo desde donde se
+     * quedo.
+     *
+     * Un fallo se ignora a proposito: la aplicacion lee de la base local, asi que no poder
+     * sincronizar no impide abrirla. Lo que hay se sigue viendo.
+     */
+    suspend fun syncOnStart() {
+        if (!devices.sessionStore.isSignedIn.first()) return
+        syncAccount()
+    }
 
     /** Algo quedo sin subir: se pide el trabajo, que arrancara cuando haya red. */
     private fun onQueued() {
@@ -131,7 +161,8 @@ class AppContainer(context: Context) {
     val home: HomeDependencies = homeDependencies(useCases)
     val movements: MovementsDependencies = movementsDependencies(useCases)
     val loans: LoansDependencies = loansDependencies(useCases)
-    val settings: SettingsDependencies = settingsDependencies(useCases)
+    val settings: SettingsDependencies =
+        settingsDependencies(useCases, resyncAccount, store.sync)
     val categories: CategoriesDependencies = categoriesDependencies(useCases)
     val export: ExportDependencies = exportDependencies(useCases)
 }

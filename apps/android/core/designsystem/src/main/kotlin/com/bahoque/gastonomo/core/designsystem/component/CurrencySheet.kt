@@ -49,7 +49,7 @@ import com.bahoque.gastonomo.core.domain.money.CurrencyCode
  *         selected = state.displayCurrency,
  *         query = state.query,
  *         onQueryChange = viewModel::onCurrencyQuery,
- *         onSelect = viewModel::onCurrencySelected,
+ *         onSelect = { viewModel.onSettingChanged(currency = it) },
  *         onDismiss = viewModel::closeSheet,
  *     )
  * }

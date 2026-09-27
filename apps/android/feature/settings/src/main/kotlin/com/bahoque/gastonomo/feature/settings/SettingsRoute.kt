@@ -42,6 +42,7 @@ fun SettingsRoute(
             onCategories = onCategories,
             onExport = onExport,
             onPending = onPending,
+            onResync = { viewModel.showSheet(SettingsSheet.RESYNC) },
             onSignOut = { viewModel.signOut(onSignedOut) },
         )
     }
@@ -74,12 +75,18 @@ private fun SettingsSheetContent(
             selected = state.settings.displayCurrency,
             query = state.currencyQuery,
             onQueryChange = viewModel::onCurrencyQuery,
-            onSelect = viewModel::onCurrencySelected,
+            onSelect = { viewModel.onSettingChanged(currency = it) },
             onDismiss = { viewModel.showSheet(null) },
         )
         SettingsSheet.LANGUAGE -> LanguageSheet(
             selected = state.settings.language,
-            onSelect = viewModel::onLanguageSelected,
+            onSelect = { viewModel.onSettingChanged(language = it) },
+            onDismiss = { viewModel.showSheet(null) },
+        )
+        SettingsSheet.RESYNC -> ResyncSheet(
+            pendingWrites = state.pendingCount,
+            running = state.resync == ResyncProgress.RUNNING,
+            onConfirm = viewModel::resync,
             onDismiss = { viewModel.showSheet(null) },
         )
         SettingsSheet.PIN -> PinSheet(
@@ -106,6 +113,8 @@ private fun SettingsToast(message: SettingsMessage, onHide: () -> Unit) {
 private fun SettingsMessage.text(): String = when (this) {
     is SettingsMessage.CurrencyChanged ->
         stringResource(R.string.settings_toast_currency, currency.value)
+    SettingsMessage.ResyncDone -> stringResource(R.string.settings_toast_resync_done)
+    SettingsMessage.ResyncFailed -> stringResource(R.string.settings_toast_resync_failed)
     SettingsMessage.LockEnabled -> stringResource(R.string.settings_toast_lock_on)
     SettingsMessage.LockDisabled -> stringResource(R.string.settings_toast_lock_off)
     SettingsMessage.CatalogNotReady -> stringResource(R.string.settings_error_catalog)

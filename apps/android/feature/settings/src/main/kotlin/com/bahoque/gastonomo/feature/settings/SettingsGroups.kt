@@ -119,10 +119,31 @@ internal fun DataGroup(
             label = stringResource(R.string.settings_export),
             value = stringResource(R.string.settings_export_value),
             showChevron = true,
-            showDivider = false,
             onClick = actions.onExport,
         )
+        // La ultima del grupo, y sin chevron: es la red de seguridad, no una fila a la que entrar.
+        // Va enterrada a proposito: no es algo que se pulse por curiosidad.
+        SettingsValueRow(
+            icon = GastonomoIcons.SWAP_VERT,
+            label = stringResource(R.string.settings_resync),
+            value = resyncText(state.resync),
+            valueColor = if (state.resync == ResyncProgress.IDLE) {
+                GastonomoTheme.colors.muted
+            } else {
+                GastonomoTheme.colors.amber
+            },
+            showDivider = false,
+            onClick = actions.onResync,
+        )
     }
+}
+
+/** El texto de la fila de resincronizar. */
+@Composable
+private fun resyncText(progress: ResyncProgress): String = when (progress) {
+    ResyncProgress.IDLE -> stringResource(R.string.settings_resync_value)
+    ResyncProgress.RUNNING -> stringResource(R.string.settings_resync_running)
+    ResyncProgress.UNFINISHED -> stringResource(R.string.settings_resync_unfinished)
 }
 
 /** La fila de tasas es de solo lectura: la fecha en verde, o el estado en muted. */

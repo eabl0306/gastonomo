@@ -16,10 +16,13 @@ data class SettingsActions(
 
     /** Abre la lista de registros que todavia no han salido del telefono. */
     val onPending: () -> Unit,
+
+    /** Abre la confirmacion de borrar lo local y bajarlo otra vez. */
+    val onResync: () -> Unit,
     val onSignOut: () -> Unit,
 ) {
     companion object {
         /** Acciones que no hacen nada, para las capturas y los tests de pintado. */
-        val NONE = SettingsActions({}, {}, {}, {}, {}, {}, {})
+        val NONE = SettingsActions({}, {}, {}, {}, {}, {}, {}, {})
     }
 }

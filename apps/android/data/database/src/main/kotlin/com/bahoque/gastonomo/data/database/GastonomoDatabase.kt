@@ -12,6 +12,7 @@ import com.bahoque.gastonomo.data.database.dao.LoanDao
 import com.bahoque.gastonomo.data.database.dao.LoanPaymentDao
 import com.bahoque.gastonomo.data.database.dao.MovementDao
 import com.bahoque.gastonomo.data.database.dao.PendingWriteDao
+import com.bahoque.gastonomo.data.database.dao.SyncDao
 import com.bahoque.gastonomo.data.database.entity.CategoryEntity
 import com.bahoque.gastonomo.data.database.entity.CurrencyEntity
 import com.bahoque.gastonomo.data.database.entity.ExchangeRateEntity
@@ -22,6 +23,7 @@ import com.bahoque.gastonomo.data.database.entity.MovementEntity
 import com.bahoque.gastonomo.data.database.entity.PendingWriteEntity
 import com.bahoque.gastonomo.data.database.entity.ProfileEntity
 import com.bahoque.gastonomo.data.database.entity.SettingsEntity
+import com.bahoque.gastonomo.data.database.entity.SyncStateEntity
 
 /**
  * La base de datos local. Guarda lo que hoy solo vive en la API para que la aplicacion se pueda
@@ -46,6 +48,7 @@ import com.bahoque.gastonomo.data.database.entity.SettingsEntity
         ExchangeRateSnapshotEntity::class,
         ExchangeRateEntity::class,
         PendingWriteEntity::class,
+        SyncStateEntity::class,
     ],
     version = GastonomoDatabase.VERSION,
     exportSchema = true,
@@ -67,9 +70,11 @@ internal abstract class GastonomoDatabase : RoomDatabase() {
 
     abstract fun pending(): PendingWriteDao
 
+    abstract fun sync(): SyncDao
+
     companion object {
         /** Sube con cada cambio de esquema, y cada subida trae su migracion y su test. */
-        const val VERSION = 3
+        const val VERSION = 4
 
         /** El fichero, dentro del almacenamiento privado de la aplicacion. */
         const val FILE_NAME = "gastonomo.db"

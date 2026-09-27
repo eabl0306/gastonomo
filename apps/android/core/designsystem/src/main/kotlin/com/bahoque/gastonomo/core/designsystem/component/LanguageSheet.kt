@@ -23,7 +23,7 @@ import com.bahoque.gastonomo.core.domain.settings.AppLanguage
  * if (state.sheet == Sheet.Language) {
  *     LanguageSheet(
  *         selected = state.language,
- *         onSelect = viewModel::onLanguageSelected,
+ *         onSelect = { viewModel.onSettingChanged(language = it) },
  *         onDismiss = viewModel::closeSheet,
  *     )
  * }

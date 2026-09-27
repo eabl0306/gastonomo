@@ -1,6 +1,7 @@
 package com.bahoque.gastonomo.data.database.local
 
 import android.content.Context
+import com.bahoque.gastonomo.core.application.port.SyncStore
 import com.bahoque.gastonomo.core.common.DefaultDispatcherProvider
 import com.bahoque.gastonomo.core.common.DispatcherProvider
 import com.bahoque.gastonomo.data.database.GastonomoDatabase
@@ -25,6 +26,14 @@ class LocalStore internal constructor(
     val account: LocalAccount = LocalAccount(database.account())
     val currencies: LocalCurrencies = LocalCurrencies(database.currencies())
     val pending: LocalPendingWrites = LocalPendingWrites(database.pending())
+
+    /**
+     * Por donde va la sincronizacion.
+     *
+     * Sale de aqui como el puerto que es, no como una clase de este modulo: quien lo usa es un
+     * caso de uso, y un caso de uso no conoce Room.
+     */
+    val sync: SyncStore = LocalSync(database)
 
     /**
      * Vacia todo, porque cambio la cuenta. Sin esto, quien entra despues de que otro cierre sesion

@@ -1,6 +1,8 @@
 package com.bahoque.gastonomo.wiring
 
 import com.bahoque.gastonomo.UseCases
+import com.bahoque.gastonomo.core.application.port.SyncStore
+import com.bahoque.gastonomo.core.application.usecase.sync.ResyncAccount
 import com.bahoque.gastonomo.feature.settings.SettingsDependencies
 
 /**
@@ -9,7 +11,11 @@ import com.bahoque.gastonomo.feature.settings.SettingsDependencies
  * Este fichero es solo de esa feature: anadir un caso de uso aqui no toca nada de las
  * demas.
  */
-internal fun settingsDependencies(useCases: UseCases): SettingsDependencies =
+internal fun settingsDependencies(
+    useCases: UseCases,
+    resync: ResyncAccount,
+    sync: SyncStore,
+): SettingsDependencies =
     object : SettingsDependencies {
         override val loadSettings = useCases.loadSettings
         override val updateSettings = useCases.updateSettings
@@ -26,4 +32,6 @@ internal fun settingsDependencies(useCases: UseCases): SettingsDependencies =
         override val discardPendingWrite = useCases.discardPendingWrite
         override val retryPendingWrites = useCases.retryPendingWrites
         override val observeConnection = useCases.observeConnection
+        override val resyncAccount = resync
+        override val syncStore = sync
     }

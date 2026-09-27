@@ -1,5 +1,6 @@
 package com.bahoque.gastonomo.feature.settings
 
+import com.bahoque.gastonomo.core.application.port.SyncStore
 import com.bahoque.gastonomo.core.application.usecase.auth.ChangePassword
 import com.bahoque.gastonomo.core.application.usecase.auth.LoadProfile
 import com.bahoque.gastonomo.core.application.usecase.auth.SetUpLocalLock
@@ -14,6 +15,7 @@ import com.bahoque.gastonomo.core.application.usecase.sync.CorrectPendingWrite
 import com.bahoque.gastonomo.core.application.usecase.sync.DiscardPendingWrite
 import com.bahoque.gastonomo.core.application.usecase.sync.ObserveConnection
 import com.bahoque.gastonomo.core.application.usecase.sync.ObservePendingWrites
+import com.bahoque.gastonomo.core.application.usecase.sync.ResyncAccount
 import com.bahoque.gastonomo.core.application.usecase.sync.RetryPendingWrites
 
 /**
@@ -55,4 +57,10 @@ interface SettingsDependencies {
     val retryPendingWrites: RetryPendingWrites
 
     val observeConnection: ObserveConnection
+
+    /** La red de seguridad: borra lo local y lo baja otra vez. */
+    val resyncAccount: ResyncAccount
+
+    /** Si quedo una resincronizacion a medias, para decirlo en la fila. */
+    val syncStore: SyncStore
 }

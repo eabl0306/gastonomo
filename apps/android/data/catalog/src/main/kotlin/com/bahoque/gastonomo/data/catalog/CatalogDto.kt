@@ -15,8 +15,15 @@ import kotlinx.serialization.Serializable
 import java.math.BigDecimal
 import java.time.LocalDate
 
+/**
+ * Una categoria tal como la manda la API.
+ *
+ * Es publica, y no `internal` como el resto de los DTO de este modulo, porque el feed de cambios
+ * (`:data:finance`) trae categorias en el mismo cuerpo. La alternativa era declararla otra vez
+ * alli, y entonces habria dos mapeos del mismo tipo que se pueden desincronizar.
+ */
 @Serializable
-internal data class CategoryDto(
+data class CategoryDto(
     @SerialName("id") val id: String,
     @SerialName("name") val name: String,
     @SerialName("kind") val kind: String,
@@ -68,8 +75,9 @@ internal data class CategoryRequestDto(
     @SerialName("color") val color: String,
 )
 
+/** Los ajustes tal como los manda la API. Publica por lo mismo que [CategoryDto]. */
 @Serializable
-internal data class SettingsDto(
+data class SettingsDto(
     @SerialName("displayCurrency") val displayCurrency: String,
     @SerialName("language") val language: String,
 ) {

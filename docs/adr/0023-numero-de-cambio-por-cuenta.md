@@ -90,6 +90,31 @@ propia tabla.
 Nunca al recibir el lote. Si la escritura local falla y el cursor ya subio, ese lote se pierde para
 siempre y nada lo vuelve a mandar.
 
+### En el cliente: el cursor vive con los datos
+
+El cursor se guarda en la **misma base local** que los datos, en una tabla de una fila. Si viviera
+en otro fichero, los dos podrian quedarse en versiones distintas y el dispositivo creeria tener algo
+que no tiene.
+
+Al abrir la aplicacion se pide solo lo nuevo. Un fallo se ignora: la aplicacion pinta de la base
+local, asi que no poder sincronizar no impide abrirla.
+
+La **resincronizacion completa** esta en Ajustes, al final del grupo Datos, y pide confirmacion.
+Tres cosas la hacen segura:
+
+- **Si hay escrituras sin subir, no borra nada.** Lo comprueba antes de tocar la base y la hoja lo
+  dice. Borrar lo local con cosas sin subir es perder movimientos del usuario, que es el peor fallo
+  posible de esta aplicacion.
+- **Lo que borra es solo lo ya subido.** Los `DELETE` llevan `pending = 0`, igual que el borrado por
+  periodo. Es la segunda barrera para lo mismo.
+- **Se puede cortar a la mitad.** La marca de "resincronizando" se guarda antes de borrar y solo se
+  quita al acabar, asi que si la aplicacion muere nadie confunde medio historico con el historico
+  entero: la fila de Ajustes lo dice y el siguiente arranque la termina, que es seguir pidiendo desde
+  donde se quedo.
+
+Si la aplicacion muere entre marcar y borrar, el cursor ya es `null`, que significa "bajalo todo": el
+caso se arregla solo.
+
 ## Consecuencias
 
 - Una migracion numera las filas que ya existen por `(created_at, id)`. Da igual que no sea el

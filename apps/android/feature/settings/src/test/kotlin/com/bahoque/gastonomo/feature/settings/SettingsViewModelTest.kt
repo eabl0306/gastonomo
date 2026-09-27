@@ -1,7 +1,10 @@
 package com.bahoque.gastonomo.feature.settings
 
+import com.bahoque.gastonomo.core.application.port.ChangeBatch
 import com.bahoque.gastonomo.core.domain.money.CurrencyCode
 import com.bahoque.gastonomo.core.domain.settings.AppLanguage
+import com.bahoque.gastonomo.core.testing.fake.FakeChangeGateway
+import com.bahoque.gastonomo.core.testing.fake.FakeSyncStore
 import com.bahoque.gastonomo.core.testing.fake.SampleAuth
 import com.bahoque.gastonomo.core.testing.fake.SampleFinance
 import kotlinx.coroutines.Dispatchers
@@ -55,7 +58,7 @@ class SettingsViewModelTest {
         val viewModel = SettingsViewModel(FakeSettingsDependencies.working())
         advanceUntilIdle()
         viewModel.showSheet(SettingsSheet.CURRENCY)
-        viewModel.onCurrencySelected(CurrencyCode.USD)
+        viewModel.onSettingChanged(currency = CurrencyCode.USD)
         advanceUntilIdle()
         val state = viewModel.state.value
         assertEquals(CurrencyCode.USD, state.settings.displayCurrency)
@@ -67,7 +70,7 @@ class SettingsViewModelTest {
     fun `picking the currency already in use says nothing`() = runTest {
         val viewModel = SettingsViewModel(FakeSettingsDependencies.working())
         advanceUntilIdle()
-        viewModel.onCurrencySelected(CurrencyCode.COP)
+        viewModel.onSettingChanged(currency = CurrencyCode.COP)
         advanceUntilIdle()
         assertNull(viewModel.state.value.message)
     }
@@ -76,7 +79,7 @@ class SettingsViewModelTest {
     fun `a 503 while saving is told as the catalog not being ready`() = runTest {
         val viewModel = SettingsViewModel(FakeSettingsDependencies.catalogNotReady())
         advanceUntilIdle()
-        viewModel.onCurrencySelected(CurrencyCode.EUR)
+        viewModel.onSettingChanged(currency = CurrencyCode.EUR)
         advanceUntilIdle()
         assertEquals(SettingsMessage.CatalogNotReady, viewModel.state.value.message)
     }
@@ -87,7 +90,7 @@ class SettingsViewModelTest {
         advanceUntilIdle()
         viewModel.showSheet(SettingsSheet.LANGUAGE)
         assertEquals(SettingsSheet.LANGUAGE, viewModel.state.value.sheet)
-        viewModel.onLanguageSelected(AppLanguage.ENGLISH)
+        viewModel.onSettingChanged(language = AppLanguage.ENGLISH)
         advanceUntilIdle()
         assertEquals(AppLanguage.ENGLISH, viewModel.state.value.settings.language)
         assertNull(viewModel.state.value.sheet)
@@ -146,6 +149,68 @@ class SettingsViewModelTest {
     }
 
     @Test
+    fun `a resync with pending writes does not touch the database`() = runTest {
+        val dependencies = FakeSettingsDependencies(
+            sync = FakeSyncStore(pending = 3),
+            changeGateway = FakeChangeGateway(),
+        )
+        val viewModel = SettingsViewModel(dependencies)
+        advanceUntilIdle()
+
+        viewModel.resync()
+        advanceUntilIdle()
+
+        // Borrar lo local con cosas sin subir es perder movimientos del usuario.
+        assertTrue(dependencies.sync.log.isEmpty())
+        assertEquals(ResyncProgress.IDLE, viewModel.state.value.resync)
+        assertNull(viewModel.state.value.message, "lo cuenta la hoja, no un toast")
+    }
+
+    @Test
+    fun `a resync that finishes says so and the row goes back to idle`() = runTest {
+        val dependencies = FakeSettingsDependencies(
+            changeGateway = FakeChangeGateway(listOf(BATCH)),
+        )
+        val viewModel = SettingsViewModel(dependencies)
+        advanceUntilIdle()
+
+        viewModel.resync()
+        advanceUntilIdle()
+
+        assertEquals(SettingsMessage.ResyncDone, viewModel.state.value.message)
+        assertEquals(ResyncProgress.IDLE, viewModel.state.value.resync)
+        assertEquals(listOf("start", "save:c1", "advance:c1", "finish"), dependencies.sync.log)
+    }
+
+    @Test
+    fun `a resync cut in half leaves the row saying it is unfinished`() = runTest {
+        val dependencies = FakeSettingsDependencies(
+            changeGateway = FakeChangeGateway(
+                batches = listOf(ChangeBatch(cursor = "c1", hasMore = true)),
+                failAfter = 1,
+            ),
+        )
+        val viewModel = SettingsViewModel(dependencies)
+        advanceUntilIdle()
+
+        viewModel.resync()
+        advanceUntilIdle()
+
+        assertEquals(ResyncProgress.UNFINISHED, viewModel.state.value.resync)
+        assertEquals(SettingsMessage.ResyncFailed, viewModel.state.value.message)
+    }
+
+    @Test
+    fun `a resync left unfinished by a previous run is announced on open`() = runTest {
+        val dependencies = FakeSettingsDependencies(sync = FakeSyncStore(resyncing = true))
+
+        val viewModel = SettingsViewModel(dependencies)
+        advanceUntilIdle()
+
+        assertEquals(ResyncProgress.UNFINISHED, viewModel.state.value.resync)
+    }
+
+    @Test
     fun `the message is cleared once the toast has been shown`() = runTest {
         val viewModel = SettingsViewModel(FakeSettingsDependencies.working())
         advanceUntilIdle()
@@ -153,5 +218,9 @@ class SettingsViewModelTest {
         advanceUntilIdle()
         viewModel.onMessageShown()
         assertNull(viewModel.state.value.message)
+    }
+
+    private companion object {
+        val BATCH = ChangeBatch(cursor = "c1", hasMore = false)
     }
 }
