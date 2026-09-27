@@ -10,6 +10,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.bahoque.gastonomo.core.designsystem.component.CurrencySheet
 import com.bahoque.gastonomo.core.designsystem.component.CurrencySheetOrigin
+import com.bahoque.gastonomo.core.designsystem.component.GastonomoSheetHost
 import com.bahoque.gastonomo.feature.loans.LoansDependencies
 import com.bahoque.gastonomo.feature.loans.moneyContextLoader
 import com.bahoque.gastonomo.feature.loans.moneyEntryActions
@@ -47,7 +48,7 @@ fun NewLoanRoute(
                 )
             },
         )
-        if (state.entry.currencySheetOpen) {
+        GastonomoSheetHost(visible = state.entry.currencySheetOpen) {
             CurrencySheet(
                 origin = CurrencySheetOrigin.Record,
                 currencies = state.context.currencies,

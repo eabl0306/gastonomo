@@ -65,6 +65,11 @@ framework, ni HTTP, ni SQL, ni React, ni Android. Los detalles estan en
   anades un formulario de creacion, tiene que entrar en `FORM_ROUTES`. Ver el
   [ADR 0017](docs/adr/0017-movimiento-en-android.md).
 
+  **Un bottom sheet va dentro de un `GastonomoSheetHost`**, nunca detras de un `if` a pelo. Un
+  sheet que se quita con un `if` no puede animar su salida, porque en cuanto la condicion es falsa
+  ya no esta compuesto. El host se queda compuesto mientras baja y retiene el ultimo valor no nulo,
+  que es lo que evita que lo que baje sea una hoja vacia.
+
   **Los seis gateways van envueltos en una cache en memoria** (`:data:cache`), que se cablea en
   `AppContainer` y es invisible para los casos de uso y las features. Sirve lo guardado durante
   45 segundos, revalida en segundo plano hasta los 5 minutos y luego espera a la red. Cada

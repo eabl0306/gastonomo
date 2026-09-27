@@ -1,4 +1,4 @@
-# ADR 0017: Movimiento: como se animan los cambios de pantalla
+# ADR 0017: Movimiento: como se animan los cambios de pantalla y los overlays
 
 - Estado: aceptado
 - Fecha: 2026-09-27
@@ -30,11 +30,11 @@ con los mismos tiempos.
 
 Los valores:
 
-| Token           | ms  | Para que                                   |
-| --------------- | --- | ------------------------------------------ |
-| `enterMillis`   | 240 | Lo que entra en pantalla                   |
-| `exitMillis`    | 180 | Lo que sale                                |
-| `overlayMillis` | 220 | Sheets, modales y el indicador de los tabs |
+| Token             | ms  | Para que                                                   |
+| ----------------- | --- | ---------------------------------------------------------- |
+| `enterMillis`     | 240 | Lo que entra: una pantalla nueva, un bottom sheet que sube |
+| `exitMillis`      | 180 | Lo que sale                                                |
+| `selectionMillis` | 170 | Lo que se mueve dentro de un control sin entrar ni salir   |
 
 Lo que sale va mas rapido que lo que entra, porque lo que se va no merece atencion. Y ninguna pasa
 de 300 ms: por encima de eso la aplicacion empieza a parecer lenta, que es exactamente lo que se
@@ -120,3 +120,59 @@ En contra, y hay que saberlo:
   deterministas.
 - **Las capturas de Roborazzi no cubren esto.** Son estaticas y se toman sobre pantallas, no sobre
   el `NavHost`, asi que una animacion que dejara un estado intermedio pintado no saldria en ellas.
+
+## Los overlays: bottom sheets y segmented control
+
+Los mismos tokens, dentro de la pantalla.
+
+### Un sheet no puede animar su salida si quien lo usa lo quita con un `if`
+
+Este era el problema de verdad, y no es de animacion sino de composicion: las siete pantallas que
+abren un sheet lo hacian con `state.x?.let { Sheet(...) }`. En cuanto el estado se pone a null la
+hoja ya no esta compuesta, asi que no hay nada que animar.
+
+Se resuelve con `GastonomoSheetHost`, que envuelve el sheet, se queda compuesto el tiempo que dura
+la salida y **retiene el ultimo valor no nulo** mientras baja. Sin la retencion lo que bajaria
+seria una hoja vacia: el sheet de abono, por ejemplo, pierde el prestamo al cerrarse, y con el el
+nombre y el saldo que pinta.
+
+El velo y el panel se animan a la vez, y esa es la parte que se nota si se hace mal: el velo funde
+con el `AnimatedVisibility` del host y el panel sube con su propio `animateEnterExit`. Si el velo
+apareciera de golpe se veria un parpadeo oscuro antes de que suba la hoja.
+
+El ambito de animacion llega al panel por un CompositionLocal y no por parametro, porque entre el
+host y `GastonomoBottomSheet` hay siempre un componente de por medio (`CurrencySheet`,
+`DateRangeSheet`, el sheet de categoria...) y pasarlo a mano obligaria a anadir el mismo parametro
+a los seis. Cuando no hay host el local es null y la hoja se pinta sin animacion, que es justo lo
+que hacen las capturas.
+
+La primera composicion no anima: es lo que hace `AnimatedVisibility` con un `visible` que ya llega
+a true. Por eso una captura con la hoja abierta sigue saliendo con la hoja entera.
+
+### Arrastrar hacia abajo cierra
+
+Es lo que el handle de 40x4 del diseno promete y no cumplia. Cierra por recorrido (120 dp) **o**
+por velocidad (900 px/s): exigir solo recorrido hace que un lanzamiento corto y rapido no cierre, y
+entonces parece que el gesto no existe. Tirar hacia arriba no hace nada, la hoja no se estira.
+
+### El fondo del segmento activo se desliza
+
+Antes cada celda pintaba su propio fondo y se encendia y se apagaba. Ahora hay **una sola capa
+detras de las celdas** que se desplaza hasta la elegida, y el color del texto funde. Ademas de
+verse como un movimiento y no como un salto, quita el problema de que el fondo apareciera en el
+destino antes de desaparecer del origen.
+
+Para animar su posicion hay que medir: los segmentos se reparten el ancho con `weight`, asi que su
+tamano no se conoce hasta que el contenedor esta medido. De ahi el `BoxWithConstraints`.
+
+### Lo que esto cuesta
+
+- **La celda ya no escala junto con su fondo al pulsarla.** El `pressScale` sigue en la celda, pero
+  el fondo es ahora una capa aparte que no se entera. Se nota poco, y arreglarlo obligaria a que la
+  capa supiera cual es la celda pulsada.
+- **El fondo y las celdas se reparten el ancho por caminos distintos**, `maxWidth / n` frente a
+  `weight`. Con un ancho que no sea divisible pueden quedar a un pixel. A los anchos reales de un
+  telefono no se aprecia, pero la diferencia existe.
+- **Que la hoja se vea bien bajando no esta probado, solo que baja.** Lo que hay son tests de que
+  sigue compuesta mientras se va, de que acaba desapareciendo, de que el contenido retenido
+  sobrevive al valor y de que arrastrar cierra pero un arrastre corto no.

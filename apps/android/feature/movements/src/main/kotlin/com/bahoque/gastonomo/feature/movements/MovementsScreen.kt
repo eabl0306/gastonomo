@@ -27,6 +27,7 @@ import com.bahoque.gastonomo.core.designsystem.component.GastonomoLoadingBlock
 import com.bahoque.gastonomo.core.designsystem.component.GastonomoNoteLine
 import com.bahoque.gastonomo.core.designsystem.component.GastonomoRetryBlock
 import com.bahoque.gastonomo.core.designsystem.component.GastonomoScreen
+import com.bahoque.gastonomo.core.designsystem.component.GastonomoSheetHost
 import com.bahoque.gastonomo.core.designsystem.component.GastonomoText
 import com.bahoque.gastonomo.core.designsystem.component.GastonomoToast
 import com.bahoque.gastonomo.core.designsystem.component.PeriodPickerRow
@@ -133,7 +134,7 @@ private fun Groups(state: MovementsUiState, actions: MovementsActions) {
 /** El sheet de rango y el toast, que van encima de la pantalla. */
 @Composable
 private fun Overlays(state: MovementsUiState, actions: MovementsActions) {
-    state.rangeDraft?.let { draft ->
+    GastonomoSheetHost(state.rangeDraft) { draft ->
         DateRangeSheet(
             from = draft.from,
             to = draft.to,

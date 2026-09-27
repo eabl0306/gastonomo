@@ -30,7 +30,7 @@ class GastonomoMotionTest {
     fun `no animation goes past 300 ms`() {
         val motion = GastonomoMotion()
 
-        listOf(motion.enterMillis, motion.exitMillis, motion.overlayMillis).forEach { duration ->
+        listOf(motion.enterMillis, motion.exitMillis, motion.selectionMillis).forEach { duration ->
             assertTrue(duration in 1..MAX_MILLIS, "$duration ms se sale del limite")
         }
     }
@@ -48,7 +48,7 @@ class GastonomoMotionTest {
 
         assertEquals(0, motion.enterMillis)
         assertEquals(0, motion.exitMillis)
-        assertEquals(0, motion.overlayMillis)
+        assertEquals(0, motion.selectionMillis)
     }
 
     @Test

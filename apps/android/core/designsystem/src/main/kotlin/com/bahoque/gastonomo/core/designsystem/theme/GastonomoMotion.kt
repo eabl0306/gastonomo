@@ -33,8 +33,11 @@ class GastonomoMotion(val enabled: Boolean = true) {
     /** Lo que sale. Sale mas rapido de lo que entra: lo que se va no merece atencion. */
     val exitMillis: Int = millis(EXIT_MILLIS)
 
-    /** Bottom sheets, modales y el indicador de los tabs. */
-    val overlayMillis: Int = millis(OVERLAY_MILLIS)
+    /**
+     * Lo que se mueve dentro de un control sin entrar ni salir, como el fondo del segmento
+     * activo. Es corto a proposito: una animacion larga en un control pequeno estorba.
+     */
+    val selectionMillis: Int = millis(SELECTION_MILLIS)
 
     /** Emphasized decelerate de M3: arranca rapido y frena al final. Para lo que entra. */
     val entering: Easing = CubicBezierEasing(0.05f, 0.7f, 0.1f, 1.0f)
@@ -51,15 +54,15 @@ class GastonomoMotion(val enabled: Boolean = true) {
     /** El spec de lo que sale. */
     fun <T> exitSpec(): FiniteAnimationSpec<T> = tween(exitMillis, easing = leaving)
 
-    /** El spec de un overlay o de un movimiento dentro de la pantalla. */
-    fun <T> overlaySpec(): FiniteAnimationSpec<T> = tween(overlayMillis, easing = standard)
+    /** El spec de lo que se mueve dentro de la pantalla. */
+    fun <T> selectionSpec(): FiniteAnimationSpec<T> = tween(selectionMillis, easing = standard)
 
     private fun millis(value: Int): Int = if (enabled) value else 0
 
     private companion object {
         const val ENTER_MILLIS = 240
         const val EXIT_MILLIS = 180
-        const val OVERLAY_MILLIS = 220
+        const val SELECTION_MILLIS = 170
     }
 }
 

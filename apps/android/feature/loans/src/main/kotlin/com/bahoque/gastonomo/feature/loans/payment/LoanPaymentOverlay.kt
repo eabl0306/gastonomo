@@ -6,6 +6,7 @@ import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.bahoque.gastonomo.core.designsystem.component.CurrencySheet
 import com.bahoque.gastonomo.core.designsystem.component.CurrencySheetOrigin
+import com.bahoque.gastonomo.core.designsystem.component.GastonomoSheetHost
 import com.bahoque.gastonomo.core.domain.money.Money
 import com.bahoque.gastonomo.feature.loans.moneyEntryActions
 
@@ -26,19 +27,22 @@ fun LoanPaymentOverlay(
     modifier: Modifier = Modifier,
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    if (!state.isOpen) return
-    RegisterPaymentSheet(
-        state = state,
-        actions = PaymentActions(
-            entry = moneyEntryActions(viewModel::editEntry),
-            onFill = viewModel::fill,
-            onDate = viewModel::onDate,
-            onSave = { viewModel.save(onSaved) },
-            onDismiss = viewModel::dismiss,
-        ),
-        modifier = modifier,
-    )
-    if (state.entry.currencySheetOpen) {
+    // Se le pasa el estado entero y no un booleano porque al cerrar el sheet el prestamo se pone
+    // a null, y sin el no hay ni nombre ni saldo que pintar mientras la hoja baja.
+    GastonomoSheetHost(state.takeIf { it.isOpen }) { open ->
+        RegisterPaymentSheet(
+            state = open,
+            actions = PaymentActions(
+                entry = moneyEntryActions(viewModel::editEntry),
+                onFill = viewModel::fill,
+                onDate = viewModel::onDate,
+                onSave = { viewModel.save(onSaved) },
+                onDismiss = viewModel::dismiss,
+            ),
+            modifier = modifier,
+        )
+    }
+    GastonomoSheetHost(visible = state.entry.currencySheetOpen) {
         CurrencySheet(
             origin = CurrencySheetOrigin.Record,
             currencies = state.context.currencies,

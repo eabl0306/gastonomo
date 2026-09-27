@@ -26,6 +26,7 @@ import com.bahoque.gastonomo.core.designsystem.component.CurrencySheet
 import com.bahoque.gastonomo.core.designsystem.component.CurrencySheetOrigin
 import com.bahoque.gastonomo.core.designsystem.component.GastonomoAppBar
 import com.bahoque.gastonomo.core.designsystem.component.GastonomoDateField
+import com.bahoque.gastonomo.core.designsystem.component.GastonomoSheetHost
 import com.bahoque.gastonomo.core.designsystem.component.GastonomoText
 import com.bahoque.gastonomo.core.designsystem.component.GastonomoTextField
 import com.bahoque.gastonomo.core.designsystem.component.PrimaryButton
@@ -79,7 +80,7 @@ fun NewMovementScreen(
             }
             SaveBar(state = state, onSave = actions.onSave)
         }
-        if (state.currencySheetOpen) {
+        GastonomoSheetHost(visible = state.currencySheetOpen) {
             CurrencySheet(
                 origin = CurrencySheetOrigin.Record,
                 currencies = state.currencies,

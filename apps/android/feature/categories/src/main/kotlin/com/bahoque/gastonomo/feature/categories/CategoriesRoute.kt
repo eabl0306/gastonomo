@@ -9,6 +9,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.bahoque.gastonomo.core.designsystem.component.GastonomoSheetHost
 import com.bahoque.gastonomo.core.designsystem.component.GastonomoToast
 import com.bahoque.gastonomo.core.designsystem.icon.GastonomoIcons
 import com.bahoque.gastonomo.core.designsystem.theme.GastonomoTheme
@@ -33,7 +34,7 @@ fun CategoriesRoute(
     }
     Box(modifier = modifier.fillMaxSize()) {
         CategoriesScreen(state = state, actions = actions)
-        state.form?.let { form ->
+        GastonomoSheetHost(state.form) { form ->
             CategorySheet(
                 form = form,
                 onFormChanged = viewModel::onFormChanged,

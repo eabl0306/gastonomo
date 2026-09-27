@@ -13,6 +13,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.bahoque.gastonomo.core.designsystem.component.CurrencySheet
 import com.bahoque.gastonomo.core.designsystem.component.CurrencySheetOrigin
+import com.bahoque.gastonomo.core.designsystem.component.GastonomoSheetHost
 import com.bahoque.gastonomo.core.designsystem.component.GastonomoToast
 import com.bahoque.gastonomo.core.designsystem.component.LanguageSheet
 import com.bahoque.gastonomo.core.designsystem.icon.GastonomoIcons
@@ -51,7 +52,20 @@ fun SettingsRoute(
 
 @Composable
 private fun SettingsSheets(state: SettingsUiState, viewModel: SettingsViewModel) {
-    when (state.sheet) {
+    // El host retiene cual era la hoja mientras baja: sin eso, cerrarla dejaria de pintar su
+    // contenido antes de que se vea salir.
+    GastonomoSheetHost(state.sheet) { sheet ->
+        SettingsSheetContent(sheet = sheet, state = state, viewModel = viewModel)
+    }
+}
+
+@Composable
+private fun SettingsSheetContent(
+    sheet: SettingsSheet,
+    state: SettingsUiState,
+    viewModel: SettingsViewModel,
+) {
+    when (sheet) {
         SettingsSheet.CURRENCY -> CurrencySheet(
             origin = CurrencySheetOrigin.Settings,
             currencies = state.currencies,
@@ -72,7 +86,6 @@ private fun SettingsSheets(state: SettingsUiState, viewModel: SettingsViewModel)
             onConfirm = viewModel::confirmPin,
             onDismiss = { viewModel.showSheet(null) },
         )
-        null -> Unit
     }
 }
 
