@@ -60,6 +60,7 @@ class LoansViewModel(
         context: MoneyContext,
     ): LoansUiState = copy(
         loading = false,
+        everLoaded = true,
         problem = null,
         rows = loans.map { (loan, summary) -> LoanRow(loan, summary) },
         owedToMe = LoanTotals.of(loans, LoanDirection.LENT, context.display),

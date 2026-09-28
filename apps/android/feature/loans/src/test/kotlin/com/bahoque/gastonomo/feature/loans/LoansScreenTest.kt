@@ -72,6 +72,15 @@ class LoansScreenTest {
     }
 
     @Test
+    fun `while it reloads, the empty state does not blink away`() {
+        // Recargar una lista vacia dejaba `isEmpty` en false por el `!loading`, asi que el
+        // texto desaparecia y volvia. Ahora manda `everLoaded`.
+        render(LoansSamples.emptyLoans.copy(loading = true))
+
+        compose.onNodeWithText("No tienes préstamos en esta lista.").assertIsDisplayed()
+    }
+
+    @Test
     fun `a failure offers to retry`() {
         var retries = 0
         render(LoansSamples.loansProblem, LoansActions({}, {}, {}, {}, onRetry = { retries++ }))
