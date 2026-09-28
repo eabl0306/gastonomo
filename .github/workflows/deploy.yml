@@ -21,6 +21,11 @@ on:
       DEPLOY_USER:
         description: usuario de despliegue, sin sudo y en el grupo docker
         required: true
+      GASTONOMO__MAIL__PASSWORD:
+        # Declarado aunque quien llama use `secrets: inherit`, para no depender de
+        # una sutileza de inherit y para que la lista diga lo que hace falta.
+        description: clave API del proveedor de correo, la contrasena SMTP
+        required: true
 
 permissions:
   contents: read
