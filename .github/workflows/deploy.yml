@@ -51,6 +51,66 @@ jobs:
           # aceptaria sin decir nada a cualquiera que responda por esa IP.
           ssh-keyscan -t ed25519 "$HOST" >> ~/.ssh/known_hosts 2>/dev/null
 
+      # El correo se configura desde aqui y no a mano en la maquina. Entrar por SSH a
+      # editar un .env es lo que hace que un secreto acabe sin rotar nunca, y en una
+      # maquina compartida con otra aplicacion es una razon de mas para no entrar.
+      #
+      # Solo la contrasena es un secreto. El resto va en claro a proposito: asi se puede
+      # leer en git con que esta configurada produccion sin entrar en el servidor.
+      #
+      # Se cambian las lineas que hagan falta y se deja el resto del fichero como esta.
+      # Regenerarlo entero se llevaria por delante la contrasena de la base de datos y el
+      # secreto de los tokens, que se generaron en la maquina y no estan en ningun sitio
+      # mas.
+      - name: Poner la configuracion de correo en el .env del servidor
+        env:
+          HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_AS: ${{ secrets.DEPLOY_USER }}
+          MAIL_PASSWORD: ${{ secrets.GASTONOMO__MAIL__PASSWORD }}
+        run: |
+          if [ -z "${MAIL_PASSWORD}" ]; then
+            echo "::error::falta el secreto GASTONOMO__MAIL__PASSWORD"
+            exit 1
+          fi
+          # La contrasena viaja en el argv del comando remoto, igual que el token de GHCR
+          # del paso siguiente. En la maquina es visible en `ps` mientras dura el comando.
+          # Se acepta por ser el patron que ya hay; si algun dia se cambia, hay que
+          # cambiar los dos.
+          ssh -i ~/.ssh/deploy "$DEPLOY_AS@$HOST" \
+            "MAIL_PASSWORD='$MAIL_PASSWORD' bash -euo pipefail" <<'REMOTE'
+          cd /srv/apps/gastonomo
+
+          # Cambia la linea si existe y la anade si no. El valor nunca pasa por el argv de
+          # un proceso hijo: `printf` es una orden interna del shell y `grep` solo ve la
+          # clave.
+          upsert() {
+            grep -v "^$1=" .env > .env.nuevo || true
+            printf '%s=%s\n' "$1" "$2" >> .env.nuevo
+            chmod 600 .env.nuevo
+            # Antes de pisar el fichero bueno: si el filtrado se comio lo que no debia,
+            # mejor fallar que dejar produccion sin la contrasena de la base de datos.
+            grep -q '^GASTONOMO_TAG=' .env.nuevo \
+              || { echo "el .env quedaria sin GASTONOMO_TAG, no se toca"; rm -f .env.nuevo; exit 1; }
+            mv .env.nuevo .env
+          }
+
+          upsert GASTONOMO__MAIL__DRIVER smtp
+          upsert GASTONOMO__MAIL__HOST smtp.resend.com
+          upsert GASTONOMO__MAIL__PORT 587
+          upsert GASTONOMO__MAIL__USERNAME resend
+          upsert GASTONOMO__MAIL__STARTTLS true
+          upsert GASTONOMO__MAIL__PASSWORD "$MAIL_PASSWORD"
+
+          # El remitente no se toca desde aqui: depende de que dominio este verificado en
+          # el proveedor, y ponerlo mal significa envios rechazados. Pero si falta, el
+          # `:?` de compose.prod.yaml tumba el contenedor al arrancar, asi que es mejor
+          # fallar aqui, donde el mensaje se entiende.
+          grep -q '^GASTONOMO__MAIL__FROM=' .env \
+            || { echo "falta GASTONOMO__MAIL__FROM en el .env del servidor"; exit 1; }
+
+          echo "correo configurado: smtp.resend.com:587"
+          REMOTE
+
       - name: Bajar la etiqueta nueva y reiniciar
         env:
           HOST: ${{ secrets.DEPLOY_HOST }}
