@@ -114,9 +114,14 @@ La contrasena del correo va por un secreto y no a mano **porque entrar por SSH a
 maquina y no esta en ningun sitio mas (la contrasena de PostgreSQL, el secreto de los
 tokens) el despliegue no lo toca: cambia las lineas que le tocan y deja el resto.
 
-El remitente se queda en la maquina a proposito. Depende de que dominio este verificado en
-el proveedor de correo, y ponerlo mal son envios rechazados sin aviso. Si falta, el
-despliegue falla con un mensaje claro en vez de dejar un contenedor que no arranca.
+El remitente va en una variable y no en un secreto porque no es sensible, y asi se cambia
+desde la misma pantalla de GitHub. Si la variable esta vacia se respeta lo que haya en la
+maquina, para que actualizar el despliegue no deje sin correo a quien no la haya puesto.
+
+**El dominio del remitente tiene que estar verificado exacto en el proveedor.** Resend
+verifica dominios uno a uno: tener verificado `bahoque.com` no verifica
+`mail.bahoque.com`, que es otra entrada. Paso de verdad: el primer envio despues de
+configurar el correo se rechazo con un 550 por esto, y no se vio hasta mirar los logs.
 
 ## Lo que se comparte con Grimdex, y lo que no
 
