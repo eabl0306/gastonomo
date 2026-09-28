@@ -18,6 +18,9 @@ import kotlin.coroutines.resume
  * Necesita una [FragmentActivity] viva, asi que no se construye una vez en el contenedor:
  * el contenedor guarda un proveedor y la actividad actual se registra al crearse. Si no
  * hay actividad, la peticion se responde como cancelada en vez de fallar.
+ *
+ * Los textos y los autenticadores del dialogo estan en [unlockPromptInfo], que si se puede
+ * ejecutar sin telefono.
  */
 class AndroidBiometricLock(
     private val context: android.content.Context,
@@ -25,7 +28,7 @@ class AndroidBiometricLock(
 ) : BiometricLock {
 
     override suspend fun availability(): BiometricAvailability =
-        when (BiometricManager.from(context).canAuthenticate(AUTHENTICATORS)) {
+        when (BiometricManager.from(context).canAuthenticate(UNLOCK_AUTHENTICATORS)) {
             BiometricManager.BIOMETRIC_SUCCESS -> BiometricAvailability.AVAILABLE
             BiometricManager.BIOMETRIC_ERROR_NONE_ENROLLED -> BiometricAvailability.NOT_ENROLLED
             else -> BiometricAvailability.UNAVAILABLE
@@ -45,14 +48,7 @@ class AndroidBiometricLock(
             androidx.core.content.ContextCompat.getMainExecutor(activity),
             Callback { continuation.resume(it) },
         )
-        prompt.authenticate(
-            BiometricPrompt.PromptInfo.Builder()
-                .setTitle(text.title)
-                .setSubtitle(text.subtitle)
-                .setNegativeButtonText(text.negativeButton)
-                .setAllowedAuthenticators(AUTHENTICATORS)
-                .build(),
-        )
+        prompt.authenticate(unlockPromptInfo(text))
         continuation.invokeOnCancellation { prompt.cancelAuthentication() }
     }
 
@@ -83,10 +79,5 @@ class AndroidBiometricLock(
             answered = true
             onResult(result)
         }
-    }
-
-    private companion object {
-        const val AUTHENTICATORS = BiometricManager.Authenticators.BIOMETRIC_WEAK or
-            BiometricManager.Authenticators.DEVICE_CREDENTIAL
     }
 }

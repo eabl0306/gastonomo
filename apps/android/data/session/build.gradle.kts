@@ -11,9 +11,12 @@ quality {
     // Estas dos clases hablan con hardware que no existe en la JVM: Robolectric no trae el
     // proveedor AndroidKeyStore ni un sensor de huella, asi que su codigo no se puede
     // ejecutar sin un dispositivo. Se comprueban con `just android-connected` cuando haya
-    // emulador; mientras tanto no cuentan para la cobertura, y lo que si se puede probar
-    // (que el valor guardado no es el texto en claro, y que sin actividad la huella se
-    // responde como cancelada) esta cubierto.
+    // emulador; mientras tanto no cuentan para la cobertura.
+    //
+    // La exclusion se lee facil como "de la huella no se puede probar nada", y eso costo un
+    // cierre en produccion: construir el dialogo no necesita sensor, solo se estaba haciendo
+    // dentro de la clase excluida. Ahora esa parte esta en UnlockPrompt.kt, que NO esta aqui
+    // y tiene su test. Lo que queda excluido es unicamente ensenar el dialogo y esperar.
     untestableOnJvm.addAll(
         "com.bahoque.gastonomo.data.session.KeystoreCipher",
         "com.bahoque.gastonomo.data.session.AndroidBiometricLock",
