@@ -25,6 +25,8 @@ class SessionModuleTest {
         assertNotNull(createBiometricLock(context) { null })
     }
 
+    // Ojo: esto vuelve ANTES de construir el dialogo, asi que no dice nada de si el dialogo
+    // es valido. Eso lo comprueba UnlockPromptTest.
     @Test
     fun `without a live activity the prompt is answered as cancelled`() = runTest {
         val lock = createBiometricLock(context) { null }

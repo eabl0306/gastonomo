@@ -44,8 +44,15 @@ class MainActivity : FragmentActivity() {
         }
     }
 
+    /**
+     * La referencia se borra solo si sigue siendo esta actividad. Si llegan a existir dos
+     * instancias y la de arriba se destruye despues de que la de abajo se registre, borrarla a
+     * ciegas dejaria el cerrojo sin actividad: el boton de la huella no haria nada y no habria
+     * ningun error que mirar.
+     */
     override fun onDestroy() {
-        (application as GastonomoApplication).container.currentActivity = null
+        val container = (application as GastonomoApplication).container
+        if (container.currentActivity === this) container.currentActivity = null
         super.onDestroy()
     }
 }

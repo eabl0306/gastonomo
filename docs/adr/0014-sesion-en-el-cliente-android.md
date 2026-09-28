@@ -40,6 +40,10 @@ Lo que implica, y es lo que hace la implementacion:
   abre.
 - La huella se pide con `androidx.biometric`, y por eso la unica actividad es una
   `FragmentActivity`: el dialogo del sistema no se puede ensenar desde una `ComponentActivity`.
+- El dialogo acepta **solo biometria**, nunca la credencial del dispositivo. El boton de salida
+  dice "Usar PIN" y ese PIN es el de cuatro digitos de la aplicacion, el del teclado que hay
+  debajo. Permitir el patron del movil seria una tercera forma de entrar que no es el cerrojo,
+  que no pasa por el contador de intentos y que nadie configuro aqui.
 - Cerrar sesion borra el cerrojo ademas del token. Un PIN que sigue puesto sin sesion detras
   solo confunde.
 - La pantalla de desbloqueo lleva un contador de intentos del **dispositivo**, no de la cuenta:
@@ -90,11 +94,15 @@ A favor:
 
 En contra, y hay que saberlo:
 
-- **`KeystoreCipher` y `AndroidBiometricLock` no se han ejecutado nunca.** Robolectric no trae
-  proveedor `AndroidKeyStore` ni sensor de huella, asi que en la JVM no hay nada que probar y
-  estan excluidos del calculo de cobertura de `:data:session`. El cifrado de verdad y el
-  dialogo del sistema hay que verificarlos con `just android-connected` cuando haya un
-  emulador. Hoy no lo hay.
+- **De `KeystoreCipher` y `AndroidBiometricLock` no se ejecuta todo en la JVM.** Robolectric no
+  trae proveedor `AndroidKeyStore` ni sensor de huella, asi que cifrar de verdad y ensenar el
+  dialogo hay que verificarlos con `just android-connected` cuando haya un emulador. Hoy no lo
+  hay, y las dos clases estan excluidas del calculo de cobertura de `:data:session`. Esto decia
+  "no se han ejecutado nunca, en la JVM no hay nada que probar", y esa frase costo un cierre en
+  produccion: construir el dialogo valida la combinacion de textos y autenticadores, **no
+  necesita sensor**, y la que se pedia era invalida. La frontera de lo que no se puede probar es
+  mas estrecha de lo que parece, y lo que cae fuera hay que sacarlo de la clase excluida; el
+  dialogo se construye ahora en `UnlockPrompt.kt`, que no esta excluido y tiene su test.
 - **Serializar los refrescos serializa tambien la espera.** Varias peticiones que fallan con
   401 a la vez se quedan en cola detras de un solo refresco. Con un access token de 15 minutos
   pasa pocas veces y es el precio correcto.
