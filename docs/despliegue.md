@@ -93,9 +93,30 @@ Los ficheros de cada aplicacion viven en `/srv/apps/<app>/`, propiedad del usuar
 ```
 /srv/apps/gastonomo/compose.yaml      copia de compose.prod.yaml de este repo
 /srv/apps/gastonomo/.env              los secretos y la etiqueta que corre ahora, en 0600
+                                      (parte la escribe el despliegue, ver abajo)
 /srv/apps/gastonomo/rollback.sh       vuelve a una etiqueta anterior
 /srv/apps/gastonomo/.previous-tag     la etiqueta anterior, la escribe el despliegue
 ```
+
+### Que parte del `.env` se edita donde
+
+El fichero es mitad de la maquina y mitad del despliegue, y saberlo evita editar en el
+sitio que no toca:
+
+| Lineas                                                                | Donde se cambian                                  |
+| --------------------------------------------------------------------- | ------------------------------------------------- |
+| `GASTONOMO_TAG`                                                       | lo escribe el despliegue, nadie lo toca a mano    |
+| Las seis de `GASTONOMO__MAIL__` menos `FROM`                          | el secreto `GASTONOMO__MAIL__PASSWORD` de Actions |
+| Todo lo demas: contrasena de la base, secreto de tokens, `MAIL__FROM` | a mano en la maquina, una vez                     |
+
+La contrasena del correo va por un secreto y no a mano **porque entrar por SSH a editar un
+`.env` es lo que hace que un secreto acabe sin rotar nunca**. Lo que se genero en la
+maquina y no esta en ningun sitio mas (la contrasena de PostgreSQL, el secreto de los
+tokens) el despliegue no lo toca: cambia las lineas que le tocan y deja el resto.
+
+El remitente se queda en la maquina a proposito. Depende de que dominio este verificado en
+el proveedor de correo, y ponerlo mal son envios rechazados sin aviso. Si falta, el
+despliegue falla con un mensaje claro en vez de dejar un contenedor que no arranca.
 
 ## Lo que se comparte con Grimdex, y lo que no
 
