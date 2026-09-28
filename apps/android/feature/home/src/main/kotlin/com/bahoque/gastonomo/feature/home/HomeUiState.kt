@@ -33,6 +33,15 @@ data class HomeUiState(
     val user: User? = null,
     val hideAmounts: Boolean = false,
     val loading: Boolean = true,
+
+    /**
+     * Si alguna vez llego contenido.
+     *
+     * Separa "todavia no hay nada que ensenar" de "estoy recargando lo que ya se ve". Sin
+     * esto, cambiar de mes en una cuenta vacia cambiaba la pantalla entera por el bloque de
+     * carga y la devolvia, que es el parpadeo.
+     */
+    val everLoaded: Boolean = false,
     val error: HomeError? = null,
     val ratesUnavailable: Boolean = false,
     val content: HomeContent = HomeContent(),

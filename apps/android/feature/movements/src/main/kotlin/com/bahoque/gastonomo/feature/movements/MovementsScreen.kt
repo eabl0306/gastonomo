@@ -114,7 +114,7 @@ private fun Groups(state: MovementsUiState, actions: MovementsActions) {
             message = stringResource(errorTextOf(state.error)),
             onRetry = actions.onRetry,
         )
-        state.loading && state.groups.isEmpty() -> GastonomoLoadingBlock()
+        state.loading && !state.everLoaded -> GastonomoLoadingBlock()
         state.groups.isEmpty() -> EmptyState(
             icon = GastonomoIcons.RECEIPT_LONG,
             message = stringResource(R.string.movements_empty),

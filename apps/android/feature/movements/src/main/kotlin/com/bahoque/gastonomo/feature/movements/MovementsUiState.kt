@@ -29,6 +29,14 @@ data class MovementsUiState(
     val summary: PeriodSummary = zeroSummary(CurrencyCode.COP),
     val groups: List<DayGroup> = emptyList(),
     val loading: Boolean = true,
+
+    /**
+     * Si alguna vez llegaron movimientos.
+     *
+     * Separa "todavia no hay nada que ensenar" de "estoy recargando lo que ya se ve", que es
+     * lo que evita que cambiar de mes parpadee.
+     */
+    val everLoaded: Boolean = false,
     val error: MovementsError? = null,
     val ratesUnavailable: Boolean = false,
     val rangeDraft: RangeDraft? = null,

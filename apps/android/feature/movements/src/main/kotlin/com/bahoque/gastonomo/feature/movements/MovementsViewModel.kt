@@ -105,6 +105,7 @@ class MovementsViewModel(private val dependencies: MovementsDependencies) : View
         mutable.update { state ->
             val next = state.copy(
                 loading = false,
+                everLoaded = state.everLoaded || load.movements != null,
                 displayCurrency = load.displayCurrency,
                 rates = load.rates,
                 summary = load.summary ?: state.summary,

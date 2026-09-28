@@ -5,6 +5,7 @@ import com.bahoque.gastonomo.core.application.state.TransientMessages
 import com.bahoque.gastonomo.core.domain.period.Period
 import com.bahoque.gastonomo.core.domain.period.PeriodPreset
 import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.Rule
 import java.math.BigDecimal
@@ -66,6 +67,24 @@ class HomeViewModelTest {
         advanceUntilIdle()
         assertEquals("Camilo", viewModel.state.value.user?.firstName)
         assertEquals("CR", viewModel.state.value.user?.initials)
+    }
+
+    @Test
+    fun `the loading block only shows before the first load, so the month does not blink`() = runTest {
+        val viewModel = HomeViewModel(TestHomeDependencies())
+        assertTrue(!viewModel.state.value.everLoaded, "la primera vez si hay bloque de carga")
+        advanceUntilIdle()
+        assertTrue(viewModel.state.value.everLoaded)
+
+        viewModel.period.previousMonth()
+        runCurrent()
+
+        // Aqui estaba el parpadeo: con la cuenta vacia, la condicion de antes miraba si la
+        // lista estaba vacia, asi que cada recarga cambiaba la pantalla entera por el bloque
+        // de carga y la devolvia.
+        assertTrue(viewModel.state.value.everLoaded, "recargar no devuelve el bloque de carga")
+        advanceUntilIdle()
+        assertTrue(viewModel.state.value.everLoaded)
     }
 
     @Test
