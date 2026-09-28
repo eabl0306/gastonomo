@@ -25,11 +25,21 @@ data class LoansUiState(
     val owedToMe: LoanTotals = LoanTotals.none(CurrencyCode.COP),
     val iOwe: LoanTotals = LoanTotals.none(CurrencyCode.COP),
     val context: MoneyContext = MoneyContext(),
+
+    /**
+     * Si alguna vez llego la lista.
+     *
+     * Separa "todavia no se ha cargado" de "estoy recargando lo que ya se ve". Sin esto, el
+     * estado vacio se decidia con `!loading`, asi que recargar una lista vacia lo hacia
+     * desaparecer y volver: el mismo parpadeo que tenian Inicio y Movimientos al cambiar
+     * de mes.
+     */
+    val everLoaded: Boolean = false,
 ) {
     /** Las tarjetas que se ensenan con el filtro puesto. */
     val visible: List<LoanRow>
         get() = rows.filter { filter == null || it.loan.direction == filter }
 
     /** El estado vacio sale cuando ya se cargo, no hubo fallo y el filtro no deja nada. */
-    val isEmpty: Boolean get() = !loading && problem == null && visible.isEmpty()
+    val isEmpty: Boolean get() = everLoaded && problem == null && visible.isEmpty()
 }

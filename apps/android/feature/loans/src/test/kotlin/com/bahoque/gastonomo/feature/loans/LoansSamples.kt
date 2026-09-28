@@ -44,7 +44,8 @@ internal object LoansSamples {
         context = context,
     )
 
-    val emptyLoans = LoansUiState(loading = false, context = context)
+    /** Cargado y sin nada: `everLoaded` es lo que distingue esto de "aun no se sabe". */
+    val emptyLoans = LoansUiState(loading = false, everLoaded = true, context = context)
 
     val loansProblem = LoansUiState(loading = false, problem = LoanProblem.NETWORK, context = context)
 

@@ -2,7 +2,9 @@ package com.bahoque.gastonomo.core.designsystem.component
 
 import android.content.Context
 import android.provider.Settings
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.test.assertIsDisplayed
@@ -21,6 +23,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.annotation.Config
+import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
@@ -38,6 +41,31 @@ class SheetHostTest {
     @After
     fun restoreAnimations() {
         setTransitionScale(1f)
+    }
+
+    @Test
+    fun `it counts the sheet that is open, so the frame can dim the tab bar`() {
+        val open = mutableStateOf(false)
+        val sheets = OpenSheets()
+        compose.setContent {
+            GastonomoTheme {
+                CompositionLocalProvider(LocalOpenSheets provides sheets) {
+                    GastonomoSheetHost(visible = open.value) { Text("hoja") }
+                }
+            }
+        }
+        compose.waitForIdle()
+        assertEquals(0, sheets.count)
+
+        compose.runOnUiThread { open.value = true }
+        compose.waitForIdle()
+        assertEquals(1, sheets.count, "con la hoja abierta la tab bar tiene que ir velada")
+
+        // Baja al cerrar, no al terminar la animacion: si no, el velo de la barra se quedaria
+        // puesto un cuarto de segundo despues de que la hoja se haya ido.
+        compose.runOnUiThread { open.value = false }
+        compose.waitForIdle()
+        assertEquals(0, sheets.count)
     }
 
     @Test

@@ -6,11 +6,15 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.staticCompositionLocalOf
 import com.bahoque.gastonomo.core.designsystem.theme.GastonomoTheme
 
 /**
@@ -36,6 +40,13 @@ import com.bahoque.gastonomo.core.designsystem.theme.GastonomoTheme
 @Composable
 fun GastonomoSheetHost(visible: Boolean, content: @Composable () -> Unit) {
     val motion = GastonomoTheme.motion
+    // Se cuenta al abrir y al cerrar, no al componer y descomponer, para que el velo de la
+    // tab bar se vaya a la vez que el de la hoja y no un cuarto de segundo despues.
+    val sheets = LocalOpenSheets.current
+    DisposableEffect(sheets, visible) {
+        if (visible) sheets?.opened()
+        onDispose { if (visible) sheets?.closed() }
+    }
     AnimatedVisibility(
         visible = visible,
         enter = fadeIn(motion.enterSpec()),
@@ -78,3 +89,41 @@ fun <T : Any> GastonomoSheetHost(value: T?, content: @Composable (T) -> Unit) {
  * tests que montan una hoja sola, que tienen que ser deterministas.
  */
 internal val LocalSheetTransition = compositionLocalOf<AnimatedVisibilityScope?> { null }
+
+/**
+ * Cuantas hojas hay abiertas ahora mismo.
+ *
+ * Existe por un detalle del armazon: la tab bar se pinta fuera del NavHost y por encima de el,
+ * asi que una hoja, que vive dentro de una pantalla, no puede taparla. Sin esto la barra se
+ * quedaba encendida y pulsable con una hoja modal abierta, y tocar un tab navegaba con la hoja
+ * puesta.
+ *
+ * Es un contador y no un booleano porque durante un cambio de pantalla hay dos pantallas
+ * compuestas a la vez, y con un booleano la que se va apagaria el velo de la que llega.
+ */
+@Stable
+class OpenSheets {
+
+    /** Hojas abiertas. */
+    var count: Int by mutableIntStateOf(0)
+        private set
+
+    /** True si hay alguna. */
+    val any: Boolean get() = count > 0
+
+    internal fun opened() {
+        count++
+    }
+
+    internal fun closed() {
+        count = (count - 1).coerceAtLeast(0)
+    }
+}
+
+/**
+ * Donde el armazon deja su contador para que lo vean las hojas.
+ *
+ * Sin proveedor es null y no pasa nada: es lo que ocurre en las capturas y en los tests que
+ * montan una hoja suelta, que no tienen tab bar que velar.
+ */
+val LocalOpenSheets = staticCompositionLocalOf<OpenSheets?> { null }
