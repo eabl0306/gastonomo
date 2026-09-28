@@ -72,6 +72,10 @@ jobs:
           HOST: ${{ secrets.DEPLOY_HOST }}
           DEPLOY_AS: ${{ secrets.DEPLOY_USER }}
           MAIL_PASSWORD: ${{ secrets.GASTONOMO__MAIL__PASSWORD }}
+          # Variable y no secreto: el remitente no es sensible y asi se cambia desde la
+          # misma pantalla de GitHub. Si esta vacia, se respeta lo que haya en la maquina,
+          # que es como estaba antes de existir esta variable.
+          MAIL_FROM: ${{ vars.GASTONOMO__MAIL__FROM }}
         run: |
           if [ -z "${MAIL_PASSWORD}" ]; then
             echo "::error::falta el secreto GASTONOMO__MAIL__PASSWORD"
@@ -82,7 +86,7 @@ jobs:
           # Se acepta por ser el patron que ya hay; si algun dia se cambia, hay que
           # cambiar los dos.
           ssh -i ~/.ssh/deploy "$DEPLOY_AS@$HOST" \
-            "MAIL_PASSWORD='$MAIL_PASSWORD' bash -euo pipefail" <<'REMOTE'
+            "MAIL_PASSWORD='$MAIL_PASSWORD' MAIL_FROM='$MAIL_FROM' bash -euo pipefail" <<'REMOTE'
           cd /srv/apps/gastonomo
 
           # Cambia la linea si existe y la anade si no. El valor nunca pasa por el argv de
@@ -106,12 +110,23 @@ jobs:
           upsert GASTONOMO__MAIL__STARTTLS true
           upsert GASTONOMO__MAIL__PASSWORD "$MAIL_PASSWORD"
 
-          # El remitente no se toca desde aqui: depende de que dominio este verificado en
-          # el proveedor, y ponerlo mal significa envios rechazados. Pero si falta, el
-          # `:?` de compose.prod.yaml tumba el contenedor al arrancar, asi que es mejor
-          # fallar aqui, donde el mensaje se entiende.
+          # El remitente solo se escribe si la variable trae algo. Vacia, se respeta lo
+          # que haya en la maquina: quien no la haya puesto no se queda sin correo por
+          # actualizar el despliegue.
+          #
+          # Cuidado con este valor: el proveedor verifica dominios exactos, asi que
+          # `mail.bahoque.com` NO vale por tener verificado `bahoque.com`. Un remitente
+          # de un dominio sin verificar son envios rechazados con un 550, y eso no se ve
+          # hasta que alguien pide una recuperacion de contrasena.
+          if [ -n "${MAIL_FROM:-}" ]; then
+            upsert GASTONOMO__MAIL__FROM "$MAIL_FROM"
+            echo "remitente: $MAIL_FROM"
+          fi
+
+          # Venga de donde venga, sin remitente el `:?` de compose.prod.yaml tumba el
+          # contenedor al arrancar. Mejor fallar aqui, donde el mensaje se entiende.
           grep -q '^GASTONOMO__MAIL__FROM=' .env \
-            || { echo "falta GASTONOMO__MAIL__FROM en el .env del servidor"; exit 1; }
+            || { echo "falta GASTONOMO__MAIL__FROM: ponlo en la variable GASTONOMO__MAIL__FROM de Actions"; exit 1; }
 
           echo "correo configurado: smtp.resend.com:587"
           REMOTE
