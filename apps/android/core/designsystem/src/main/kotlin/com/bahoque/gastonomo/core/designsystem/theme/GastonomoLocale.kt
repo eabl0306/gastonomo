@@ -2,6 +2,7 @@ package com.bahoque.gastonomo.core.designsystem.theme
 
 import android.annotation.SuppressLint
 import android.content.res.Configuration
+import androidx.activity.compose.LocalActivity
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
@@ -21,6 +22,14 @@ import java.util.Locale
  *
  * La configuracion se copia de la vigente, asi que un cambio de tamano o de densidad del
  * sistema sigue llegando; lo unico que se sustituye es el idioma.
+ *
+ * **Cuidado con lo que se calcula a partir de `LocalContext`.** El contexto que se provee aqui
+ * es un contexto de configuracion, y **no es la actividad**: no es un `ContextWrapper`, asi que
+ * no lleva a ella. `LocalActivity` no se provee en ningun sitio, se deriva de `LocalContext`, asi
+ * que sustituirlo lo dejaba en null en toda la aplicacion. Quien quisiera abrir algo del sistema
+ * se quedaba sin actividad, y eso no da un error: da una pantalla que no hace nada, o un cierre si
+ * lo intenta con el contexto equivocado. Por eso se vuelve a fijar con el valor de fuera, que es
+ * donde todavia se resuelve bien.
  */
 // El reparto por idioma del bundle esta desactivado en app/build.gradle.kts, que es donde se
 // configura. Lint no lo ve desde aqui porque este es un modulo de libreria.
@@ -28,6 +37,8 @@ import java.util.Locale
 @Composable
 internal fun ProvideLocalizedResources(language: AppLanguage, content: @Composable () -> Unit) {
     val context = LocalContext.current
+    // Se lee ANTES de sustituir LocalContext, que es de donde sale.
+    val activity = LocalActivity.current
     val current = LocalConfiguration.current
     val configuration = remember(current, language) {
         Configuration(current).apply { setLocale(Locale.forLanguageTag(language.localeTag)) }
@@ -39,6 +50,7 @@ internal fun ProvideLocalizedResources(language: AppLanguage, content: @Composab
         LocalContext provides localized,
         LocalConfiguration provides configuration,
         LocalResources provides localized.resources,
+        LocalActivity provides activity,
         content = content,
     )
 }

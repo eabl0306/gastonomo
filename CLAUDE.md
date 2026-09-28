@@ -65,6 +65,13 @@ framework, ni HTTP, ni SQL, ni React, ni Android. Los detalles estan en
   anades un formulario de creacion, tiene que entrar en `FORM_ROUTES`. Ver el
   [ADR 0017](docs/adr/0017-movimiento-en-android.md).
 
+  **`LocalContext` no es la actividad.** El tema sustituye `LocalContext` por un contexto de
+  configuracion para que los textos salgan en el idioma de Ajustes, y ese contexto no puede lanzar
+  una actividad: hacerlo cierra la aplicacion. Para eso esta `LocalActivity`, que el tema vuelve a
+  fijar precisamente porque se deriva de `LocalContext` y la sustitucion lo dejaba en null. Si
+  anades algo que necesite la actividad de verdad (abrir la hoja de compartir, pedir un permiso,
+  el dialogo de la huella), sale de ahi y no de `LocalContext`.
+
   **Un bottom sheet va dentro de un `GastonomoSheetHost`**, nunca detras de un `if` a pelo. Un
   sheet que se quita con un `if` no puede animar su salida, porque en cuanto la condicion es falsa
   ya no esta compuesto. El host se queda compuesto mientras baja y retiene el ultimo valor no nulo,

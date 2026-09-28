@@ -1,5 +1,6 @@
 package com.bahoque.gastonomo.feature.export
 
+import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
@@ -59,20 +60,31 @@ fun ExportRoute(
     }
 }
 
-/** Escribe los archivos en la cache y abre la hoja de compartir en cuanto estan listos. */
+/**
+ * Escribe los archivos en la cache y abre la hoja de compartir en cuanto estan listos.
+ *
+ * La hoja se abre desde la **actividad**, no desde `LocalContext`. En esta aplicacion
+ * `LocalContext` no es la actividad: `ProvideLocalizedResources` lo sustituye por un contexto
+ * de configuracion para que los textos salgan en el idioma de Ajustes, y ese contexto no puede
+ * lanzar una actividad sin pedir una tarea nueva. Hacerlo cerraba la aplicacion al exportar.
+ *
+ * El contexto sigue valiendo para escribir en la cache y para la uri de contenido, que es lo
+ * unico que se le pide.
+ */
 @Composable
 private fun ShareWhenReady(state: ExportUiState, viewModel: ExportViewModel) {
     val context = LocalContext.current
+    val activity = LocalActivity.current
     val title = stringResource(R.string.export_share)
     val payload = state.payload
     LaunchedEffect(payload) {
         if (payload == null) return@LaunchedEffect
         val intent = ExportSharing.intentFor(context, payload, title)
-        if (intent == null) {
+        if (intent == null || activity == null) {
             viewModel.onPayloadFailed()
             return@LaunchedEffect
         }
-        context.startActivity(intent)
+        activity.startActivity(intent)
         viewModel.onPayloadDelivered(payload.rows)
     }
 }

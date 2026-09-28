@@ -1,12 +1,18 @@
 package com.bahoque.gastonomo.feature.settings
 
+import com.bahoque.gastonomo.core.application.error.ApiError
+import com.bahoque.gastonomo.core.application.port.CategoryGateway
 import com.bahoque.gastonomo.core.application.port.ChangeBatch
+import com.bahoque.gastonomo.core.common.Outcome
+import com.bahoque.gastonomo.core.domain.category.Category
 import com.bahoque.gastonomo.core.domain.money.CurrencyCode
 import com.bahoque.gastonomo.core.domain.settings.AppLanguage
+import com.bahoque.gastonomo.core.testing.fake.FakeCategoryGateway
 import com.bahoque.gastonomo.core.testing.fake.FakeChangeGateway
 import com.bahoque.gastonomo.core.testing.fake.FakeSyncStore
 import com.bahoque.gastonomo.core.testing.fake.SampleAuth
 import com.bahoque.gastonomo.core.testing.fake.SampleFinance
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -94,6 +100,37 @@ class SettingsViewModelTest {
         advanceUntilIdle()
         assertEquals(AppLanguage.ENGLISH, viewModel.state.value.settings.language)
         assertNull(viewModel.state.value.sheet)
+    }
+
+    /**
+     * Ajustes ensenaba el cerrojo apagado aunque el telefono lo tuviera puesto.
+     *
+     * La carga son cinco lecturas de red, y el valor del cerrojo sale de DataStore, asi que llega
+     * en ese hueco. La carga escribia el estado entero a partir de la copia con la que empezo, y se
+     * llevaba por delante todo lo que hubiera llegado mientras. Lo mismo valia para la cola de
+     * pendientes, la red y la marca de resincronizacion a medias.
+     *
+     * El test de encender el cerrojo que ya habia no lo veia porque miraba el almacen, que estaba
+     * bien, y no lo que la pantalla ensena.
+     */
+    @Test
+    fun `the load does not undo what arrived while its reads were in flight`() = runTest {
+        val gate = CompletableDeferred<Unit>()
+        val dependencies = FakeSettingsDependencies(categoryGateway = SlowCategories(gate))
+        val viewModel = SettingsViewModel(dependencies)
+        advanceUntilIdle()
+
+        dependencies.deviceSettings.setLockEnabled(true)
+        advanceUntilIdle()
+        assertTrue(viewModel.state.value.device.lockEnabled, "el observador no lo pinto")
+
+        gate.complete(Unit)
+        advanceUntilIdle()
+        assertTrue(
+            viewModel.state.value.device.lockEnabled,
+            "la carga volvio a escribir el estado de antes y apago el cerrojo en la pantalla",
+        )
+        assertTrue(!viewModel.state.value.loading)
     }
 
     @Test
@@ -222,5 +259,19 @@ class SettingsViewModelTest {
 
     private companion object {
         val BATCH = ChangeBatch(cursor = "c1", hasMore = false)
+    }
+}
+
+/**
+ * Un catalogo de categorias que se queda esperando. Es la quinta y ultima lectura de la carga,
+ * asi que retenerla deja la carga en vuelo y permite que llegue algo por otro camino.
+ */
+private class SlowCategories(
+    private val gate: CompletableDeferred<Unit>,
+    private val real: CategoryGateway = FakeCategoryGateway(),
+) : CategoryGateway by real {
+    override suspend fun list(): Outcome<List<Category>, ApiError> {
+        gate.await()
+        return real.list()
     }
 }

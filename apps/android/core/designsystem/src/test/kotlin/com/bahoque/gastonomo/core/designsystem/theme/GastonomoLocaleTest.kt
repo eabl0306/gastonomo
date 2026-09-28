@@ -1,6 +1,8 @@
 package com.bahoque.gastonomo.core.designsystem.theme
 
+import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.layout.Column
+import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
@@ -15,6 +17,8 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.annotation.Config
+import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 /**
  * El idioma se elige en Ajustes, no en el telefono. El dispositivo esta en es-CO en los dos
@@ -37,6 +41,34 @@ class GastonomoLocaleTest {
     fun `english switches the strings although the device is in spanish`() {
         render(AppLanguage.ENGLISH)
         compose.onNodeWithText("Main currency").assertIsDisplayed()
+    }
+
+    /**
+     * Poner el idioma sustituye `LocalContext` por un contexto de configuracion, y `LocalActivity`
+     * no se provee en ningun sitio: se **deriva** de `LocalContext`. Sin volver a fijarlo, toda
+     * pantalla dentro del tema veia null y se quedaba sin actividad, que es como la de Exportar
+     * dejo de poder abrir la hoja de compartir.
+     */
+    @Test
+    fun `the activity survives the language substitution`() {
+        var activity: Any? = null
+        var seen = false
+        compose.setContent {
+            GastonomoTheme(language = AppLanguage.SPANISH, displayCurrency = CurrencyCode.COP) {
+                val current = LocalActivity.current
+                SideEffect {
+                    activity = current
+                    seen = true
+                }
+            }
+        }
+        compose.waitForIdle()
+        assertTrue(seen, "el contenido del tema no se compuso")
+        assertNotNull(
+            activity,
+            "LocalActivity se calcula a partir de LocalContext, y el tema lo sustituye: hay que " +
+                "volver a fijarlo o nadie dentro de la aplicacion puede abrir nada del sistema",
+        )
     }
 
     @Test
