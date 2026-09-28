@@ -51,12 +51,20 @@ class SettingsViewModel(private val dependencies: SettingsDependencies) : ViewMo
         load()
     }
 
-    /** Vuelve a pedirlo todo. Es lo que hace el reintento. */
+    /**
+     * Vuelve a pedirlo todo. Es lo que hace el reintento.
+     *
+     * Las cinco lecturas tardan, y mientras estan en vuelo los tres observadores de arriba
+     * siguen escribiendo: el cerrojo del dispositivo, la cola de pendientes y la red. Por eso
+     * el resultado se aplica con [withLoaded] sobre el estado **vivo** y no se escribe entero.
+     * Escribirlo entero devolvia el cerrojo a apagado en cada carga, porque la copia con la que
+     * empezo la carga todavia no habia recibido el valor del dispositivo.
+     */
     fun load() {
         mutableState.update { it.copy(loading = true) }
         viewModelScope.launch {
             val loaded = loader(mutableState.value)
-            mutableState.update { loaded }
+            mutableState.update { live -> live.withLoaded(loaded) }
         }
     }
 

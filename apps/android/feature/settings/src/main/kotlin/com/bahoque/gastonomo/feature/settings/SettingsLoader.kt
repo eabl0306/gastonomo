@@ -65,6 +65,27 @@ internal class SettingsLoader(private val dependencies: SettingsDependencies) {
 }
 
 /**
+ * Pasa al estado vivo **solo los campos que la carga trae**.
+ *
+ * Todo lo demas es de quien lo escribio y no se toca: el cerrojo del dispositivo, la cola de
+ * pendientes, la red y la resincronizacion llegan por sus propios observadores, y la hoja
+ * abierta, el PIN teclado y el aviso son de la pantalla. Antes la carga escribia el estado
+ * entero desde la copia con la que empezo, asi que se llevaba por delante todo lo que hubiera
+ * llegado en ese hueco, y eran cinco lecturas de red de hueco.
+ *
+ * Si anades un campo que se lea de fuera, tiene que entrar aqui.
+ */
+internal fun SettingsUiState.withLoaded(loaded: SettingsUiState): SettingsUiState = copy(
+    loading = false,
+    user = loaded.user,
+    settings = loaded.settings,
+    currencies = loaded.currencies,
+    rates = loaded.rates,
+    categoryCount = loaded.categoryCount,
+    reachedApi = loaded.reachedApi,
+)
+
+/**
  * La fila de sincronizacion pasa a "Sin conexion" cuando no se pudo hablar con la API. Un 422 o
  * un 404 no son falta de conexion, asi que no la tocan.
  */
