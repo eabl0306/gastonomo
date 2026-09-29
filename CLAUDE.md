@@ -162,6 +162,8 @@ POST   /v1/categories/{id}/restore
 GET    /v1/settings                  PATCH /v1/settings
 GET    /v1/currencies                GET /v1/exchange-rates
 GET    /v1/changes?since=&limit=
+
+POST   /v1/dictation/parse           solo cuentas aprobadas, 404 si no
 ```
 
 Todo `/v1` exige `Authorization: Bearer {accessToken}` menos `auth/register`,
@@ -216,6 +218,17 @@ PostgreSQL y las sirve en `/v1/exchange-rates` con base USD y un `status` de `ok
 `stale`. Una tarea refresca a las 06:00 y 18:00 UTC, y al arrancar si hace falta. Ver
 [ADR 0010](docs/adr/0010-cacheo-de-tasas-de-cambio.md).
 
+### Dictado
+
+`POST /v1/dictation/parse` convierte una frase dictada en un **borrador** de movimiento o
+de prestamo. **No crea nada**: confirmarlo es una llamada aparte a `/v1/movements` o
+`/v1/loans` con su `Idempotency-Key`, y por eso este endpoint no lleva idempotencia. Toda
+la normalizacion es de la API, no del cliente: lo que no encaja se sustituye (categoria
+desconocida a "Otros", moneda sin tasa a la principal, fecha futura a hoy) y lo que falta
+se lista en `missing`, que es lo que apaga el boton de guardar. Solo lo pueden usar las
+cuentas de la tabla `dictation_allowlist`; el resto recibe 404, no 403. Ver el
+[ADR 0024](docs/adr/0024-dictar-un-registro.md).
+
 ### Configuracion
 
 Por entorno, con el prefijo `GASTONOMO__` y `__` como separador de nivel. La lista
@@ -228,6 +241,7 @@ GASTONOMO__TELEMETRY__LOG_LEVEL
 GASTONOMO__AUTH__ACCESS_TOKEN_SECRET        obligatorio de verdad al desplegar
 GASTONOMO__MAIL__DRIVER                     log o smtp
 GASTONOMO__EXCHANGE_RATES__ENABLED          false en tests y CI
+GASTONOMO__CLAUDE__API_KEY                  vacia = dictado apagado, responde 503
 ```
 
 La web lee `VITE_API_URL` (dev 5173, preview 4173). Android lee
@@ -319,7 +333,7 @@ Los hooks se saltan con `LEFTHOOK=0` y solo en emergencias.
   navegador bloqueara las llamadas hasta que la API tenga CORS o Vite tenga un proxy.
 - **El gateway necesita un `location` por prefijo de la API, y el orden importa.** Los
   bloques de `/health/`, `/openapi.json` y `/v1/` van ANTES de `location /`, que manda
-  todo lo demas a la web. Cuando `/v1/` falto, las 24 rutas de la API acababan en el nginx
+  todo lo demas a la web. Cuando `/v1/` falto, las 25 rutas de la API acababan en el nginx
   de la SPA: los GET devolvian el `index.html` con 200 y los POST un 405 en HTML. Los jobs
   de `api.yml` y `web.yml` pasaban igual, porque cada uno prueba su imagen por separado.
   Por eso existe `just smoke` (y el job `stack` de la CI): levanta la pila entera y entra

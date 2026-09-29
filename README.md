@@ -4,7 +4,7 @@ Monorepo con tres aplicaciones que comparten el mismo contrato: una API en Rust,
 en React y una app nativa de Android.
 
 La API ya tiene el dominio completo: cuentas con contrasena, movimientos, prestamos con
-abonos, categorias, ajustes y tasas de cambio multimoneda. Son 24 endpoints bajo `/v1` mas
+abonos, categorias, ajustes y tasas de cambio multimoneda. Son 25 endpoints bajo `/v1` mas
 los de salud, y estan descritos uno por uno en
 [docs/api-surface.md](docs/api-surface.md).
 
