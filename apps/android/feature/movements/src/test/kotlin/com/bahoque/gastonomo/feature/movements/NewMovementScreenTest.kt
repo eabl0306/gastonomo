@@ -66,12 +66,14 @@ class NewMovementScreenTest {
     }
 
     @Test
-    fun `another currency shows the conversion box`() {
+    fun `another currency shows the rate, and the equivalent worked out from it`() {
         compose.captureGastonomoScreen("new-movement-foreign") {
             NewMovementScreen(MovementsSamples.foreignForm, NewMovementActions.NONE)
         }
-        compose.onNodeWithText("Equivale a (COP)").assertIsDisplayed()
-        compose.onNodeWithText("447.917").assertIsDisplayed()
+        compose.onNodeWithText("Tasa: 1 USD en COP").assertIsDisplayed()
+        // La tasa se teclea; el equivalente se cuenta debajo y ya no se puede teclear.
+        compose.onNodeWithText("3.199,41").assertExists()
+        compose.onNodeWithText("447.917", substring = true).assertExists()
     }
 
     @Test

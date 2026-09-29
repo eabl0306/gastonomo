@@ -31,8 +31,18 @@ class AmountInput internal constructor(
      * de la moneda, no admite separador en las monedas sin fraccion, quita los ceros a la
      * izquierda y corta la parte entera a 11 digitos.
      */
-    fun sanitize(typed: String, currency: CurrencyCode): String {
-        val maxDecimals = CurrencyDecimals.of(currency)
+    fun sanitize(typed: String, currency: CurrencyCode): String =
+        sanitize(typed, CurrencyDecimals.of(currency))
+
+    /**
+     * Lo mismo para una **tasa**, que no es un importe y no se rige por los decimales de la
+     * moneda. Con las reglas de importe, una tasa hacia una moneda sin fraccion como el peso
+     * colombiano se quedaria en numeros enteros y teclear 3199,41 daria 3199: el registro se
+     * guardaria con otra equivalencia y nada avisaria.
+     */
+    fun sanitizeRate(typed: String): String = sanitize(typed, MAX_RATE_DECIMALS)
+
+    private fun sanitize(typed: String, maxDecimals: Int): String {
         val integer = StringBuilder()
         val fraction = StringBuilder()
         var separatorSeen = false
@@ -64,6 +74,13 @@ class AmountInput internal constructor(
         /** Maximo de digitos de la parte entera. */
         const val MAX_INTEGER_DIGITS = 11
 
+        /**
+         * Decimales que se admiten al teclear una tasa. Seis es lo que hace falta para las
+         * tasas menores que uno, que son las que mas decimales necesitan, y es el mismo tope
+         * con el que se pintan.
+         */
+        const val MAX_RATE_DECIMALS = 6
+
         /** Lee un valor raw. Una cadena vacia o a medio teclear vale cero. */
         fun parse(raw: String): BigDecimal =
             raw.removeSuffix(".").toBigDecimalOrNull() ?: BigDecimal.ZERO
@@ -93,8 +110,14 @@ class AmountInput internal constructor(
          * moneda y sin ceros de relleno. Es lo que rellena la caja de conversion y los
          * chips "Todo el saldo" y "La mitad".
          */
-        fun toRaw(value: BigDecimal, currency: CurrencyCode): String {
-            val scaled = value.setScale(CurrencyDecimals.of(currency), RoundingMode.HALF_UP)
+        fun toRaw(value: BigDecimal, currency: CurrencyCode): String =
+            toRaw(value, CurrencyDecimals.of(currency))
+
+        /** Lo mismo para una tasa, con sus propios decimales. */
+        fun rateToRaw(value: BigDecimal): String = toRaw(value, MAX_RATE_DECIMALS)
+
+        private fun toRaw(value: BigDecimal, decimals: Int): String {
+            val scaled = value.setScale(decimals, RoundingMode.HALF_UP)
             if (scaled.signum() == 0) return "0"
             return scaled.stripTrailingZeros().toPlainString()
         }

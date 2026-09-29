@@ -79,7 +79,7 @@ class LoanPaymentViewModel(
         current.copy(
             entry = current.entry
                 .withAmount(AmountInput.toRaw(converted, current.entry.currency))
-                .withBase(null),
+                .withRate(null),
         )
     }
 

@@ -62,25 +62,27 @@ class NewLoanScreenTest {
     fun `an amount in the display currency hides the conversion box`() {
         render(LoansSamples.newLoan)
 
-        compose.onAllNodesWithText("Equivale a (COP)").assertCountEquals(0)
+        compose.onAllNodesWithText("Tasa: 1 USD en COP").assertCountEquals(0)
         compose.onNodeWithText("Monto total").assertIsDisplayed()
     }
 
     @Test
-    fun `a foreign amount shows the conversion box with the suggested rate`() {
+    fun `a foreign amount shows the rate, and the equivalent worked out from it`() {
         render(LoansSamples.newLoanInDollars)
 
-        compose.onNodeWithText("Equivale a (COP)").assertIsDisplayed()
+        compose.onNodeWithText("Tasa: 1 USD en COP").assertIsDisplayed()
+        // Lo que se teclea es la tasa, y debajo se cuenta lo que sale: 140 por 3.199,41.
+        compose.onNodeWithText("3.199,41").assertExists()
         compose.onNodeWithText(
-            "Tasa sugerida por Frankfurter: 1 USD = 3.199,41 COP. Puedes cambiarla.",
+            "Equivale a $ 447.917. Tasa de Frankfurter; puedes cambiarla.",
         ).assertExists()
     }
 
     @Test
-    fun `an edited equivalence offers to go back to the suggested one`() {
+    fun `an edited rate offers to go back to the suggested one`() {
         render(
             LoansSamples.newLoanInDollars.copy(
-                entry = LoansSamples.newLoanInDollars.entry.withBase("450000"),
+                entry = LoansSamples.newLoanInDollars.entry.withRate("4500"),
             ),
         )
 

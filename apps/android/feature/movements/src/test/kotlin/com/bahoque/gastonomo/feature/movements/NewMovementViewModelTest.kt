@@ -64,27 +64,30 @@ class NewMovementViewModelTest {
     }
 
     @Test
-    fun `another currency asks for an equivalent and keeps both amounts`() = runTest {
+    fun `another currency asks for a rate and works out the equivalent itself`() = runTest {
         val viewModel = viewModelOf(TestMovementsDependencies())
         advanceUntilIdle()
         viewModel.onAmount("140")
         viewModel.onCurrency(CurrencyCode.USD)
         val suggestion = viewModel.state.value.suggestion
         assertTrue(suggestion.isForeign)
-        assertEquals(0, suggestion.suggestedBase?.compareTo(BigDecimal("447917.4")))
-        viewModel.onBase("450000")
-        assertEquals(0, viewModel.state.value.suggestion.base.compareTo(BigDecimal("450000")))
+        // La tasa vigente, y la equivalencia que sale de multiplicarla por el importe.
+        assertEquals(0, suggestion.suggestedRate?.compareTo(BigDecimal("3199.41")))
+        assertEquals(0, suggestion.base.compareTo(BigDecimal("447917.4")))
+        // Con la tasa del usuario la equivalencia se recalcula sola: ya no la teclea nadie.
+        viewModel.onRate("4500")
+        assertEquals(0, viewModel.state.value.suggestion.base.compareTo(BigDecimal("630000")))
     }
 
     @Test
-    fun `changing the currency throws the edited equivalent away`() = runTest {
+    fun `changing the currency throws the edited rate away`() = runTest {
         val viewModel = viewModelOf(TestMovementsDependencies())
         advanceUntilIdle()
         viewModel.onAmount("140")
         viewModel.onCurrency(CurrencyCode.USD)
-        viewModel.onBase("450000")
+        viewModel.onRate("4500")
         viewModel.onCurrency(CurrencyCode.EUR)
-        assertNull(viewModel.state.value.baseRaw)
+        assertNull(viewModel.state.value.rateRaw)
     }
 
     @Test

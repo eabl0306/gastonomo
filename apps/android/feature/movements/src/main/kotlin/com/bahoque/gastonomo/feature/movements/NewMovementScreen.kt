@@ -147,9 +147,9 @@ private fun AmountBlock(state: NewMovementUiState, actions: NewMovementActions) 
         if (state.suggestion.isForeign && state.canConvert) {
             ConversionBox(
                 suggestion = state.suggestion,
-                baseRaw = state.baseRaw,
-                onBaseChange = actions.onBase,
-                onUseSuggested = { actions.onBase(null) },
+                rateRaw = state.rateRaw,
+                onRateChange = actions.onRate,
+                onUseSuggested = { actions.onRate(null) },
                 modifier = Modifier.padding(top = CONVERSION_GAP),
             )
         }

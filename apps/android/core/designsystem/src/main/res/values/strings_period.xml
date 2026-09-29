@@ -26,14 +26,14 @@
     <string name="gastonomo_period_preset_last_3_months">Últimos 3 meses</string>
     <string name="gastonomo_period_preset_this_year">Este año</string>
 
-    <!-- Caja de conversion -->
-    <string name="gastonomo_conversion_header">Equivale a (%1$s)</string>
+    <!-- Caja de conversion. Lo que se teclea es la tasa; la equivalencia se calcula. -->
+    <string name="gastonomo_conversion_header">Tasa: 1 %1$s en %2$s</string>
     <string name="gastonomo_conversion_use_suggested">Usar sugerida</string>
-    <string name="gastonomo_conversion_edit">Editar la equivalencia</string>
-    <string name="gastonomo_conversion_rate_suggested">Tasa sugerida por Frankfurter: 1 %1$s = %2$s %3$s. Puedes cambiarla.</string>
-    <string name="gastonomo_conversion_rate_own">Tu tasa: 1 %1$s = %2$s %3$s · sugerida %4$s</string>
-    <string name="gastonomo_conversion_rate_own_only">Tu tasa: 1 %1$s = %2$s %3$s</string>
-    <string name="gastonomo_conversion_rate_missing">No hay tasa disponible para %1$s. Escribe la equivalencia.</string>
+    <string name="gastonomo_conversion_edit">Editar la tasa</string>
+    <string name="gastonomo_conversion_equivalent_suggested">Equivale a %1$s. Tasa de Frankfurter; puedes cambiarla.</string>
+    <string name="gastonomo_conversion_equivalent_own">Equivale a %1$s · sugerida %2$s</string>
+    <string name="gastonomo_conversion_equivalent_own_only">Equivale a %1$s</string>
+    <string name="gastonomo_conversion_rate_missing">No hay tasa disponible para %1$s. Escribe la tuya.</string>
 
     <!-- Campo de fecha -->
     <string name="gastonomo_date_field_open">Elegir fecha</string>
