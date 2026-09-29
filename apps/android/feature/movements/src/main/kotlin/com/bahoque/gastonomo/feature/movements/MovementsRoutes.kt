@@ -63,7 +63,7 @@ internal fun NewMovementRoute(
         NewMovementActions(
             onKind = viewModel::onKind,
             onAmount = viewModel::onAmount,
-            onBase = viewModel::onBase,
+            onRate = viewModel::onRate,
             onCategory = viewModel::onCategory,
             onDate = viewModel::onDate,
             onNote = viewModel::onNote,

@@ -69,8 +69,8 @@ class NewMovementViewModel(
     }
 
     /** La equivalencia de la caja de conversion. null la devuelve a la tasa sugerida. */
-    fun onBase(raw: String?) {
-        mutable.update { it.copy(baseRaw = raw) }
+    fun onRate(raw: String?) {
+        mutable.update { it.copy(rateRaw = raw) }
     }
 
     fun onCategory(id: CategoryId) {
@@ -95,7 +95,7 @@ class NewMovementViewModel(
 
     /** Cambiar la moneda del registro borra la equivalencia editada. */
     fun onCurrency(currency: CurrencyCode) {
-        mutable.update { it.copy(currency = currency, baseRaw = null, currencySheetOpen = false) }
+        mutable.update { it.copy(currency = currency, rateRaw = null, currencySheetOpen = false) }
     }
 
     fun onSave() {

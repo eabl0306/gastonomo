@@ -12,7 +12,7 @@ import java.time.LocalDate
 data class NewMovementActions(
     val onKind: (MovementKind) -> Unit,
     val onAmount: (String) -> Unit,
-    val onBase: (String?) -> Unit,
+    val onRate: (String?) -> Unit,
     val onCategory: (CategoryId) -> Unit,
     val onDate: (LocalDate) -> Unit,
     val onNote: (String) -> Unit,
@@ -27,7 +27,7 @@ data class NewMovementActions(
         val NONE = NewMovementActions(
             onKind = {},
             onAmount = {},
-            onBase = {},
+            onRate = {},
             onCategory = {},
             onDate = {},
             onNote = {},

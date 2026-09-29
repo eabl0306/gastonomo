@@ -17,13 +17,13 @@
     <string name="gastonomo_period_preset_last_3_months">Last 3 months</string>
     <string name="gastonomo_period_preset_this_year">This year</string>
 
-    <string name="gastonomo_conversion_header">Equals (%1$s)</string>
+    <string name="gastonomo_conversion_header">Rate: 1 %1$s in %2$s</string>
     <string name="gastonomo_conversion_use_suggested">Use suggested</string>
-    <string name="gastonomo_conversion_edit">Edit the equivalent</string>
-    <string name="gastonomo_conversion_rate_suggested">Rate suggested by Frankfurter: 1 %1$s = %2$s %3$s. You can change it.</string>
-    <string name="gastonomo_conversion_rate_own">Your rate: 1 %1$s = %2$s %3$s · suggested %4$s</string>
-    <string name="gastonomo_conversion_rate_own_only">Your rate: 1 %1$s = %2$s %3$s</string>
-    <string name="gastonomo_conversion_rate_missing">There is no rate for %1$s. Type the equivalent.</string>
+    <string name="gastonomo_conversion_edit">Edit the rate</string>
+    <string name="gastonomo_conversion_equivalent_suggested">Equals %1$s. Frankfurter rate; you can change it.</string>
+    <string name="gastonomo_conversion_equivalent_own">Equals %1$s · suggested %2$s</string>
+    <string name="gastonomo_conversion_equivalent_own_only">Equals %1$s</string>
+    <string name="gastonomo_conversion_rate_missing">There is no rate for %1$s. Type your own.</string>
 
     <string name="gastonomo_date_field_open">Pick a date</string>
 </resources>

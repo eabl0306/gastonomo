@@ -158,12 +158,12 @@ class NewLoanViewModelTest {
         val model = viewModel()
         testScheduler.advanceUntilIdle()
 
-        model.editEntry { withAmount("140").withCurrency(CurrencyCode.USD).withBase("450000") }
-        assertEquals("450000", model.state.value.entry.baseRaw)
+        model.editEntry { withAmount("140").withCurrency(CurrencyCode.USD).withRate("4500") }
+        assertEquals("4500", model.state.value.entry.rateRaw)
 
         model.editEntry { withCurrency(CurrencyCode.EUR) }
 
-        assertNull(model.state.value.entry.baseRaw)
+        assertNull(model.state.value.entry.rateRaw)
     }
 
     @Test

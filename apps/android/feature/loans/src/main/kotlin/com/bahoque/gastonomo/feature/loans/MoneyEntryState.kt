@@ -9,21 +9,20 @@ import java.math.BigDecimal
 
 /**
  * El trozo de estado que comparten Nuevo prestamo y Registrar abono: el importe tecleado,
- * la moneda del registro, la equivalencia editada a mano y el sheet de moneda abierto
- * encima.
+ * la moneda del registro, la tasa editada a mano y el sheet de moneda abierto encima.
  *
  * El importe se guarda en bruto (con punto decimal y sin miles) y no como se ve: el campo
  * lo pinta con el separador del idioma cada vez, asi que cambiar de idioma no corrompe lo
  * que el usuario llevaba escrito.
  *
- * @property baseRaw null mientras el usuario no toque la caja de conversion, que es la
- *   senal de "usa la equivalencia sugerida".
+ * @property rateRaw null mientras el usuario no toque la caja de conversion, que es la
+ *   senal de "usa la tasa sugerida". La equivalencia no se guarda: se calcula con la tasa.
  */
 @Immutable
 data class MoneyEntryState(
     val amountRaw: String = "",
     val currency: CurrencyCode = CurrencyCode.COP,
-    val baseRaw: String? = null,
+    val rateRaw: String? = null,
     val currencySheetOpen: Boolean = false,
     val currencyQuery: String = "",
     /**
@@ -41,17 +40,17 @@ data class MoneyEntryState(
         entered = Money(amount, currency),
         display = context.display,
         rates = context.rates,
-        editedBase = baseRaw?.let(AmountInput::parse),
+        editedRate = rateRaw?.let(AmountInput::parse),
     )
 
     fun withAmount(raw: String): MoneyEntryState = copy(amountRaw = raw)
 
-    /** Cambiar de moneda borra la equivalencia editada y cierra el sheet. */
+    /** Cambiar de moneda borra la tasa editada y cierra el sheet. */
     fun withCurrency(code: CurrencyCode): MoneyEntryState =
-        copy(currency = code, baseRaw = null, currencySheetOpen = false, currencyQuery = "")
+        copy(currency = code, rateRaw = null, currencySheetOpen = false, currencyQuery = "")
 
-    /** null restaura la equivalencia sugerida, que es lo que hace "Usar sugerida". */
-    fun withBase(raw: String?): MoneyEntryState = copy(baseRaw = raw)
+    /** null restaura la tasa sugerida, que es lo que hace "Usar sugerida". */
+    fun withRate(raw: String?): MoneyEntryState = copy(rateRaw = raw)
 
     fun withQuery(query: String): MoneyEntryState = copy(currencyQuery = query)
 
@@ -68,7 +67,7 @@ data class MoneyEntryState(
      */
     fun withConnection(canConvert: Boolean, display: CurrencyCode): MoneyEntryState = when {
         canConvert -> copy(canConvert = true)
-        else -> copy(canConvert = false, currency = display, baseRaw = null, currencySheetOpen = false)
+        else -> copy(canConvert = false, currency = display, rateRaw = null, currencySheetOpen = false)
     }
 
     companion object {

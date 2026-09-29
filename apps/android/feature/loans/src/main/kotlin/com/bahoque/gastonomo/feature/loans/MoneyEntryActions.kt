@@ -8,7 +8,7 @@ import com.bahoque.gastonomo.core.domain.money.CurrencyCode
 data class MoneyEntryActions(
     val onAmount: (String) -> Unit,
     val onCurrency: (CurrencyCode) -> Unit,
-    val onBase: (String?) -> Unit,
+    val onRate: (String?) -> Unit,
     val onQuery: (String) -> Unit,
     val onCurrencySheet: (Boolean) -> Unit,
 )
@@ -23,7 +23,7 @@ data class MoneyEntryActions(
 fun moneyEntryActions(edit: (MoneyEntryState.() -> MoneyEntryState) -> Unit) = MoneyEntryActions(
     onAmount = { raw -> edit { withAmount(raw) } },
     onCurrency = { code -> edit { withCurrency(code) } },
-    onBase = { raw -> edit { withBase(raw) } },
+    onRate = { raw -> edit { withRate(raw) } },
     onQuery = { query -> edit { withQuery(query) } },
     onCurrencySheet = { open -> edit { withCurrencySheet(open) } },
 )

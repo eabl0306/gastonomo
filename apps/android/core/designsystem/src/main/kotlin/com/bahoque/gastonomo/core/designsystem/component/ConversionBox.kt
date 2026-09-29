@@ -30,28 +30,30 @@ import com.bahoque.gastonomo.core.domain.money.ConversionSuggestion
 /**
  * La caja de conversion de los tres formularios de creacion: movimiento, prestamo y abono.
  *
- * Solo se ensena cuando el registro esta en una moneda distinta de la principal. Propone la
- * equivalencia con la tasa vigente, deja editarla y ofrece "Usar sugerida" para volver. El
- * calculo esta en [ConversionSuggestion]; aqui solo se pinta.
+ * Solo se ensena cuando el registro esta en una moneda distinta de la principal. **Lo que se
+ * teclea es la tasa**, y la equivalencia se calcula y se cuenta debajo. Antes era al reves, y
+ * era pedirle al usuario la cuenta ya hecha: quien recibe dolares sabe a como esta el cambio,
+ * no cuanto suman ciento cuarenta dolares en pesos. El calculo esta en [ConversionSuggestion];
+ * aqui solo se pinta.
  *
  * ```
  * if (state.suggestion.isForeign) {
  *     ConversionBox(
  *         suggestion = state.suggestion,
- *         baseRaw = state.baseRaw,
- *         onBaseChange = viewModel::onBase,
- *         onUseSuggested = viewModel::onUseSuggestedRate,
+ *         rateRaw = state.rateRaw,
+ *         onRateChange = viewModel::onRate,
+ *         onUseSuggested = { viewModel.onRate(null) },
  *     )
  * }
  * ```
  *
- * @param baseRaw lo que el usuario escribio, con punto decimal, o null para la sugerida.
+ * @param rateRaw la tasa que escribio el usuario, con punto decimal, o null para la sugerida.
  */
 @Composable
 fun ConversionBox(
     suggestion: ConversionSuggestion,
-    baseRaw: String?,
-    onBaseChange: (String) -> Unit,
+    rateRaw: String?,
+    onRateChange: (String) -> Unit,
     onUseSuggested: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -61,11 +63,16 @@ fun ConversionBox(
         radius = GastonomoTheme.radii.smallCard,
         contentPadding = PaddingValues(horizontal = CONTENT_PADDING, vertical = VERTICAL_PADDING),
     ) {
-        Header(code = suggestion.display.value, edited = suggestion.isEdited, onUseSuggested = onUseSuggested)
-        BaseField(
-            symbol = formats.symbolOf(suggestion.display),
-            shown = formats.amountInput.display(baseRaw ?: suggestedRaw(suggestion)),
-            onTyped = { typed -> onBaseChange(formats.amountInput.sanitize(typed, suggestion.display)) },
+        Header(
+            from = suggestion.entered.currency.value,
+            to = suggestion.display.value,
+            edited = suggestion.isEdited,
+            onUseSuggested = onUseSuggested,
+        )
+        RateField(
+            code = suggestion.display.value,
+            shown = formats.amountInput.display(rateRaw ?: suggestedRateRaw(suggestion)),
+            onTyped = { typed -> onRateChange(formats.amountInput.sanitizeRate(typed)) },
         )
         GastonomoText(
             text = helpText(suggestion, formats),
@@ -77,13 +84,13 @@ fun ConversionBox(
 }
 
 @Composable
-private fun Header(code: String, edited: Boolean, onUseSuggested: () -> Unit) {
+private fun Header(from: String, to: String, edited: Boolean, onUseSuggested: () -> Unit) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         GastonomoText(
-            text = stringResource(R.string.gastonomo_conversion_header, code),
+            text = stringResource(R.string.gastonomo_conversion_header, from, to),
             modifier = Modifier.weight(1f),
             style = GastonomoTheme.typography.secondarySmall.copy(fontWeight = FontWeight.SemiBold),
             color = GastonomoTheme.colors.muted,
@@ -98,18 +105,14 @@ private fun Header(code: String, edited: Boolean, onUseSuggested: () -> Unit) {
     }
 }
 
+/** La tasa: el numero se teclea y al lado va el codigo de la moneda principal. */
 @Composable
-private fun BaseField(symbol: String, shown: String, onTyped: (String) -> Unit) {
+private fun RateField(code: String, shown: String, onTyped: (String) -> Unit) {
     Row(
         modifier = Modifier.fillMaxWidth().padding(top = FIELD_GAP),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(FIELD_GAP_INNER),
     ) {
-        GastonomoAmountText(
-            text = symbol,
-            style = GastonomoTheme.typography.amountCard,
-            color = GastonomoTheme.colors.ink,
-        )
         Box(modifier = Modifier.weight(1f)) {
             if (shown.isEmpty()) {
                 GastonomoText(
@@ -128,6 +131,11 @@ private fun BaseField(symbol: String, shown: String, onTyped: (String) -> Unit) 
                 modifier = Modifier.fillMaxWidth(),
             )
         }
+        GastonomoText(
+            text = code,
+            style = GastonomoTheme.typography.secondarySmall.copy(fontWeight = FontWeight.SemiBold),
+            color = GastonomoTheme.colors.muted,
+        )
         GastonomoIcon(
             name = GastonomoIcons.EDIT,
             size = ICON_SIZE,
@@ -137,41 +145,31 @@ private fun BaseField(symbol: String, shown: String, onTyped: (String) -> Unit) 
     }
 }
 
-/** La equivalencia que se pinta cuando el usuario todavia no ha escrito nada. */
-private fun suggestedRaw(suggestion: ConversionSuggestion): String {
-    if (suggestion.entered.amount.signum() <= 0) return ""
-    val suggested = suggestion.suggestedBase ?: return ""
-    return AmountInput.toRaw(suggested, suggestion.display)
+/** La tasa que se pinta cuando el usuario todavia no ha escrito ninguna. */
+private fun suggestedRateRaw(suggestion: ConversionSuggestion): String {
+    val suggested = suggestion.suggestedRate ?: return ""
+    return AmountInput.rateToRaw(suggested)
 }
 
-/** Las tres variantes del texto de ayuda, en el orden que decide el prototipo. */
+/**
+ * El texto de debajo cuenta **la equivalencia**, que es lo que el usuario ya no teclea. Cuando
+ * cambio la tasa se anade la sugerida al lado, que es la referencia para saber si se paso.
+ */
 @Composable
 private fun helpText(suggestion: ConversionSuggestion, formats: GastonomoFormats): String {
-    val code = suggestion.entered.currency.value
-    val display = suggestion.display.value
-    val ownRate = suggestion.ownRate.takeIf { suggestion.isEdited }
     val suggested = suggestion.suggestedRate
+    if (suggestion.rate == null) {
+        return stringResource(R.string.gastonomo_conversion_rate_missing, suggestion.entered.currency.value)
+    }
+    val equivalent = formats.amount(suggestion.base, suggestion.display)
     return when {
-        ownRate != null && suggested != null -> stringResource(
-            R.string.gastonomo_conversion_rate_own,
-            code,
-            formats.rate(ownRate),
-            display,
+        suggestion.isEdited && suggested != null -> stringResource(
+            R.string.gastonomo_conversion_equivalent_own,
+            equivalent,
             formats.rate(suggested),
         )
-        ownRate != null -> stringResource(
-            R.string.gastonomo_conversion_rate_own_only,
-            code,
-            formats.rate(ownRate),
-            display,
-        )
-        suggested != null -> stringResource(
-            R.string.gastonomo_conversion_rate_suggested,
-            code,
-            formats.rate(suggested),
-            display,
-        )
-        else -> stringResource(R.string.gastonomo_conversion_rate_missing, code)
+        suggestion.isEdited -> stringResource(R.string.gastonomo_conversion_equivalent_own_only, equivalent)
+        else -> stringResource(R.string.gastonomo_conversion_equivalent_suggested, equivalent)
     }
 }
 

@@ -57,27 +57,27 @@ class PeriodComponentsTest {
     }
 
     @Test
-    fun `the conversion box explains the suggested rate`() {
+    fun `the conversion box shows the rate and works out the equivalent`() {
         compose.captureGastonomoScreen("conversion-box-suggested") {
             ConversionBox(
                 suggestion = suggestion(edited = null),
-                baseRaw = null,
-                onBaseChange = {},
+                rateRaw = null,
+                onRateChange = {},
                 onUseSuggested = {},
             )
         }
-        compose.onNodeWithText("Equivale a (COP)").assertIsDisplayed()
+        compose.onNodeWithText("Tasa: 1 USD en COP").assertIsDisplayed()
         compose.onNodeWithText(SUGGESTED_HELP).assertIsDisplayed()
     }
 
     @Test
-    fun `an edited equivalent offers the suggested one back`() {
+    fun `an edited rate offers the suggested one back`() {
         var reset = false
         compose.captureGastonomoScreen("conversion-box-edited") {
             ConversionBox(
-                suggestion = suggestion(edited = BigDecimal("450000")),
-                baseRaw = "450000",
-                onBaseChange = {},
+                suggestion = suggestion(edited = BigDecimal("4500")),
+                rateRaw = "4500",
+                onRateChange = {},
                 onUseSuggested = { reset = true },
             )
         }
@@ -168,8 +168,8 @@ class PeriodComponentsTest {
             CurrencyChip(currency = CurrencyCode.USD, onClick = {})
             ConversionBox(
                 suggestion = suggestion(edited = null),
-                baseRaw = null,
-                onBaseChange = {},
+                rateRaw = null,
+                onRateChange = {},
                 onUseSuggested = {},
             )
             GastonomoDateField(label = "Fecha", value = LocalDate.of(2026, 9, 22), onValueChange = {})
@@ -191,16 +191,19 @@ class PeriodComponentsTest {
         entered = Money(BigDecimal("140"), CurrencyCode.USD),
         display = CurrencyCode.COP,
         rates = RATES,
-        editedBase = edited,
+        editedRate = edited,
     )
 
     private companion object {
         val ITEM_GAP = 12.dp
 
         const val SCREENSHOT_NAME = "design-system-period"
-        const val SUGGESTED_HELP =
-            "Tasa sugerida por Frankfurter: 1 USD = 3.199,41 COP. Puedes cambiarla."
-        const val OWN_HELP = "Tu tasa: 1 USD = 3.214,29 COP · sugerida 3.199,41"
+
+        /** 140 USD por la tasa vigente de 3.199,41. */
+        const val SUGGESTED_HELP = "Equivale a $ 447.917. Tasa de Frankfurter; puedes cambiarla."
+
+        /** 140 USD por la tasa que escribio el usuario, 4.500. */
+        const val OWN_HELP = "Equivale a $ 630.000 · sugerida 3.199,41"
 
         val RATES = ExchangeRates(
             base = CurrencyCode.USD,

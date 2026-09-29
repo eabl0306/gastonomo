@@ -78,9 +78,9 @@ fun MoneyEntryBlock(
         if (suggestion.isForeign && entry.canConvert) {
             ConversionBox(
                 suggestion = suggestion,
-                baseRaw = entry.baseRaw,
-                onBaseChange = actions.onBase,
-                onUseSuggested = { actions.onBase(null) },
+                rateRaw = entry.rateRaw,
+                onRateChange = actions.onRate,
+                onUseSuggested = { actions.onRate(null) },
                 modifier = Modifier.padding(top = CONVERSION_GAP),
             )
         }

@@ -16,11 +16,11 @@ import java.time.LocalDate
 /**
  * El formulario de Nuevo movimiento.
  *
- * Los importes se guardan en crudo (`amountRaw`, `baseRaw`), con punto decimal y sin separador
+ * Los importes se guardan en crudo (`amountRaw`, `rateRaw`), con punto decimal y sin separador
  * de miles: lo que se ensena lo construye el campo con el formato del idioma. Asi lo que se
  * teclea y lo que se manda a la API no dependen de como se pinte.
  *
- * @property baseRaw la equivalencia que escribio el usuario. null significa usar la sugerida,
+ * @property rateRaw la tasa que escribio el usuario. null significa usar la sugerida,
  *   y cambiar la moneda del formulario lo vuelve a poner a null.
  */
 data class NewMovementUiState(
@@ -30,7 +30,7 @@ data class NewMovementUiState(
     val amountRaw: String = "",
     val currency: CurrencyCode = CurrencyCode.COP,
     val displayCurrency: CurrencyCode = CurrencyCode.COP,
-    val baseRaw: String? = null,
+    val rateRaw: String? = null,
     val note: String = "",
     val categories: List<Category> = emptyList(),
     val selectedCategoryId: CategoryId? = null,
@@ -59,7 +59,7 @@ data class NewMovementUiState(
             entered = Money(amount, currency),
             display = displayCurrency,
             rates = rates,
-            editedBase = baseRaw?.let(AmountInput::parse),
+            editedRate = rateRaw?.let(AmountInput::parse),
         )
 
     /**

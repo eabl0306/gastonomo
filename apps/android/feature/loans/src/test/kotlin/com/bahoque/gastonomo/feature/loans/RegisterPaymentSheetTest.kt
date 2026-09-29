@@ -62,7 +62,7 @@ class RegisterPaymentSheetTest {
         )
         render(state)
 
-        compose.onNodeWithText("Equivale a (COP)").assertIsDisplayed()
+        compose.onNodeWithText("Tasa: 1 USD en COP").assertIsDisplayed()
     }
 
     @Test
