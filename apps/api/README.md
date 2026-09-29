@@ -5,7 +5,8 @@ HTTP ni PostgreSQL, y un test lo comprueba en cada build.
 
 El dominio esta completo: salud, autenticacion, movimientos, prestamos con sus
 abonos, categorias, ajustes, monedas, tasas de cambio y el dictado de un registro.
-Son 25 endpoints, once migraciones y 33 binarios de test, diez de ellos contra un
+Son 25 endpoints bajo `/v1`, mas los dos de salud y los dos del contrato: 29 rutas
+en total. Once migraciones y 35 binarios de test, once de ellos contra un
 PostgreSQL de verdad.
 
 El contrato completo, con el porque de cada decision, esta en
@@ -29,22 +30,26 @@ Prefijo `/v1`. Todo JSON, claves en camelCase.
 |---|---|---|
 | `POST /v1/auth/register` | Registro. Siembra las 12 categorias y los ajustes. | 201 / 409 / 422 / 429 |
 | `POST /v1/auth/login` | Login. | 200 / 401 / 422 / 429 |
-| `POST /v1/auth/refresh` | Rota el refresh token y devuelve un par nuevo. | 200 / 401 |
-| `POST /v1/auth/logout` | Revoca el refresh token recibido. Idempotente. | 204 |
+| `POST /v1/auth/refresh` | Rota el refresh token y devuelve un par nuevo. | 200 / 401 / 422 |
+| `POST /v1/auth/logout` | Revoca el refresh token recibido. Idempotente: un token desconocido responde igual. | 204 / 422 |
 | `POST /v1/auth/password/forgot` | Manda el enlace de recuperacion. | 202 / 429 |
-| `POST /v1/auth/password/reset` | Cambia la contrasena con el token del correo. Invalida los enlaces anteriores de esa cuenta. | 204 / 401 / 422 / 429 |
+| `POST /v1/auth/password/reset` | Cambia la contrasena con el token del correo, de un solo uso, y revoca todas las sesiones de la cuenta. | 204 / 401 / 422 / 429 |
 | `POST /v1/auth/password/change` | Cambia la contrasena estando dentro. | 204 / 401 / 422 |
 | `GET /v1/me` | Perfil: nombre y correo. | 200 / 401 |
 
-Todo lo que cuelga de `/v1` y no es `auth` exige `Authorization: Bearer <access
-token>`. El access token dura 15 minutos; el refresh, 30 dias, y se rota en cada
-refresco: reutilizar uno ya rotado revoca la familia entera, que es la senal
-clasica de robo de token.
+Todo lo que cuelga de `/v1` exige `Authorization: Bearer <access token>` menos
+seis rutas publicas: `auth/register`, `auth/login`, `auth/refresh`, `auth/logout`,
+`auth/password/forgot` y `auth/password/reset`. `auth/password/change` tambien
+cuelga de `auth`, pero si lo exige. El access token dura 15 minutos; el refresh,
+30 dias, y se rota en cada refresco: reutilizar uno ya rotado revoca la familia
+entera, que es la senal clasica de robo de token.
 
 Decisiones que no se negocian: las contrasenas se guardan con Argon2id, los
 refresh tokens y los enlaces de recuperacion se guardan **hasheados** (SHA-256),
 `password/forgot` responde 202 siempre (exista o no el correo) y el enlace caduca
-en 30 minutos y sirve una vez.
+en 30 minutos y sirve una vez. Pedirlo otra vez invalida el anterior, asi que cada
+cuenta tiene como mucho uno vivo; dos peticiones muy seguidas no invalidan nada,
+para que nadie pueda dejar a otro sin recuperar la cuenta pidiendolo en bucle.
 
 Los errores van en `application/problem+json` (RFC 9457):
 
@@ -85,12 +90,14 @@ propaga tal cual.
 | `GET /v1/loans/{id}` | Detalle de un prestamo. | 200 / 401 / 404 |
 | `POST /v1/loans` | Nuevo prestamo. Escribe tambien su movimiento. | 201 / 401 / 409 / 422 |
 | `POST /v1/loans/{id}/payments` | Nuevo abono. Escribe tambien su movimiento. | 201 / 401 / 404 / 409 / 422 |
-| `GET /v1/categories` | Todas, con `isDefault` y el conteo de uso. | 200 / 401 |
+| `GET /v1/categories?includeArchived=` | Las activas, con `isDefault`, `archived` y el conteo de uso. Con `includeArchived=true`, tambien las archivadas. | 200 / 401 |
 | `POST /v1/categories` | Crear. | 201 / 401 / 409 / 422 |
 | `PATCH /v1/categories/{id}` | Editar nombre, icono, color y tipo. | 200 / 401 / 404 / 409 / 422 |
-| `DELETE /v1/categories/{id}` | Borrar y reasignar sus movimientos a `Otros`. | 204 / 401 / 404 / 409 |
+| `DELETE /v1/categories/{id}` | Archiva si algun movimiento la usa, o la borra de verdad si no la usa nadie. El cuerpo dice cual de las dos paso. | 200 / 401 / 404 / 409 |
+| `POST /v1/categories/{id}/restore` | Devuelve a la lista una archivada. | 200 / 401 / 404 / 409 |
 | `GET /v1/settings` | Moneda principal e idioma. | 200 / 401 |
 | `PATCH /v1/settings` | Cambiar una o las dos. | 200 / 401 / 422 / 503 |
+| `GET /v1/changes?since=&limit=` | Lo que cambio desde un cursor, para sincronizar. | 200 / 401 / 422 |
 
 Los importes viajan **como string**, y cada registro lleva cuatro campos:
 `amount` y `currency` (lo que tecleo el usuario) mas `base` y `baseCurrency` (su
@@ -113,8 +120,11 @@ perder la cobertura duplica el gasto, y no hay pantalla para borrarlo.
 
 El reintento con la misma clave y el mismo cuerpo recibe la respuesta original
 con la cabecera `Idempotent-Replay: true`, sin escribir nada. La misma clave con
-otro cuerpo es 409 `idempotency_key_reused`. Un cuerpo rechazado con 422 no quema
-la clave. Las claves valen 24 horas. El detalle esta en
+otro cuerpo es 409 `idempotency_key_reused`, y una clave con otro intento todavia
+en vuelo es 409 `idempotency_key_in_progress`: ese se reintenta, el otro no. Un
+cuerpo rechazado con 422 no quema la clave. Las claves valen 24 horas y miden de 1
+a 200 caracteres; fuera de ese rango la peticion es 422 sin llegar al handler. El
+detalle esta en
 [el ADR 0012](../../docs/adr/0012-idempotencia-con-cabecera.md).
 
 ### Monedas y tasas
@@ -203,7 +213,7 @@ separador de nivel.
 | `GASTONOMO__AUTH__ACCESS_TOKEN_MINUTES` | `15` | Validez del access token |
 | `GASTONOMO__AUTH__REFRESH_TOKEN_DAYS` | `30` | Validez del refresh token |
 | `GASTONOMO__AUTH__RESET_LINK_TEMPLATE` | `http://localhost:5173/reset-password?token={token}` | Enlace del correo. `{token}` se sustituye |
-| `GASTONOMO__AUTH__RATE_LIMIT_MAX_REQUESTS` | `10` | Peticiones por ventana en los cuatro endpoints publicos que tocan credenciales |
+| `GASTONOMO__AUTH__RATE_LIMIT_MAX_REQUESTS` | `10` | Peticiones por ventana y **por ruta** en los cuatro endpoints publicos que tocan credenciales: gastar el cupo de uno no toca el de los otros tres |
 | `GASTONOMO__AUTH__RATE_LIMIT_WINDOW_SECONDS` | `60` | Tamano de la ventana |
 | `GASTONOMO__MAIL__DRIVER` | `log` | `log` escribe el correo en el log, `smtp` lo envia |
 | `GASTONOMO__MAIL__HOST` | `localhost` | Host SMTP |
@@ -224,11 +234,24 @@ separador de nivel.
 | `GASTONOMO__CLAUDE__REQUEST_TIMEOUT_MS` | `12000` | Espera maxima por la llamada al modelo |
 | `GASTONOMO__CLAUDE__MAX_TOKENS` | `512` | Tope de la respuesta del modelo |
 
+Una variable con el prefijo `GASTONOMO__` que no este en esta tabla **no se
+ignora: impide el arranque**. Todos los bloques rechazan los campos que no
+conocen, asi que una errata como `GASTONOMO__AUTH__ACCESS_TOKEN_SECRETO` sale por
+el log como `invalid configuration: unknown field` y el proceso termina con codigo
+1. Lo mismo con un valor que no encaja con el tipo. Como el despliegue va solo en
+cada push verde a `main`, una errata ahi deja el servicio sin arrancar.
+
+El limite de peticiones es una ventana fija **en memoria del proceso**, asi que
+con varias replicas cada una lleva su cuenta y el techo real se multiplica. El
+cliente es la IP de la **ultima** entrada de `X-Forwarded-For`, que es la que pone
+el proxy; la primera la escribe quien llama y vale cualquier cosa. Si no viene la
+cabecera se usa la IP del par.
+
 ## Estructura
 
 ```
 apps/api
-  crates/domain           nucleo puro, solo depende de thiserror
+  crates/domain           nucleo puro: thiserror, chrono, rust_decimal y uuid
   crates/application      casos de uso y puertos, sin framework
   crates/infrastructure   adaptadores driven: config, telemetria, PostgreSQL
   crates/http             adaptador driving: Salvo, DTOs y OpenAPI
@@ -262,7 +285,7 @@ puertos a proposito: Postgres en el **5433**, la API en el 8081 y Mailpit en el
 
 ```sh
 docker compose -f apps/api/docker-compose.yml up -d postgres   # solo la base
-cargo run --bin gastonomo-api                                  # la API en local
+just run                                                       # la API en local
 docker compose -f apps/api/docker-compose.yml up               # todo con recarga
 ```
 
@@ -282,10 +305,14 @@ enlace de recuperacion aparece en el log del proceso.
 Con `just` instalado, desde `apps/api`:
 
 ```sh
-just check        # formato, clippy, tests y cobertura, igual que CI
+just check        # formato, clippy, guards, tests y cobertura
 just test-db      # tests contra un PostgreSQL de verdad
+just deny         # licencias y avisos de seguridad de las dependencias
 just coverage-html
 ```
+
+`just check` no es todo lo que corre la CI: le faltan los tests contra PostgreSQL,
+`cargo deny` y el build de release. Desde la raiz del monorepo, eso es `just ci`.
 
 ## Calidad
 
@@ -299,7 +326,8 @@ Nada de esto es una recomendacion: si falla, no compila o no pasa CI.
 | Parametros <= 5 | `clippy::too_many_arguments` en deny |
 | Anidamiento <= 4 niveles | `clippy::excessive_nesting` en deny, umbral en `clippy.toml` |
 | Sin codigo muerto ni imports sin usar | lints de `rustc` en deny via `-D warnings` |
-| Sin `unwrap`, `expect`, `panic!`, `todo!`, `dbg!` | lints de clippy en deny |
+| Sin `unwrap`, `expect`, `panic!`, `todo!`, `unimplemented!`, `dbg!`, `print!` ni indexar por posicion | lints de clippy en deny |
+| Nada de `unsafe` | `unsafe_code` en **forbid**: no se levanta ni con un `#[allow]` |
 | Documentacion de todo lo publico | `missing_docs` |
 | Dependencias sin usar | `unused_crate_dependencies` |
 | Cobertura: 80% en el nucleo, 60% global | `cargo llvm-cov --fail-under-lines` |
@@ -322,8 +350,8 @@ escrito. No hay `#[ignore]` sin justificacion ni tests enfocados.
 
 `crates/api/tests/architecture.rs` lee `Cargo.lock`, calcula el cierre
 transitivo de dependencias de `gastonomo-domain` y `gastonomo-application` y
-falla si aparece Salvo, SQLx, Tokio, reqwest, hyper, utoipa, argon2, jsonwebtoken
-o lettre. Tambien comprueba que las dependencias directas del nucleo estan en una
+falla si aparece Salvo, SQLx, Tokio, reqwest, hyper, figment, utoipa, argon2,
+jsonwebtoken o lettre. Tambien comprueba que las dependencias directas del nucleo estan en una
 lista corta de librerias puras (`thiserror`, `chrono`, `rust_decimal`, `uuid`),
 asi que no vale colar una dependencia "pequena".
 
@@ -338,14 +366,16 @@ garantiza la comprobacion de dependencias directas.
 cargo test --workspace     # unitarios y de integracion, sin base de datos
 ```
 
-Los tests que necesitan PostgreSQL son siete suites en
+Los tests que necesitan PostgreSQL son once suites en
 `crates/infrastructure/tests`: `postgres_integration` (esquema y probe),
-`postgres_auth` (cuentas, sesiones, tokens de recuperacion y siembra del
-registro), `postgres_movements` (cuatro importes, cursor y aislamiento entre
-cuentas), `postgres_loans` (las dos escrituras en una transaccion),
-`postgres_categories_and_settings`, `postgres_exchange_rates` y
-`postgres_idempotency` (la reserva atomica de una clave). Se saltan solas si no
-hay `GASTONOMO_TEST_DATABASE_URL`:
+`postgres_auth` (cuentas, sesiones y siembra del registro),
+`postgres_password_reset` (los enlaces de recuperacion), `postgres_movements`
+(cuatro importes, cursor y aislamiento entre cuentas), `postgres_loans` (las dos
+escrituras en una transaccion), `postgres_categories` (que archivar no toque
+ningun movimiento), `postgres_settings`, `postgres_exchange_rates`,
+`postgres_idempotency` (la reserva atomica de una clave), `postgres_changes` (que
+el cursor no se salte nada) y `postgres_dictation`. Se saltan solas si no hay
+`GASTONOMO_TEST_DATABASE_URL`:
 
 ```sh
 just api-test-db     # desde la raiz del monorepo: levanta la base y los corre
@@ -363,15 +393,22 @@ conviene un `just db-reset` de vez en cuando.
 ## Docker
 
 ```sh
-docker build -t gastonomo-api:local apps/api
+docker build -t gastonomo-api:local apps/api   # desde la raiz del monorepo
 docker run --rm -p 8080:8080 \
+  --add-host=host.docker.internal:host-gateway \
   -e GASTONOMO__DATABASE__URL=postgres://gastonomo:gastonomo@host.docker.internal:5432/gastonomo \
   gastonomo-api:local
 ```
 
+`host.docker.internal` solo lo resuelve Docker Desktop; en el Docker Engine de
+Linux hace falta ese `--add-host`. Sin el, el contenedor arranca igual, porque un
+fallo de las migraciones solo deja un aviso en el log, y el unico sintoma es que
+`/health/ready` responde 503.
+
 La imagen final es `debian:trixie-slim`, corre como usuario `gastonomo`
 (uid 10001), expone el 8080 y trae un `HEALTHCHECK` que consulta
-`/health/live`. El build usa cargo-chef para cachear dependencias.
+`/health/live`. El build usa cargo-chef para cachear dependencias. Desde esta
+carpeta, el build es `just docker-build`.
 
 ## Migraciones
 

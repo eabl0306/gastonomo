@@ -227,7 +227,7 @@ siempre espera JSON. Lo arregla un catcher en `crates/http/src/catcher.rs`, enga
 en `build_service`. Solo actua cuando la respuesta ya tiene estado de error y el cuerpo
 esta vacio, asi que no puede pisar lo que escriba un handler.
 
-## Los 25 endpoints
+## Los 29 endpoints
 
 ```
 GET    /health/live                  200 siempre, sin tocar dependencias
