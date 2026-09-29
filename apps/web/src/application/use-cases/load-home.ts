@@ -10,10 +10,9 @@ import type { Period } from '../../domain/calendar/period';
 import { loanTotals, type LoanRow, type LoanTotals } from '../../domain/ledger/loan-summary';
 import type { Movement } from '../../domain/ledger/movement';
 import type { CurrencyCode } from '../../domain/money/currency';
-import { EMPTY_RATES, type ExchangeRates } from '../../domain/money/exchange-rates';
+import type { ExchangeRates } from '../../domain/money/exchange-rates';
 import type { ApiError, Outcome } from '../ports/api-error';
 import type { AuthGateway } from '../ports/auth-gateway';
-import type { CurrencyGateway } from '../ports/currency-gateway';
 import type { LoanGateway } from '../ports/loan-gateway';
 import type { MovementGateway } from '../ports/movement-gateway';
 
@@ -24,7 +23,6 @@ import { loadPeriodMovements, loadRecentMovements } from './load-period-movement
 export interface HomePorts {
   readonly movements: MovementGateway;
   readonly loans: LoanGateway;
-  readonly currencies: CurrencyGateway;
   readonly auth: AuthGateway;
 }
 
@@ -40,70 +38,58 @@ export interface HomeContent {
 
 /** El resultado de cargar Inicio una vez: lo que se pudo traer y lo que fallo. */
 export interface HomeData {
-  readonly rates: ExchangeRates;
   readonly user: User | null;
   /** Null solo cuando fallo la lista del periodo, que es lo unico que rompe la pantalla. */
   readonly content: HomeContent | null;
   readonly error: ApiError | null;
-  /**
-   * `GET /v1/exchange-rates` respondio 503 porque la tarea de refresco todavia no consiguio
-   * una pasada. No es un fallo de la pantalla: lo que esta en la moneda principal se ensena
-   * igual y se avisa con una linea.
-   */
-  readonly ratesUnavailable: boolean;
 }
 
 function valueOr<T>(outcome: Outcome<T>, fallback: T): T {
   return outcome.ok ? outcome.value : fallback;
 }
 
-/** Lo que hace falta para una carga: el periodo, el dia de hoy y la moneda principal. */
+/** Lo que hace falta para una carga. La moneda y las tasas llegan ya cargadas de la cuenta. */
 export interface HomeRequest {
   readonly period: Period;
   readonly today: Day;
   /**
-   * La moneda con la que se convierte todo. Llega ya cargada y no se pide aqui.
+   * La moneda con la que se convierte todo.
    *
    * Es el codigo y no los ajustes enteros a proposito: el idioma no cambia lo que se pide, y
    * pasar el objeto hacia recargar Inicio cada vez que llegaba una copia nueva de los ajustes.
    */
   readonly display: CurrencyCode;
+  readonly rates: ExchangeRates;
 }
 
 /**
  * Trae de la API todo lo que ensena Inicio y lo convierte en lo que pinta la pantalla.
  *
- * Son cinco llamadas: cuatro en paralelo y la de prestamos despues, porque necesita las
- * tasas para calcular los saldos.
+ * Son cuatro llamadas, tres en paralelo. Las tasas y la moneda principal no se piden aqui:
+ * vienen de la cuenta, que las carga una sola vez.
  *
  * **Lo unico que rompe la pantalla es que falle la lista de movimientos del periodo**: de
  * ella salen el balance, la tendencia, los gastos por categoria y los ultimos movimientos.
- * Si solo fallan el perfil, los prestamos o las tasas, se ensena lo que hay.
+ * Si solo fallan el perfil o los prestamos, se ensena lo que hay.
  */
 export async function loadHome(ports: HomePorts, request: HomeRequest): Promise<HomeData> {
-  const { period, today, display } = request;
-  const [rates, movements, recent, profile] = await Promise.all([
-    ports.currencies.rates(),
+  const { period, today, display, rates } = request;
+  const [movements, recent, profile] = await Promise.all([
     loadPeriodMovements(ports.movements, period),
     loadRecentMovements(ports.movements, period),
     ports.auth.profile(),
   ]);
-  const table = valueOr(rates, EMPTY_RATES);
-  const head = {
-    rates: table,
-    user: valueOr<User | null>(profile, null),
-    ratesUnavailable: !rates.ok,
-  };
-  if (!movements.ok) return { ...head, content: null, error: movements.error };
-  const loans = await loadLoans(ports.loans, display, table);
+  const user = valueOr<User | null>(profile, null);
+  if (!movements.ok) return { user, content: null, error: movements.error };
+  const loans = await loadLoans(ports.loans, display, rates);
   return {
-    ...head,
+    user,
     content: contentOf({
       movements: movements.value,
       recent: valueOr<readonly Movement[]>(recent, []),
       rows: valueOr(loans, []),
       display,
-      rates: table,
+      rates,
       period,
       today,
     }),

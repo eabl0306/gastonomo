@@ -1,8 +1,9 @@
 import type { ReactElement } from 'react';
-import { NavLink, Outlet } from 'react-router';
+import { NavLink, Outlet, useLocation } from 'react-router';
 
 import { initialsOf, type User } from '../../domain/account/user';
 import { Icon } from '../auth/auth-chrome';
+import { RadialFab } from '../fab/radial-fab';
 import { RangeSheet } from '../period/range-sheet';
 import { useSession } from '../session/use-session';
 
@@ -16,11 +17,19 @@ import { NAV_ITEMS, type NavItem } from './nav-items';
  * un `matchMedia` en estado habria un primer fotograma con el armazon equivocado, y encima
  * el servidor de desarrollo lo notaria en cada recarga.
  *
- * El sheet de rango se monta aqui y no dentro de una pantalla porque el borrador es el mismo
- * para Inicio y para Movimientos: uno por pantalla serian dos borradores distintos.
+ * El sheet de rango y el boton flotante se montan aqui y no dentro de una pantalla: el
+ * borrador del rango es el mismo para Inicio y para Movimientos, y el boton sale en esas dos
+ * mas Prestamos.
  */
-export function AppShell(): ReactElement {
+export interface QuickAdd {
+  /** Las direcciones que ensenan el boton. Las decide `app`, que es quien conoce las rutas. */
+  readonly routes: ReadonlySet<string>;
+  readonly onChoose: (option: string) => void;
+}
+
+export function AppShell({ quickAdd }: { quickAdd: QuickAdd }): ReactElement {
   const session = useSession();
+  const { pathname } = useLocation();
   return (
     <div className="g-shell">
       <Sidebar user={session?.user ?? null} />
@@ -31,6 +40,7 @@ export function AppShell(): ReactElement {
         <BottomNav />
       </div>
       <RangeSheet />
+      {quickAdd.routes.has(pathname) ? <RadialFab onChoose={quickAdd.onChoose} /> : null}
     </div>
   );
 }

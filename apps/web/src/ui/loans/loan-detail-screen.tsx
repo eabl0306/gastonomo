@@ -6,6 +6,7 @@ import type { LoanRow } from '../../domain/ledger/loan-summary';
 import { displayedMoney } from '../../domain/money/displayed-amount';
 import type { ExchangeRates } from '../../domain/money/exchange-rates';
 import { isForeignTo } from '../../domain/money/monetary-amount';
+import { useAccount } from '../account/account-context';
 import { Icon } from '../auth/auth-chrome';
 import { Amount } from '../common/amount';
 import { LoadingBlock, RetryBlock, messageOf } from '../common/blocks';
@@ -35,6 +36,7 @@ export function LoanDetailScreen({
   loanId: string;
   actions: LoanDetailActions;
 }): ReactElement {
+  const { rates } = useAccount();
   const { data, loading, reload } = useLoans(ports);
   const row = data?.rows.find((candidate) => candidate.loan.id === loanId) ?? null;
   return (
@@ -55,7 +57,7 @@ export function LoanDetailScreen({
         loading={loading}
         onRegisterPayment={actions.onRegisterPayment}
         onRetry={reload}
-        rates={data?.rates ?? null}
+        rates={rates}
         row={row}
       />
     </div>
@@ -64,7 +66,7 @@ export function LoanDetailScreen({
 
 interface BodyProps {
   readonly row: LoanRow | null;
-  readonly rates: ExchangeRates | null;
+  readonly rates: ExchangeRates;
   readonly error: Parameters<typeof messageOf>[0] | null;
   readonly loading: boolean;
   readonly onRetry: () => void;
@@ -76,7 +78,7 @@ function Body(props: BodyProps): ReactElement {
     return <RetryBlock message={messageOf(props.error)} onRetry={props.onRetry} />;
   }
   if (props.loading) return <LoadingBlock />;
-  if (props.row === null || props.rates === null) {
+  if (props.row === null) {
     return <RetryBlock message="No encontramos este préstamo." onRetry={props.onRetry} />;
   }
   return (

@@ -9,6 +9,8 @@ import '../ui/period/period.css';
 import '../ui/home/home.css';
 import '../ui/movements/movements.css';
 import '../ui/loans/loans.css';
+import '../ui/forms/forms.css';
+import '../ui/fab/fab.css';
 import '../ui/styles.css';
 
 import { App } from './app';

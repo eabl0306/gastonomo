@@ -13,6 +13,7 @@
   --g-sheet: #fbf9f5;
   --g-soft: #ece8df;
   --g-soft-panel: #f7f5f0;
+  --g-selected: #f2efe8;
   --g-ink: #1b1a17;
   --g-muted: #736d62;
   --g-placeholder: #a9a397;
@@ -35,6 +36,9 @@
 
   /* El velo de lo que se abre encima: sheets, menus y modales. */
   --g-scrim: rgb(27 26 23 / 40%);
+
+  /* El del menu radial es mas opaco: debajo hay contenido que no debe distraer. */
+  --g-fab-scrim: rgb(27 26 23 / 55%);
 
   /* Acento y estados */
   --g-lime: #d4ef7a;

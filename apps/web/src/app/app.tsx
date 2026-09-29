@@ -7,18 +7,19 @@ import { HealthGatewayProvider } from '../ui/health/health-gateway-provider';
 import { HealthPanel } from '../ui/health/health-panel';
 import { PeriodProvider } from '../ui/period/period-context';
 import { SessionProvider } from '../ui/session/session-context';
-import { AppShell } from '../ui/shell/app-shell';
 
 import {
   HomeRoute,
   LoanDetailRoute,
   LoansRoute,
   MovementsRoute,
+  NewMovementRoute,
   ResetPasswordRoute,
   SettingsRoute,
 } from './app-screens';
 import { ForgotRoute, LoginRoute, RegisterRoute } from './auth-screens';
 import type { Container } from './composition-root';
+import { ShellWithQuickAdd } from './quick-add';
 import { RequireSession } from './require-session';
 import { ROUTES } from './routes';
 
@@ -43,7 +44,7 @@ export function App({ container }: { container: Container }): ReactElement {
               <RequireSession>
                 <AccountProvider currencies={container.currencies} settings={container.settings}>
                   <PeriodProvider clock={container.clock}>
-                    <AppShell />
+                    <ShellWithQuickAdd />
                   </PeriodProvider>
                 </AccountProvider>
               </RequireSession>
@@ -51,6 +52,7 @@ export function App({ container }: { container: Container }): ReactElement {
           >
             <Route element={<HomeRoute container={container} />} index />
             <Route element={<MovementsRoute container={container} />} path={ROUTES.movements} />
+            <Route element={<NewMovementRoute container={container} />} path={ROUTES.newMovement} />
             <Route element={<LoansRoute container={container} />} path={ROUTES.loans} />
             <Route element={<LoanDetailRoute container={container} />} path={ROUTES.loanDetail} />
             <Route element={<SettingsRoute />} path={ROUTES.settings} />

@@ -34,7 +34,7 @@ interface Loaded {
  */
 export function useHome(ports: HomePorts): HomeState {
   const { state, today } = usePeriod();
-  const { settings, ready } = useAccount();
+  const { settings, rates, ready } = useAccount();
   const period: Period = state.selection.period;
   const display = settings.displayCurrency;
   const [loaded, setLoaded] = useState<Loaded | null>(null);
@@ -44,14 +44,14 @@ export function useHome(ports: HomePorts): HomeState {
   useEffect(() => {
     if (!ready) return undefined;
     let live = true;
-    void loadHome(ports, { period, today, display }).then((data) => {
+    void loadHome(ports, { period, today, display, rates }).then((data) => {
       // Una respuesta que llega tarde no puede pisar a la del periodo que se esta viendo.
       if (live) setLoaded({ key, data });
     });
     return () => {
       live = false;
     };
-  }, [ports, period, today, display, ready, key]);
+  }, [ports, period, today, display, rates, ready, key]);
 
   const reload = useCallback(() => {
     setAttempt((previous) => previous + 1);

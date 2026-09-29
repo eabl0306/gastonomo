@@ -1,0 +1,447 @@
+/*
+ * Los tres formularios: nuevo movimiento, nuevo prestamo y registrar abono.
+ *
+ * El boton de guardar va fuera del scroll: en un formulario largo, tener que bajar para
+ * encontrarlo es lo que hace que se abandone a medias.
+ */
+
+.g-form {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.g-form__bar {
+  display: flex;
+  flex: none;
+  gap: 6px;
+  align-items: center;
+  height: 60px;
+}
+
+.g-form__close {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: var(--g-height-touch);
+  height: var(--g-height-touch);
+  border: 0;
+  background: none;
+  color: var(--g-ink);
+  font-size: 24px;
+  cursor: pointer;
+}
+
+.g-form__title {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.g-form__body {
+  flex: 1;
+  min-height: 0;
+  padding-bottom: 20px;
+}
+
+.g-form__footer {
+  flex: none;
+  padding: 12px 0 24px;
+}
+
+.g-form__save {
+  width: 100%;
+  height: var(--g-height-primary);
+  border: 0;
+  border-radius: var(--g-radius-field);
+  background: var(--g-ink);
+  color: var(--g-on-ink);
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.g-form__save:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.g-form__section {
+  margin: 0 0 10px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.g-form__fields {
+  display: grid;
+  gap: 14px;
+  margin-top: 20px;
+  grid-template-columns: 1fr;
+}
+
+/* Las dos pestanas de arriba */
+.g-segments {
+  display: grid;
+  padding: 4px;
+  border-radius: var(--g-radius-field);
+  background: var(--g-soft);
+  grid-template-columns: 1fr 1fr;
+}
+
+.g-segment {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  align-items: center;
+  height: 42px;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--g-muted);
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.g-segment .g-icon {
+  font-size: 18px;
+}
+
+.g-segment[data-active='true'] {
+  background: var(--g-surface);
+  box-shadow: 0 1px 3px rgb(0 0 0 / 8%);
+  color: var(--g-ink);
+}
+
+.g-segment[data-active='true'][data-value='in'] {
+  color: var(--g-green);
+}
+
+.g-segment[data-active='true'][data-value='out'] {
+  color: var(--g-red);
+}
+
+/* El importe grande */
+.g-amount {
+  padding: 28px 0 22px;
+  text-align: center;
+}
+
+.g-amount__row {
+  display: flex;
+  gap: 4px;
+  justify-content: center;
+  align-items: center;
+}
+
+.g-amount__symbol {
+  font-size: 40px;
+  font-weight: 700;
+}
+
+.g-amount__input {
+  width: 230px;
+  border: 0;
+  outline: none;
+  background: none;
+  color: inherit;
+  font:
+    700 44px 'Plus Jakarta Sans',
+    system-ui,
+    sans-serif;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.03em;
+}
+
+.g-amount[data-tone='income'] .g-amount__symbol,
+.g-amount[data-tone='income'] .g-amount__input {
+  color: var(--g-green);
+}
+
+.g-amount[data-tone='expense'] .g-amount__symbol,
+.g-amount[data-tone='expense'] .g-amount__input {
+  color: var(--g-red);
+}
+
+.g-amount[data-tone='neutral'] .g-amount__symbol,
+.g-amount[data-tone='neutral'] .g-amount__input {
+  color: var(--g-ink);
+}
+
+.g-amount__chip {
+  display: inline-flex;
+  gap: 2px;
+  align-items: center;
+  height: 32px;
+  margin-top: 6px;
+  padding: 0 8px 0 12px;
+  border: 1px solid var(--g-field-line);
+  border-radius: 16px;
+  background: var(--g-surface);
+  color: var(--g-ink);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.g-amount__chip .g-icon {
+  font-size: 18px;
+}
+
+/* La caja de equivalencia */
+.g-conversion {
+  margin-top: 14px;
+  padding: 12px 14px;
+  border: 1px solid var(--g-line);
+  border-radius: var(--g-radius-large-tile);
+  background: var(--g-surface);
+  text-align: left;
+}
+
+.g-conversion__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.g-conversion__label {
+  color: var(--g-muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.g-conversion__reset {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--g-ink);
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
+.g-conversion__row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin-top: 4px;
+}
+
+.g-conversion__symbol {
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.g-conversion__input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: none;
+  background: none;
+  color: var(--g-ink);
+  font:
+    700 22px 'Plus Jakarta Sans',
+    system-ui,
+    sans-serif;
+  font-variant-numeric: tabular-nums;
+}
+
+.g-conversion__row .g-icon {
+  color: var(--g-placeholder);
+  font-size: 18px;
+}
+
+.g-conversion__rate {
+  margin: 4px 0 0;
+  color: var(--g-muted);
+  font-size: 12px;
+  line-height: 1.4;
+  text-wrap: pretty;
+}
+
+/* El grid de categorias */
+.g-cats {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(auto-fill, minmax(78px, 1fr));
+}
+
+.g-cat {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  justify-content: center;
+  align-items: center;
+  height: 78px;
+  padding: 0 4px;
+  border: 1.5px solid var(--g-line);
+  border-radius: var(--g-radius-field);
+  background: var(--g-surface);
+  color: var(--g-ink);
+  cursor: pointer;
+}
+
+.g-cat[data-active='true'] {
+  background: var(--g-sheet);
+}
+
+.g-cat__tile {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: var(--g-radius-tile-small);
+  font-size: 18px;
+}
+
+.g-cat__tile .g-icon {
+  font-size: inherit;
+}
+
+.g-cat__name {
+  max-width: 100%;
+  overflow: hidden;
+  font-size: 11px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Un campo con su etiqueta */
+.g-field {
+  display: block;
+}
+
+.g-field__label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.g-field__hint {
+  color: var(--g-placeholder);
+  font-weight: 500;
+}
+
+.g-field input {
+  width: 100%;
+  height: 52px;
+  padding: 0 16px;
+  border: 1px solid var(--g-field-line);
+  border-radius: var(--g-radius-field);
+  outline: none;
+  background: var(--g-surface);
+  color: var(--g-ink);
+  font:
+    500 15px 'Plus Jakarta Sans',
+    system-ui,
+    sans-serif;
+}
+
+.g-field input:focus {
+  border-color: var(--g-ink);
+}
+
+/* El buscador del sheet de moneda */
+.g-search {
+  position: relative;
+}
+
+.g-search .g-icon {
+  position: absolute;
+  top: 13px;
+  left: 14px;
+  color: var(--g-placeholder);
+  font-size: 20px;
+}
+
+.g-search input {
+  width: 100%;
+  height: 46px;
+  padding: 0 14px 0 42px;
+  border: 1px solid var(--g-field-line);
+  border-radius: var(--g-radius-nav-item);
+  outline: none;
+  background: var(--g-surface);
+  color: var(--g-ink);
+  font:
+    500 15px 'Plus Jakarta Sans',
+    system-ui,
+    sans-serif;
+}
+
+.g-currencies {
+  max-height: 380px;
+  margin-top: 12px;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.g-currencies__group {
+  margin: 4px 4px 6px;
+  color: var(--g-muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.g-currencies__list {
+  margin: 0 0 14px;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--g-line);
+  border-radius: var(--g-radius-large-tile);
+  background: var(--g-surface);
+  list-style: none;
+}
+
+.g-currency {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  width: 100%;
+  height: 54px;
+  padding: 0 10px;
+  border: 0;
+  border-bottom: 1px solid var(--g-row-line);
+  background: transparent;
+  color: var(--g-ink);
+  text-align: left;
+  cursor: pointer;
+}
+
+.g-currencies__list li:last-child .g-currency {
+  border-bottom: 0;
+}
+
+.g-currency[data-active='true'] {
+  background: var(--g-selected);
+}
+
+.g-currency__code {
+  width: 44px;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.g-currency__name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  font-size: 14px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.g-currency__symbol {
+  color: var(--g-muted);
+  font-size: 13px;
+}

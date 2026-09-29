@@ -27,7 +27,7 @@ export interface LoansState {
  * saldo se convierte al pintar.
  */
 export function useLoans(ports: LoanPorts): LoansState {
-  const { settings, ready } = useAccount();
+  const { settings, rates, ready } = useAccount();
   const display = settings.displayCurrency;
   const [loaded, setLoaded] = useState<Loaded | null>(null);
   const [attempt, setAttempt] = useState(0);
@@ -36,13 +36,13 @@ export function useLoans(ports: LoanPorts): LoansState {
   useEffect(() => {
     if (!ready) return undefined;
     let live = true;
-    void loadLoanList(ports, display).then((data) => {
+    void loadLoanList(ports, display, rates).then((data) => {
       if (live) setLoaded({ key, data });
     });
     return () => {
       live = false;
     };
-  }, [ports, display, ready, key]);
+  }, [ports, display, rates, ready, key]);
 
   const reload = useCallback(() => {
     setAttempt((previous) => previous + 1);

@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import type { ReactElement } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import type { CurrencyGateway } from '../../application/ports/currency-gateway';
 import type { HomePorts } from '../../application/use-cases/load-home';
 import { createMemoryAuthGateway } from '../../infrastructure/memory/in-memory-auth';
 import {
@@ -26,16 +27,19 @@ const NOOP_ACTIONS = {
   onOpenSettings: () => undefined,
 };
 
-function renderHome(overrides: Partial<HomePorts> = {}, actions = NOOP_ACTIONS): ReactElement {
+function renderHome(
+  overrides: Partial<HomePorts> = {},
+  actions = NOOP_ACTIONS,
+  currencies: CurrencyGateway = createMemoryCurrencyGateway(),
+): ReactElement {
   const ports: HomePorts = {
     movements: createMemoryMovementGateway(),
     loans: createMemoryLoanGateway(),
-    currencies: createMemoryCurrencyGateway(),
     auth: createMemoryAuthGateway(),
     ...overrides,
   };
   const tree = (
-    <AccountProvider currencies={ports.currencies} settings={createMemorySettingsGateway()}>
+    <AccountProvider currencies={currencies} settings={createMemorySettingsGateway()}>
       <PeriodProvider clock={fixedClock(SAMPLE_TODAY)}>
         <HomeScreen actions={actions} ports={ports} />
       </PeriodProvider>
@@ -119,15 +123,13 @@ describe('Inicio', () => {
 
   /** Un 503 de tasas no es un fallo de la pantalla: lo de la moneda principal se ensena igual. */
   it('sin tasas se avisa con una linea y el contenido sigue', async () => {
-    renderHome({
-      currencies: {
-        catalog: () => Promise.resolve({ ok: false, error: { kind: 'service-unavailable' } }),
-        rates: () => Promise.resolve({ ok: false, error: { kind: 'service-unavailable' } }),
-      },
+    renderHome({}, NOOP_ACTIONS, {
+      catalog: () => Promise.resolve({ ok: false, error: { kind: 'service-unavailable' } }),
+      rates: () => Promise.resolve({ ok: false, error: { kind: 'service-unavailable' } }),
     });
 
-    expect(await screen.findByText('Las tasas de cambio aún no están listas.')).toBeInTheDocument();
-    expect(screen.getByText('Balance de septiembre')).toBeInTheDocument();
+    expect(await screen.findByText('Balance de septiembre')).toBeInTheDocument();
+    expect(screen.getByText('Las tasas de cambio aún no están listas.')).toBeInTheDocument();
   });
 
   it('las acciones rapidas y Ver todos llevan a donde toca', async () => {

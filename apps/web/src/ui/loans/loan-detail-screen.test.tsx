@@ -19,7 +19,7 @@ const NOOP: LoanDetailActions = {
 
 function renderDetail(loanId: string, actions: LoanDetailActions = NOOP): void {
   const currencies = createMemoryCurrencyGateway();
-  const ports: LoanPorts = { loans: createMemoryLoanGateway(), currencies };
+  const ports: LoanPorts = { loans: createMemoryLoanGateway() };
   render(
     <AccountProvider currencies={currencies} settings={createMemorySettingsGateway()}>
       <LoanDetailScreen actions={actions} loanId={loanId} ports={ports} />

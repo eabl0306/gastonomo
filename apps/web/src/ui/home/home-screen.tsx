@@ -41,20 +41,19 @@ export function HomeScreen({
   actions: HomeActions;
 }): ReactElement {
   const { today } = usePeriod();
-  const { settings } = useAccount();
+  const { settings, rates, ratesUnavailable } = useAccount();
   const { data, loading, everLoaded, reload } = useHome(ports);
   const { hidden, toggle } = useHideAmounts();
   return (
     <div className="g-home">
       <HomeHeader onOpenSettings={actions.onOpenSettings} today={today} user={data?.user ?? null} />
       <PeriodPicker />
-      {data?.ratesUnavailable === true ? (
-        <NoteLine>Las tasas de cambio aún no están listas.</NoteLine>
-      ) : null}
+      {ratesUnavailable ? <NoteLine>Las tasas de cambio aún no están listas.</NoteLine> : null}
       <Body
         actions={actions}
         data={data}
         display={settings.displayCurrency}
+        rates={rates}
         everLoaded={everLoaded}
         hidden={hidden}
         loading={loading}
@@ -68,6 +67,7 @@ export function HomeScreen({
 interface BodyProps {
   readonly data: ReturnType<typeof useHome>['data'];
   readonly display: CurrencyCode;
+  readonly rates: ExchangeRates;
   readonly loading: boolean;
   readonly everLoaded: boolean;
   readonly hidden: boolean;
@@ -89,7 +89,7 @@ function Body(props: BodyProps): ReactElement | null {
       display={props.display}
       hidden={props.hidden}
       onToggleHidden={props.onToggleHidden}
-      rates={props.data.rates}
+      rates={props.rates}
     />
   );
 }

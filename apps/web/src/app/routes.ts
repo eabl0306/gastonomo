@@ -11,6 +11,7 @@
 export const ROUTES = {
   home: '/',
   movements: '/movements',
+  newMovement: '/movements/new',
   loans: '/loans',
   loanDetail: '/loans/:loanId',
   settings: '/settings',

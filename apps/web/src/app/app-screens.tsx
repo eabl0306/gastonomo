@@ -7,6 +7,7 @@ import { HomeScreen } from '../ui/home/home-screen';
 import { LoanDetailScreen } from '../ui/loans/loan-detail-screen';
 import { LoansScreen } from '../ui/loans/loans-screen';
 import { MovementsScreen } from '../ui/movements/movements-screen';
+import { NewMovementScreen } from '../ui/movements/new-movement-screen';
 import { SettingsScreen } from '../ui/shell/settings-screen';
 
 import { useResetToken } from './auth-screens';
@@ -61,6 +62,20 @@ export function HomeRoute({ container }: { container: Container }): ReactElement
 
 export function MovementsRoute({ container }: { container: Container }): ReactElement {
   return <MovementsScreen ports={container} />;
+}
+
+/**
+ * El formulario de un movimiento.
+ *
+ * Al guardar vuelve **reemplazando** la entrada de la pila, no apilando: dejarla dentro haria
+ * que el boton de atras del navegador volviera a un formulario ya enviado.
+ */
+export function NewMovementRoute({ container }: { container: Container }): ReactElement {
+  const navigate = useNavigate();
+  const leave = (): void => {
+    void navigate(ROUTES.movements, { replace: true });
+  };
+  return <NewMovementScreen onClose={leave} onSaved={leave} ports={container} />;
 }
 
 export function LoansRoute({ container }: { container: Container }): ReactElement {

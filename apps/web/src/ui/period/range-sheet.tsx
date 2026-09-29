@@ -1,7 +1,8 @@
-import { useEffect, type ReactElement } from 'react';
+import { useCallback, type ReactElement } from 'react';
 
 import { canApplyRange, type RangeDraft } from '../../application/state/period-filter';
 import { PERIOD_PRESETS, type PeriodPreset } from '../../domain/calendar/period';
+import { Sheet } from '../common/sheet';
 
 import { usePeriod } from './period-context';
 
@@ -24,47 +25,12 @@ const PRESET_LABELS: Readonly<Record<PeriodPreset, string>> = {
 export function RangeSheet(): ReactElement | null {
   const { state, dispatch } = usePeriod();
   const draft = state.draft;
-  useEscapeToClose(draft !== null);
+  const close = useCallback(() => {
+    dispatch({ type: 'close' });
+  }, [dispatch]);
   if (draft === null) return null;
   return (
-    <div className="g-sheet">
-      <button
-        aria-label="Cerrar"
-        className="g-sheet__scrim"
-        onClick={() => {
-          dispatch({ type: 'close' });
-        }}
-        type="button"
-      />
-      <Panel draft={draft} />
-    </div>
-  );
-}
-
-/** Escape cierra, que en el modal de escritorio es lo que se espera. */
-function useEscapeToClose(open: boolean): void {
-  const { dispatch } = usePeriod();
-  useEffect(() => {
-    if (!open) return undefined;
-    const onKey = (event: KeyboardEvent): void => {
-      if (event.key === 'Escape') dispatch({ type: 'close' });
-    };
-    globalThis.addEventListener('keydown', onKey);
-    return () => {
-      globalThis.removeEventListener('keydown', onKey);
-    };
-  }, [open, dispatch]);
-}
-
-function Panel({ draft }: { draft: RangeDraft }): ReactElement {
-  const { dispatch } = usePeriod();
-  return (
-    <div aria-labelledby="g-range-title" aria-modal="true" className="g-sheet__panel" role="dialog">
-      <div className="g-sheet__handle" />
-      <h2 className="g-sheet__title" id="g-range-title">
-        Rango de fechas
-      </h2>
-      <p className="g-sheet__subtitle">Se aplica al inicio y a movimientos.</p>
+    <Sheet onClose={close} subtitle="Se aplica al inicio y a movimientos." title="Rango de fechas">
       <Presets draft={draft} />
       <Fields draft={draft} />
       <button
@@ -77,7 +43,7 @@ function Panel({ draft }: { draft: RangeDraft }): ReactElement {
       >
         Aplicar rango
       </button>
-    </div>
+    </Sheet>
   );
 }
 

@@ -19,7 +19,7 @@ const NOOP: LoansActions = {
 
 function renderLoans(overrides: Partial<LoanPorts> = {}, actions: LoansActions = NOOP): void {
   const currencies = createMemoryCurrencyGateway();
-  const ports: LoanPorts = { loans: createMemoryLoanGateway(), currencies, ...overrides };
+  const ports: LoanPorts = { loans: createMemoryLoanGateway(), ...overrides };
   render(
     <AccountProvider currencies={currencies} settings={createMemorySettingsGateway()}>
       <LoansScreen actions={actions} ports={ports} />

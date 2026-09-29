@@ -11,6 +11,7 @@ import {
 } from '../../domain/money/decimal';
 import type { Money } from '../../domain/money/money';
 
+import { amountInput, type AmountInput } from './amount-input';
 import { FALLBACK_SYMBOLS, symbolOf, type CurrencySymbolTable } from './currency-symbols';
 import { dateFormats, type DateFormats } from './date-formats';
 import { localizedNumbers, type LocalizedNumbers } from './localized-numbers';
@@ -47,6 +48,8 @@ export interface GastonomoFormats {
   readonly displayCurrency: CurrencyCode;
   readonly dates: DateFormats;
   readonly numbers: LocalizedNumbers;
+  /** El teclado de importes en el idioma vigente. */
+  readonly amountInput: AmountInput;
   /** "$ 186.400" o "US$ 140,00". Siempre en valor absoluto: el signo lo ponen los de abajo. */
   amount: (value: Decimal, currency?: CurrencyCode) => string;
   /** Lo mismo para un [Money], que ya lleva su moneda. */
@@ -89,6 +92,7 @@ export function gastonomoFormats(
     displayCurrency: display,
     dates,
     numbers,
+    amountInput: amountInput(numbers),
     amount,
     amountOf: (money) => amount(money.amount, money.currency),
     signed,

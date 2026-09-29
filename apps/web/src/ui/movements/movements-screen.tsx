@@ -5,7 +5,7 @@ import { groupByDay } from '../../domain/analysis/day-group';
 import { summarizePeriod } from '../../domain/analysis/period-summary';
 import type { Day } from '../../domain/calendar/day';
 import type { CurrencyCode } from '../../domain/money/currency';
-import { EMPTY_RATES } from '../../domain/money/exchange-rates';
+import type { ExchangeRates } from '../../domain/money/exchange-rates';
 import { useAccount } from '../account/account-context';
 import { LoadingBlock, NoteLine, RetryBlock, messageOf } from '../common/blocks';
 import { EmptyState } from '../common/empty-state';
@@ -32,18 +32,15 @@ import { useMovements } from './use-movements';
  */
 export function MovementsScreen({ ports }: { ports: MovementsPorts }): ReactElement {
   const { today } = usePeriod();
-  const { settings } = useAccount();
+  const { settings, rates, ratesUnavailable } = useAccount();
   const { data, loading, everLoaded, reload } = useMovements(ports);
   const [filter, setFilter] = useState<MovementFilter>('all');
   const display = settings.displayCurrency;
-  const rates = data?.rates ?? EMPTY_RATES;
   return (
     <div className="g-movements">
       <h1 className="g-screen__title">Movimientos</h1>
       <PeriodPicker />
-      {data?.ratesUnavailable === true ? (
-        <NoteLine>Las tasas de cambio aún no están listas.</NoteLine>
-      ) : null}
+      {ratesUnavailable ? <NoteLine>Las tasas de cambio aún no están listas.</NoteLine> : null}
       <PeriodSummaryCard
         display={display}
         summary={summarizePeriod(data?.movements ?? [], display, rates)}
@@ -62,6 +59,7 @@ export function MovementsScreen({ ports }: { ports: MovementsPorts }): ReactElem
         filter={filter}
         loading={loading}
         onRetry={reload}
+        rates={rates}
         today={today}
       />
     </div>
@@ -72,6 +70,7 @@ interface BodyProps {
   readonly data: MovementsData | null;
   readonly filter: MovementFilter;
   readonly display: CurrencyCode;
+  readonly rates: ExchangeRates;
   readonly today: Day;
   readonly loading: boolean;
   readonly everLoaded: boolean;
@@ -79,11 +78,14 @@ interface BodyProps {
 }
 
 function Body(props: BodyProps): ReactElement | null {
-  const rates = props.data?.rates ?? EMPTY_RATES;
   const groups = useMemo(
     () =>
-      groupByDay(filterMovements(props.data?.movements ?? [], props.filter), props.display, rates),
-    [props.data, props.filter, props.display, rates],
+      groupByDay(
+        filterMovements(props.data?.movements ?? [], props.filter),
+        props.display,
+        props.rates,
+      ),
+    [props.data, props.filter, props.display, props.rates],
   );
   const error = props.data?.error ?? null;
   if (error !== null) return <RetryBlock message={messageOf(error)} onRetry={props.onRetry} />;
@@ -99,7 +101,7 @@ function Body(props: BodyProps): ReactElement | null {
           display={props.display}
           group={group}
           key={group.date}
-          rates={rates}
+          rates={props.rates}
           today={props.today}
         />
       ))}

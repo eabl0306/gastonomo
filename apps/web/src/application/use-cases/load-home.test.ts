@@ -5,13 +5,15 @@ import { monthPeriod } from '../../domain/calendar/period';
 import { decimalToString } from '../../domain/money/decimal';
 import { createMemoryAuthGateway } from '../../infrastructure/memory/in-memory-auth';
 import {
-  createMemoryCurrencyGateway,
   createMemoryLoanGateway,
   createMemoryMovementGateway,
 } from '../../infrastructure/memory/in-memory-ledger';
-import { SAMPLE_MOVEMENTS, SAMPLE_TODAY } from '../../infrastructure/memory/sample-ledger';
+import {
+  SAMPLE_MOVEMENTS,
+  SAMPLE_RATES,
+  SAMPLE_TODAY,
+} from '../../infrastructure/memory/sample-ledger';
 import type { ApiError } from '../ports/api-error';
-import type { CurrencyGateway } from '../ports/currency-gateway';
 import type { LoanGateway } from '../ports/loan-gateway';
 import type { MovementGateway } from '../ports/movement-gateway';
 
@@ -24,24 +26,23 @@ function ports(overrides: Partial<HomePorts> = {}): HomePorts {
   return {
     movements: createMemoryMovementGateway(),
     loans: createMemoryLoanGateway(),
-    currencies: createMemoryCurrencyGateway(),
     auth: createMemoryAuthGateway(),
     ...overrides,
   };
 }
 
 function request(): Parameters<typeof loadHome>[1] {
-  return { period: PERIOD, today: SAMPLE_TODAY, display: DEFAULT_SETTINGS.displayCurrency };
+  return {
+    period: PERIOD,
+    today: SAMPLE_TODAY,
+    display: DEFAULT_SETTINGS.displayCurrency,
+    rates: SAMPLE_RATES,
+  };
 }
 
 const FAILING_MOVEMENTS: MovementGateway = {
   list: () => Promise.resolve({ ok: false, error: NETWORK }),
   create: () => Promise.resolve({ ok: false, error: NETWORK }),
-};
-
-const FAILING_RATES: CurrencyGateway = {
-  catalog: () => Promise.resolve({ ok: false, error: { kind: 'service-unavailable' } }),
-  rates: () => Promise.resolve({ ok: false, error: { kind: 'service-unavailable' } }),
 };
 
 const FAILING_LOANS: LoanGateway = {
@@ -64,7 +65,6 @@ describe('cargar Inicio', () => {
     expect(data.content?.owedToMe.openCount).toBe(1);
     expect(data.content?.iOwe.openCount).toBe(1);
     expect(data.error).toBeNull();
-    expect(data.ratesUnavailable).toBe(false);
   });
 
   /** De la lista del periodo salen balance, tendencia, categorias y ultimos movimientos. */
@@ -73,14 +73,6 @@ describe('cargar Inicio', () => {
 
     expect(data.content).toBeNull();
     expect(data.error).toEqual(NETWORK);
-  });
-
-  it('sin tasas se ensena lo que hay y se avisa con una linea', async () => {
-    const data = await loadHome(ports({ currencies: FAILING_RATES }), request());
-
-    expect(data.ratesUnavailable).toBe(true);
-    expect(data.content).not.toBeNull();
-    expect(data.rates.status).toBe('unavailable');
   });
 
   it('sin prestamos las dos tarjetas quedan a cero y el resto sigue', async () => {
@@ -95,6 +87,7 @@ describe('cargar Inicio', () => {
       period: monthPeriod('2026-01'),
       today: SAMPLE_TODAY,
       display: DEFAULT_SETTINGS.displayCurrency,
+      rates: SAMPLE_RATES,
     });
 
     // Uno de los tres esta pagado, asi que no cuenta: la tarjeta solo suma los abiertos.

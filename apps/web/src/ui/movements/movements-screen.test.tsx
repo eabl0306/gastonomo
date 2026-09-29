@@ -17,11 +17,7 @@ import { MovementsScreen } from './movements-screen';
 
 function renderMovements(overrides: Partial<MovementsPorts> = {}): void {
   const currencies = createMemoryCurrencyGateway();
-  const ports: MovementsPorts = {
-    movements: createMemoryMovementGateway(),
-    currencies,
-    ...overrides,
-  };
+  const ports: MovementsPorts = { movements: createMemoryMovementGateway(), ...overrides };
   render(
     <AccountProvider currencies={currencies} settings={createMemorySettingsGateway()}>
       <PeriodProvider clock={fixedClock(SAMPLE_TODAY)}>
