@@ -11,6 +11,7 @@ mod password_ports;
 mod refresh_session;
 mod register_user;
 mod request_password_reset;
+mod reset_mail;
 mod reset_password;
 mod session;
 

@@ -7,12 +7,11 @@ use gastonomo_domain::{
     Email, NewPasswordResetToken, PasswordResetToken, RESET_TOKEN_MINUTES, User,
 };
 
-use super::password_ports::PasswordPorts;
-use crate::error::AppError;
-use crate::port::MailMessage;
+use gastonomo_domain::settings::Language;
 
-/// Asunto del correo de recuperacion.
-const SUBJECT: &str = "Recupera tu contrasena de Gastonomo";
+use super::password_ports::PasswordPorts;
+use super::reset_mail::reset_mail;
+use crate::error::AppError;
 
 /// Correo para el que se pide el enlace.
 #[derive(Debug, Clone)]
@@ -76,21 +75,29 @@ impl RequestPasswordReset {
     }
 
     async fn send_mail(&self, user: &User, link: &str) -> Result<(), AppError> {
-        let body = format!(
-            "Hola, {name}.\n\n\
-             Pediste crear una contrasena nueva para tu cuenta de Gastonomo.\n\
-             Abre este enlace: {link}\n\n\
-             Caduca en {RESET_TOKEN_MINUTES} minutos y solo sirve una vez.\n\
-             Si no lo pediste, no hace falta que hagas nada.\n",
-            name = user.name().as_str(),
+        let message = reset_mail(
+            user.email().clone(),
+            user.name(),
+            link,
+            self.language_of(user).await,
         );
+        self.ports.mailer.send(&message).await
+    }
+
+    /// El idioma que la cuenta tiene elegido.
+    ///
+    /// Un fallo leyendo los ajustes **no impide mandar el correo**: se cae al
+    /// castellano, que es el idioma por defecto de una cuenta nueva. Perder el
+    /// enlace de recuperacion porque la consulta de ajustes tropezo seria mucho
+    /// peor que mandarlo en el idioma equivocado.
+    async fn language_of(&self, user: &User) -> Language {
         self.ports
-            .mailer
-            .send(&MailMessage {
-                to: user.email().clone(),
-                subject: SUBJECT.to_owned(),
-                body,
-            })
+            .settings
+            .find(user.id())
             .await
+            .ok()
+            .flatten()
+            .map(|settings| settings.language())
+            .unwrap_or_default()
     }
 }

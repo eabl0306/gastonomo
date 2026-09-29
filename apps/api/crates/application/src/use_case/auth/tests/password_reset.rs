@@ -9,8 +9,11 @@
 
 use chrono::Duration;
 
+use gastonomo_domain::settings::{Language, UserSettings};
+
 use super::support::{Harness, credentials, registration};
 use crate::error::AppError;
+use crate::port::Clock as _;
 use crate::testing::block_on;
 use crate::use_case::auth::{
     LoginUserCommand, RequestPasswordReset, RequestPasswordResetCommand, ResetPassword,
@@ -127,4 +130,46 @@ fn a_short_new_password_is_a_field_error() {
         unreachable!("a short password is a validation error")
     };
     assert_eq!(errors.entries()[0].field, "newPassword");
+}
+
+/// El idioma del correo sale de los ajustes de la cuenta, que son los mismos que
+/// deciden el idioma de la aplicacion. Antes el correo era solo en castellano, asi
+/// que quien tenia el telefono en ingles pedia el enlace desde una pantalla en
+/// ingles y recibia un correo en espanol.
+#[test]
+fn the_mail_speaks_the_language_of_the_account() {
+    let harness = Harness::new();
+    block_on(harness.register().execute(registration())).expect("should register");
+    let user_id = harness
+        .users
+        .by_email("camilo@correo.com")
+        .expect("the account should exist")
+        .id();
+    let mut settings = UserSettings::defaults_for(user_id, harness.clock.now());
+    settings.set_language(Language::English, harness.clock.now());
+    harness.settings.seed(settings);
+
+    request(&harness, "camilo@correo.com").expect("should accept the request");
+
+    let sent = harness.mailer.sent();
+    assert!(
+        sent[0].subject.contains("Reset"),
+        "subject was {}",
+        sent[0].subject
+    );
+    assert!(sent[0].body.contains("You asked to create a new password"));
+}
+
+/// Sin ajustes guardados, o si su lectura falla, el correo sale igual: perder el
+/// enlace de recuperacion es mucho peor que mandarlo en el idioma equivocado.
+#[test]
+fn without_settings_the_mail_still_goes_out_in_spanish() {
+    let harness = Harness::new();
+    block_on(harness.register().execute(registration())).expect("should register");
+
+    request(&harness, "camilo@correo.com").expect("should accept the request");
+
+    let sent = harness.mailer.sent();
+    assert_eq!(sent.len(), 1);
+    assert!(sent[0].subject.contains("Recupera"));
 }
