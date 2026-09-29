@@ -2,7 +2,6 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
-import { App } from '../../app/app';
 import type { HealthGateway } from '../../application/ports/health-gateway';
 import {
   createInMemoryHealthGateway,
@@ -10,14 +9,23 @@ import {
   healthyReport,
 } from '../../infrastructure/memory/in-memory-health-gateway';
 
+import { HealthGatewayProvider } from './health-gateway-provider';
 import { HealthPanel } from './health-panel';
 
+/**
+ * El panel se monta con su proveedor, no a traves de `App`.
+ *
+ * Antes se renderizaba la aplicacion entera porque el panel ocupaba la ruta raiz. Ya no: la
+ * raiz es Inicio y exige sesion, asi que montar `App` aqui probaria el guardia en vez del
+ * panel.
+ */
 function renderWith(gateway: HealthGateway): void {
-  render(<App gateway={gateway} passwordResets={stubPasswordResets} />);
+  render(
+    <HealthGatewayProvider gateway={gateway}>
+      <HealthPanel />
+    </HealthGatewayProvider>,
+  );
 }
-
-/** La pantalla de restablecer no entra en estos tests; el doble solo cumple el tipo. */
-const stubPasswordResets = { resetPassword: () => Promise.resolve() };
 
 describe('HealthPanel', () => {
   it('muestra el servicio operativo con sus comprobaciones', async () => {

@@ -31,19 +31,3 @@ export interface Loan {
   readonly money: MonetaryAmount;
   readonly payments: readonly LoanPayment[];
 }
-
-/** Lo que se manda a `POST /v1/loans`. Crea tambien su movimiento, en una sola escritura. */
-export interface LoanDraft {
-  readonly person: string;
-  readonly direction: LoanDirection;
-  readonly openedOn: string;
-  readonly money: MonetaryAmount;
-  readonly note: string | null;
-}
-
-/** Lo que se manda a `POST /v1/loans/{id}/payments`. Crea tambien su movimiento. */
-export interface LoanPaymentDraft {
-  readonly paidOn: string;
-  readonly money: MonetaryAmount;
-  readonly label: string | null;
-}

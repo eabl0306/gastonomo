@@ -28,6 +28,9 @@
   --g-ink-raised: #2a2925;
   --g-ink-line: #2f2e2a;
 
+  /* El velo de lo que se abre encima: sheets, menus y modales. */
+  --g-scrim: rgb(27 26 23 / 40%);
+
   /* Acento y estados */
   --g-lime: #d4ef7a;
   --g-green: #2f8a55;
@@ -42,6 +45,8 @@
   --g-radius-large-tile: 20px;
   --g-radius-check: 7px;
   --g-radius-bar: 2px;
+  --g-radius-nav-item: 14px;
+  --g-radius-nav-pill: 15px;
 
   /* Alturas del diseno. No son multiplos de una escala: son medidas fijas. */
   --g-height-primary: 56px;
@@ -49,6 +54,23 @@
   --g-height-field: 54px;
   --g-height-text-button: 48px;
   --g-height-touch: 44px;
+  --g-height-nav-item: 46px;
+  --g-height-nav-bar: 78px;
+
+  /*
+   * Medidas del armazon. La barra lateral es de ancho fijo y el contenido tiene
+   * un tope: en una pantalla ancha, una linea de texto de 2000px no se lee.
+   */
+  --g-side-width: 248px;
+  --g-content-max: 1320px;
+  --g-content-max-auth: 460px;
+  --g-gutter: clamp(20px, 4vw, 56px);
+  --g-gutter-auth: 24px;
+
+  /* El panel de marca de las pantallas de autenticacion, solo en escritorio. */
+  --g-auth-panel-width: 44%;
+  --g-auth-panel-max: 640px;
+  --g-auth-panel-pad-x: clamp(32px, 4vw, 64px);
 
   /* El unico corte responsive del diseno. Aqui solo como referencia: las media
      queries lo repiten porque CSS no admite variables en su condicion. */

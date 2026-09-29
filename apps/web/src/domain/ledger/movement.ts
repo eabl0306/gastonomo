@@ -21,19 +21,3 @@ export interface Movement {
   /** Lo rellena la API cuando lo genero un abono. */
   readonly loanPaymentId: string | null;
 }
-
-/** Lo que se manda a `POST /v1/movements`. */
-export interface MovementDraft {
-  readonly occurredOn: string;
-  readonly kind: MovementKind;
-  readonly categoryId: string;
-  readonly money: MonetaryAmount;
-  /** Si va vacia, el titulo lo pone la API con el nombre de la categoria. */
-  readonly note: string | null;
-}
-
-/** Una pagina de movimientos. `nextCursor` es null cuando no hay mas. */
-export interface MovementPage {
-  readonly items: readonly Movement[];
-  readonly nextCursor: string | null;
-}

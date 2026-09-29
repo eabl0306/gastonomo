@@ -39,7 +39,7 @@ export interface LoanSummary {
 }
 
 /** Porcentaje maximo que ensena la barra, aunque lo abonado se pase del monto. */
-export const MAX_PERCENT = 100;
+const MAX_PERCENT = 100;
 
 const HALF_CENT = decimalOf('0.005');
 const HALF_UNIT = decimalOf('0.5');

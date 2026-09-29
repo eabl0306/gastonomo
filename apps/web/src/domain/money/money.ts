@@ -1,11 +1,9 @@
 import { decimalsOf, type CurrencyCode } from './currency';
 import {
   ZERO,
-  absDecimal,
   addDecimals,
   compareDecimals,
   isZero,
-  negateDecimal,
   parseDecimal,
   roundDecimal,
   signOf,
@@ -61,14 +59,6 @@ export function addMoney(a: Money, b: Money): Money {
 export function subtractMoney(a: Money, b: Money): Money {
   requireSameCurrency(a, b);
   return { amount: subtractDecimals(a.amount, b.amount), currency: a.currency };
-}
-
-export function negateMoney(value: Money): Money {
-  return { amount: negateDecimal(value.amount), currency: value.currency };
-}
-
-export function absMoney(value: Money): Money {
-  return { amount: absDecimal(value.amount), currency: value.currency };
 }
 
 export function compareMoney(a: Money, b: Money): number {

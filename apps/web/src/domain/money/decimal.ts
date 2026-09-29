@@ -29,7 +29,7 @@ export interface Decimal {
  * no es un numero que nadie escribiera a proposito, y aceptarla solo sirve para que una
  * respuesta rara se convierta en operaciones con enteros gigantes.
  */
-export const MAX_SCALE = 20;
+const MAX_SCALE = 20;
 
 /** Los decimales con los que se divide. Sobran para tasas de 10 decimales encadenadas. */
 export const DIVISION_SCALE = 20;

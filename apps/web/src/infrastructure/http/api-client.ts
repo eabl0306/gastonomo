@@ -12,7 +12,7 @@ export interface ApiClientOptions {
   readonly fetchImpl?: typeof fetch;
 }
 
-export interface RequestOptions {
+interface RequestOptions {
   readonly method?: 'GET' | 'POST' | 'PATCH' | 'DELETE';
   readonly body?: unknown;
   readonly query?: Readonly<Record<string, string | number | undefined>>;
@@ -23,7 +23,7 @@ export interface RequestOptions {
 }
 
 /** Lo que devuelve una llamada: el cuerpo ya leido y si fue un reintento idempotente. */
-export interface ApiResponse {
+interface ApiResponse {
   readonly body: unknown;
   readonly isReplay: boolean;
 }
@@ -60,7 +60,7 @@ function headersOf(request: RequestOptions, token: string | null): HeadersInit {
     accept: 'application/json, application/problem+json',
   };
   if (request.body !== undefined) headers['content-type'] = 'application/json';
-  if (token !== null) headers.authorization = `Bearer ${token}`;
+  if (token !== null) headers['authorization'] = `Bearer ${token}`;
   if (request.idempotencyKey !== undefined) headers['idempotency-key'] = request.idempotencyKey;
   return headers;
 }

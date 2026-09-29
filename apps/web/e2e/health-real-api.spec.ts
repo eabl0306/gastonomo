@@ -16,7 +16,7 @@ test.describe('la web contra la API real', () => {
   test.skip(!USE_REAL_API, 'necesita la pila levantada: just e2e-stack');
 
   test('pinta el informe que devuelve la API, no uno inventado', async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/estado');
 
     const status = page.getByTestId('health-status');
     await expect(status).toHaveText('Servicio operativo');
@@ -25,7 +25,7 @@ test.describe('la web contra la API real', () => {
   });
 
   test('la comprobacion de la base de datos llega hasta PostgreSQL', async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/estado');
 
     const database = page.getByTestId('health-check').filter({ hasText: 'database' });
     await expect(database).toHaveCount(1);
@@ -33,7 +33,7 @@ test.describe('la web contra la API real', () => {
   });
 
   test('el boton de reintentar vuelve a preguntar a la API', async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/estado');
     await expect(page.getByTestId('health-status')).toHaveText('Servicio operativo');
 
     const readiness = page.waitForResponse(

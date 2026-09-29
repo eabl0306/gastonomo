@@ -14,7 +14,7 @@ import { displayedAmount } from '../money/displayed-amount';
 import type { ExchangeRates } from '../money/exchange-rates';
 
 /** Un punto de la linea de tendencia: un dia y el balance acumulado hasta el. */
-export interface TrendPoint {
+interface TrendPoint {
   readonly date: Day;
   readonly cumulative: Decimal;
 }

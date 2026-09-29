@@ -16,7 +16,7 @@ import type { ExchangeRates } from '../money/exchange-rates';
 import type { Money } from '../money/money';
 
 /** Una porcion del grafico de gastos por categoria. */
-export interface CategorySlice {
+interface CategorySlice {
   readonly category: Category;
   readonly total: Money;
   /** Fraccion del total del periodo, entre 0 y 1. Es el ancho de la porcion. */

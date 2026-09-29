@@ -56,6 +56,12 @@ export interface PasswordFieldProps {
   readonly describedBy?: string | undefined;
   /** El medidor solo acompana a la contrasena nueva, no a la repeticion. */
   readonly withStrength?: boolean;
+  /**
+   * Que le dice al gestor de contrasenas. `new-password` al crear una y
+   * `current-password` al entrar: con el valor equivocado, el navegador ofrece guardar una
+   * contrasena nueva cada vez que alguien inicia sesion.
+   */
+  readonly autoComplete?: string | undefined;
 }
 
 /** El campo de contrasena del diseno, con su ojo y, si se pide, su medidor. */
@@ -67,12 +73,13 @@ export function PasswordField({
   invalid = false,
   describedBy,
   withStrength = false,
+  autoComplete = 'new-password',
 }: PasswordFieldProps): ReactElement {
   const [shown, setShown] = useState(false);
   const id = useId();
 
   return (
-    <>
+    <div className="g-field">
       <label className="g-field__label" htmlFor={id}>
         {label}
       </label>
@@ -80,7 +87,7 @@ export function PasswordField({
         <input
           aria-describedby={describedBy}
           aria-invalid={invalid}
-          autoComplete="new-password"
+          autoComplete={autoComplete}
           className="g-field__input"
           data-invalid={invalid}
           data-with-affordance="true"
@@ -100,6 +107,6 @@ export function PasswordField({
         />
       </div>
       {withStrength ? <StrengthMeter password={value} /> : null}
-    </>
+    </div>
   );
 }

@@ -48,7 +48,7 @@ function gatewayOf(result: Outcome<Session>, signOutResult?: Outcome<void>): Aut
   };
 }
 
-function withError(error: ApiError): Outcome<Session> {
+function withError<T>(error: ApiError): Outcome<T> {
   return { ok: false, error };
 }
 

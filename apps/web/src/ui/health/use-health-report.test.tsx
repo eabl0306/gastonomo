@@ -2,12 +2,15 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
-import { App } from '../../app/app';
+import type { HealthGateway } from '../../application/ports/health-gateway';
 import type { HealthReport } from '../../domain/health-report';
 import {
   degradedReport,
   healthyReport,
 } from '../../infrastructure/memory/in-memory-health-gateway';
+
+import { HealthGatewayProvider } from './health-gateway-provider';
+import { HealthPanel } from './health-panel';
 
 /** Puerta cuyas respuestas se resuelven a mano, para controlar el orden de llegada. */
 function deferredGateway(): {
@@ -31,13 +34,19 @@ function deferredGateway(): {
   };
 }
 
-/** La pantalla de restablecer no entra en estos tests; el doble solo cumple el tipo. */
-const stubPasswordResets = { resetPassword: () => Promise.resolve() };
+/** El panel con su proveedor. La aplicacion entera ya no sirve: la raiz exige sesion. */
+function renderWith(gateway: HealthGateway): void {
+  render(
+    <HealthGatewayProvider gateway={gateway}>
+      <HealthPanel />
+    </HealthGatewayProvider>,
+  );
+}
 
 describe('useHealthReport', () => {
   it('mientras la API no contesta, la pantalla sigue cargando', () => {
     const gateway = deferredGateway();
-    render(<App gateway={gateway} passwordResets={stubPasswordResets} />);
+    renderWith(gateway);
 
     expect(screen.getByTestId('health-status')).toHaveTextContent('Consultando la API...');
     expect(screen.getByTestId('health-status')).toHaveAttribute('data-tone', 'loading');
@@ -45,7 +54,7 @@ describe('useHealthReport', () => {
 
   it('descarta la respuesta vieja si se reintenta antes de que llegue', async () => {
     const gateway = deferredGateway();
-    render(<App gateway={gateway} passwordResets={stubPasswordResets} />);
+    renderWith(gateway);
     expect(gateway.calls()).toBe(1);
 
     await userEvent.click(screen.getByTestId('health-refresh'));

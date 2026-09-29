@@ -1,0 +1,338 @@
+/*
+ * El armazon: barra lateral en escritorio, navegacion inferior en movil.
+ *
+ * El corte esta en 900px, que es el unico del diseno, y lo decide CSS: las dos
+ * navegaciones se pintan siempre y aqui se esconde la que sobra. Asi no hay un
+ * primer fotograma con el armazon equivocado.
+ */
+.g-shell {
+  display: flex;
+  height: 100dvh;
+  overflow: hidden;
+  background: var(--g-bg-app);
+}
+
+.g-shell__column {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+/*
+ * Lo unico que scrollea. La raiz no: sin esto, en movil la barra inferior se iria
+ * con el contenido.
+ */
+.g-shell__main {
+  flex: 1;
+  min-height: 0;
+  padding: 20px var(--g-gutter) 110px;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+/* El contenido tiene tope: una linea de texto de 2000px no se lee. */
+.g-shell__main > * {
+  max-width: var(--g-content-max);
+  margin: 0 auto;
+}
+
+/* Barra lateral, solo en escritorio */
+.g-side {
+  display: none;
+}
+
+@media (min-width: 900px) {
+  .g-side {
+    display: flex;
+    flex: none;
+    flex-direction: column;
+    width: var(--g-side-width);
+    padding: 24px 16px;
+    overflow-y: auto;
+    background: var(--g-ink);
+    color: var(--g-on-ink);
+  }
+
+  .g-shell__main {
+    padding-bottom: 28px;
+  }
+}
+
+.g-side__brand {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 0 8px;
+}
+
+.g-side__brand-tile {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--g-radius-tile);
+  background: var(--g-lime);
+  color: var(--g-ink);
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.g-side__brand-word {
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: var(--g-tracking-tight, -0.01em);
+}
+
+.g-side__nav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 28px;
+}
+
+.g-side__item {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  height: var(--g-height-nav-item);
+  padding: 0 12px;
+  border-radius: var(--g-radius-nav-item);
+  color: var(--g-on-ink-muted);
+  font-size: 15px;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.g-side__item .g-icon {
+  font-size: 22px;
+}
+
+.g-side__item:hover {
+  background: var(--g-ink-raised);
+}
+
+.g-side__item[aria-current='page'] {
+  background: var(--g-ink-raised);
+  color: var(--g-on-ink);
+  font-weight: 700;
+}
+
+.g-side__item[aria-current='page'] .g-icon {
+  color: var(--g-lime);
+}
+
+.g-side__spacer {
+  flex: 1;
+  min-height: 24px;
+}
+
+.g-side__user {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 12px 8px 0;
+  border-top: 1px solid var(--g-ink-line);
+}
+
+.g-side__avatar {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: var(--g-lime);
+  color: var(--g-ink);
+  font-size: 14px;
+  font-weight: 800;
+}
+
+/* El nombre y el correo se recortan: un correo largo no puede ensanchar la barra. */
+.g-side__identity {
+  flex: 1;
+  min-width: 0;
+}
+
+.g-side__name,
+.g-side__email {
+  margin: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.g-side__name {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.g-side__email {
+  color: var(--g-on-ink-faint);
+  font-size: 12px;
+}
+
+/* Navegacion inferior, solo en movil */
+.g-tabs {
+  display: grid;
+  flex: none;
+  grid-template-columns: repeat(4, 1fr);
+  height: var(--g-height-nav-bar);
+  padding: 6px 8px calc(14px + env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid var(--g-line);
+  background: var(--g-sheet);
+}
+
+@media (min-width: 900px) {
+  .g-tabs {
+    display: none;
+  }
+}
+
+.g-tabs__item {
+  display: flex;
+  gap: 3px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: var(--g-muted);
+  font-size: 11px;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.g-tabs__item[aria-current='page'] {
+  color: var(--g-ink);
+  font-weight: 700;
+}
+
+.g-tabs__pill {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 30px;
+  border-radius: var(--g-radius-nav-pill);
+  font-size: 22px;
+}
+
+.g-tabs__item[aria-current='page'] .g-tabs__pill {
+  background: var(--g-lime);
+}
+
+/* El titulo de una pantalla principal, dentro del scroller como en el diseno. */
+.g-screen__title {
+  margin: 4px 0 16px;
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+/* Una pantalla que todavia no esta. Dice lo que va a haber. */
+.g-pending {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  max-width: 520px;
+  padding: 20px;
+  border: 1px solid var(--g-line);
+  border-radius: var(--g-radius-large-tile);
+  background: var(--g-surface);
+  color: var(--g-muted);
+}
+
+.g-pending .g-icon {
+  color: var(--g-placeholder);
+  font-size: 24px;
+}
+
+.g-pending__text {
+  /*
+   * El reset pone `flex-shrink: 0` a los parrafos para que los campos de 54px no se
+   * compriman en los formularios. Aqui hay que deshacerlo, o el texto se sale de la
+   * tarjeta en cuanto la pantalla es estrecha.
+   */
+  flex-shrink: 1;
+  min-width: 0;
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+/* Tarjeta de perfil de Ajustes */
+.g-profile {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  max-width: 720px;
+  padding: 16px;
+  border: 1px solid var(--g-line);
+  border-radius: var(--g-radius-large-tile);
+  background: var(--g-surface);
+}
+
+.g-profile__avatar {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: var(--g-ink);
+  color: var(--g-lime);
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.g-profile__identity {
+  min-width: 0;
+}
+
+.g-profile__name,
+.g-profile__email {
+  margin: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.g-profile__name {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.g-profile__email {
+  color: var(--g-muted);
+  font-size: 13px;
+}
+
+.g-signout {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 360px;
+  height: var(--g-height-secondary);
+  margin-top: 24px;
+  border: 1px solid var(--g-line);
+  border-radius: var(--g-radius-field);
+  background: var(--g-surface);
+  color: var(--g-red);
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.g-signout:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.g-signout .g-icon {
+  font-size: 20px;
+}

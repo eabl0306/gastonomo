@@ -42,18 +42,6 @@ export function messageFor(error: ApiError, field: string): string | null {
   return error.fields.find((candidate) => candidate.field === field)?.message ?? null;
 }
 
-/** Los `code` que la API pone en un 409. */
-export const CONFLICT_CODES = {
-  /** La misma clave de idempotencia con otro cuerpo: no es un reintento. */
-  idempotencyKeyReused: 'idempotency_key_reused',
-  /** Dos intentos con la misma clave a la vez: hay que esperar y reintentar. */
-  idempotencyKeyInProgress: 'idempotency_key_in_progress',
-  /** El nombre de categoria ya existe en la cuenta, sin distinguir tipo ni mayusculas. */
-  categoryNameTaken: 'category_name_taken',
-  /** Se intento editar o borrar una de las 12 predeterminadas. */
-  categoryIsDefault: 'category_is_default',
-} as const;
-
 /**
  * El resultado de todo lo que habla con la API.
  *

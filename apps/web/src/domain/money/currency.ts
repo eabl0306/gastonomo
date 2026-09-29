@@ -32,7 +32,7 @@ export const COP = currencyOf('COP');
 export const USD = currencyOf('USD');
 
 export const EUR = currencyOf('EUR');
-export const MXN = currencyOf('MXN');
+const MXN = currencyOf('MXN');
 
 /** Las cuatro que el selector de moneda ensena en Frecuentes, en orden. */
 export const FREQUENT_CURRENCIES: readonly CurrencyCode[] = [COP, USD, EUR, MXN];

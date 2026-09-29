@@ -43,7 +43,7 @@ export function createHealthGateway(env: WebEnv): HealthGateway {
  */
 const RESET_TIMEOUT_MS = 10_000;
 
-export function createPasswordResetGateway(env: WebEnv): PasswordResetGateway {
+function createPasswordResetGateway(env: WebEnv): PasswordResetGateway {
   return createHttpPasswordResetGateway({
     baseUrl: resolveApiUrl(env),
     timeoutMs: RESET_TIMEOUT_MS,

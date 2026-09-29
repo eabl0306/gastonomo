@@ -106,8 +106,8 @@ describe('api client', () => {
    */
   it('dos peticiones que caducan a la vez refrescan una sola vez', async () => {
     const session = storeOf({ accessToken: 'viejo', refreshToken: 'r1', user: USER });
-    const fetchImpl = vi.fn((_url: string, init: RequestInit) => {
-      const auth = headerOf(init, 'authorization');
+    const fetchImpl = vi.fn((_url: URL | RequestInfo, init?: RequestInit) => {
+      const auth = init === undefined ? undefined : headerOf(init, 'authorization');
       return Promise.resolve(
         auth === 'Bearer viejo' ? jsonResponse({}, { status: 401 }) : jsonResponse({ ok: true }),
       );

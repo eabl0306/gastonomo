@@ -3,19 +3,24 @@ import { createRoot } from 'react-dom/client';
 
 import '../ui/theme/tokens.css';
 import '../ui/auth/auth.css';
+import '../ui/shell/shell.css';
 import '../ui/styles.css';
 
 import { App } from './app';
-import { createHealthGateway, createPasswordResetGateway } from './composition-root';
+import { createContainer } from './composition-root';
 
-const container = document.getElementById('root');
-if (container === null) throw new Error('No existe el elemento #root en index.html');
+const root = document.getElementById('root');
+if (root === null) throw new Error('No existe el elemento #root en index.html');
 
-createRoot(container).render(
+const container = createContainer(import.meta.env);
+
+createRoot(root).render(
   <StrictMode>
     <App
-      gateway={createHealthGateway(import.meta.env)}
-      passwordResets={createPasswordResetGateway(import.meta.env)}
+      auth={container.auth}
+      health={container.health}
+      passwordResets={container.passwordResets}
+      session={container.session}
     />
   </StrictMode>,
 );

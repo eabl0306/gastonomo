@@ -58,6 +58,26 @@ describe('local session store', () => {
     expect(createLocalSessionStore().read()).toBeNull();
   });
 
+  /**
+   * `useSyncExternalStore` compara por identidad. Devolver un objeto nuevo en cada lectura
+   * deja la pagina en blanco con "Maximum update depth exceeded", y eso no se ve en un test
+   * que solo mire el contenido.
+   */
+  it('dos lecturas seguidas devuelven el mismo objeto', () => {
+    const store = createLocalSessionStore();
+    store.save(SESSION);
+    expect(store.read()).toBe(store.read());
+  });
+
+  it('despues de cambiar, la lectura devuelve un objeto distinto', () => {
+    const store = createLocalSessionStore();
+    store.save(SESSION);
+    const before = store.read();
+    store.rotate({ accessToken: 'a2', refreshToken: 'r2', expiresInSeconds: 900 });
+    expect(store.read()).not.toBe(before);
+    expect(store.read()?.accessToken).toBe('a2');
+  });
+
   it('avisa a quien escucha cuando la sesion cambia', () => {
     const store = createLocalSessionStore();
     let changes = 0;

@@ -122,6 +122,19 @@
   text-wrap: pretty;
 }
 
+/*
+ * Entrar respira mas que las demas: su titulo es dos puntos mayor y arranca mas
+ * abajo. Es lo que hace el prototipo, y se nota porque es la primera pantalla.
+ */
+.g-auth__title[data-size='large'] {
+  margin-top: 48px;
+  font-size: 32px;
+}
+
+.g-auth__title[data-size='large'] + .g-auth__lead {
+  margin-bottom: 32px;
+}
+
 .g-auth__lead strong {
   color: var(--g-ink);
 }
@@ -282,4 +295,134 @@
 .g-auth__spacer {
   flex: 1;
   min-height: 24px;
+}
+
+/*
+ * El bloque de un campo. El diseno separa los campos 18px, y esa separacion es
+ * del grupo y no del input: el de contrasena lleva el ojo dentro y el medidor
+ * debajo, asi que ponerla en el input dejaba el medidor pegado al siguiente.
+ */
+.g-field {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 18px;
+}
+
+.g-field:last-of-type {
+  margin-bottom: 0;
+}
+
+/* El enlace de recuperar, alineado a la derecha bajo la contrasena. */
+.g-auth__aside-link {
+  align-self: flex-end;
+  padding: 12px 0;
+  border: 0;
+  background: none;
+  color: var(--g-ink);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+/* El divisor con la "o" en medio. */
+.g-divider {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin: 22px 0;
+  color: var(--g-placeholder);
+  font-size: 13px;
+}
+
+.g-divider::before,
+.g-divider::after {
+  flex: 1;
+  height: 1px;
+  background: var(--g-field-line);
+  content: '';
+}
+
+.g-button[data-variant='secondary'] {
+  height: var(--g-height-secondary);
+  border: 1px solid var(--g-field-line);
+  background: var(--g-surface);
+  color: var(--g-ink);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.g-button[data-variant='secondary']:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+/* El pie de las pantallas de autenticacion: "¿No tienes cuenta? Registrate". */
+.g-auth__footer {
+  color: var(--g-muted);
+  font-size: 14px;
+  text-align: center;
+}
+
+.g-auth__footer button {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--g-ink);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/*
+ * El foco del teclado. El prototipo solo lo dibuja en los inputs, asi que aqui
+ * se anade para todo lo demas: sin el, quien navega con Tab no sabe donde esta.
+ */
+.g-auth :is(button, a):focus-visible,
+.g-shell :is(button, a):focus-visible {
+  outline: 2px solid var(--g-ink);
+  outline-offset: 2px;
+}
+
+/* La casilla de los terminos. */
+.g-terms {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  margin-top: 6px;
+  color: var(--g-muted);
+  font-size: 13px;
+  line-height: 1.45;
+  cursor: pointer;
+}
+
+.g-terms__box {
+  position: relative;
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border: 1px solid var(--g-ink);
+  border-radius: var(--g-radius-check);
+  color: var(--g-lime);
+  font-size: 16px;
+}
+
+.g-terms__box[data-checked='true'] {
+  background: var(--g-ink);
+}
+
+.g-terms[data-invalid='true'] .g-terms__box {
+  border-color: var(--g-red);
+}
+
+/* El control real, invisible pero presente: sin el no hay teclado ni lector. */
+.g-terms__input {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
 }

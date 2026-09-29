@@ -9,7 +9,7 @@ import {
 } from './decimal';
 
 /** Frescura de la tabla de tasas, tal como la marca `GET /v1/exchange-rates`. */
-export type RatesStatus = 'ok' | 'stale' | 'unavailable';
+type RatesStatus = 'ok' | 'stale' | 'unavailable';
 
 /**
  * Tabla de tasas con base USD.

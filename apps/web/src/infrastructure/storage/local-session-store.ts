@@ -22,9 +22,7 @@ const storedSchema = z.object({
  * Un cuerpo guardado que no cuadra con el esquema se borra en vez de usarse a medias: una
  * sesion incompleta manda peticiones sin token y echa al usuario de formas raras.
  */
-function readFrom(storage: Storage): StoredSession | null {
-  const raw = storage.getItem(KEY);
-  if (raw === null) return null;
+function parseStored(storage: Storage, raw: string): StoredSession | null {
   try {
     const parsed = storedSchema.safeParse(JSON.parse(raw));
     if (parsed.success) return parsed.data;
@@ -35,6 +33,26 @@ function readFrom(storage: Storage): StoredSession | null {
   return null;
 }
 
+/**
+ * Lee la sesion y **devuelve siempre el mismo objeto mientras no cambie**.
+ *
+ * La cache no es una optimizacion: `useSyncExternalStore` compara el resultado por
+ * identidad, asi que devolver un objeto nuevo en cada lectura lo hace volver a pintar sin
+ * parar. React lo corta con "Maximum update depth exceeded" y la pagina se queda en blanco.
+ * Aqui pasaba, porque cada lectura parsea el JSON de `localStorage`.
+ */
+function createReader(storage: Storage): () => StoredSession | null {
+  let cachedRaw: string | null = null;
+  let cached: StoredSession | null = null;
+  return () => {
+    const raw = storage.getItem(KEY);
+    if (raw === cachedRaw) return cached;
+    cachedRaw = raw;
+    cached = raw === null ? null : parseStored(storage, raw);
+    return cached;
+  };
+}
+
 export function createLocalSessionStore(storage: Storage = globalThis.localStorage): SessionStore {
   const listeners = new Set<() => void>();
 
@@ -42,7 +60,7 @@ export function createLocalSessionStore(storage: Storage = globalThis.localStora
     for (const listener of listeners) listener();
   }
 
-  const read = (): StoredSession | null => readFrom(storage);
+  const read = createReader(storage);
 
   function write(session: StoredSession): void {
     storage.setItem(KEY, JSON.stringify(session));
