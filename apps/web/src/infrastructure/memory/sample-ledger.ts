@@ -1,4 +1,5 @@
 import type { CurrencyInfo } from '../../application/ports/currency-gateway';
+import type { DictationDraft } from '../../domain/dictation/draft';
 import type { Category } from '../../domain/ledger/category';
 import type { Loan } from '../../domain/ledger/loan';
 import type { Movement } from '../../domain/ledger/movement';
@@ -177,4 +178,20 @@ export const SAMPLE_RATES: ExchangeRates = {
     [COP, decimalOf('4000')],
     [currencyOf('EUR'), decimalOf('0.92')],
   ]),
+};
+
+/** El borrador de muestra del dictado: "Gasté 45 mil en almuerzo". */
+export const SAMPLE_DRAFT: DictationDraft = {
+  entry: {
+    kind: 'movement',
+    movement: {
+      kind: 'out',
+      category: { id: 'c1', name: 'Alimentación' },
+      note: 'Almuerzo',
+    },
+  },
+  amount: decimalOf('45000.0000'),
+  currency: COP,
+  occurredOn: SAMPLE_TODAY,
+  missing: [],
 };

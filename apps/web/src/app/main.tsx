@@ -14,6 +14,7 @@ import '../ui/fab/fab.css';
 import '../ui/settings/settings.css';
 import '../ui/categories/categories.css';
 import '../ui/export/export.css';
+import '../ui/dictation/dictation.css';
 import '../ui/styles.css';
 
 import { App } from './app';

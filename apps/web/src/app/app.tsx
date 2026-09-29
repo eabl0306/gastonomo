@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react';
-import { BrowserRouter, Route, Routes } from 'react-router';
+import { BrowserRouter, Route, Routes, useLocation, type Location } from 'react-router';
 
 import type { HealthGateway } from '../application/ports/health-gateway';
 import { AccountProvider } from '../ui/account/account-context';
@@ -42,41 +42,64 @@ export function App({ container }: { container: Container }): ReactElement {
   return (
     <BrowserRouter>
       <SessionProvider value={{ session: container.session, auth: container.auth }}>
-        <Routes>
-          <Route
-            element={
-              <RequireSession>
-                <TodayProvider clock={container.clock}>
-                  <AccountProvider currencies={container.currencies} settings={container.settings}>
-                    <PeriodProvider>
-                      <ShellWithQuickAdd />
-                    </PeriodProvider>
-                  </AccountProvider>
-                </TodayProvider>
-              </RequireSession>
-            }
-          >
-            <Route element={<HomeRoute container={container} />} index />
-            <Route element={<MovementsRoute container={container} />} path={ROUTES.movements} />
-            <Route element={<NewMovementRoute container={container} />} path={ROUTES.newMovement} />
-            <Route element={<LoansRoute container={container} />} path={ROUTES.loans} />
-            <Route element={<NewLoanRoute container={container} />} path={ROUTES.newLoan} />
-            <Route element={<LoanDetailRoute container={container} />} path={ROUTES.loanDetail} />
-            <Route element={<SettingsRoute container={container} />} path={ROUTES.settings} />
-            <Route element={<CategoriesRoute container={container} />} path={ROUTES.categories} />
-            <Route element={<ExportRoute container={container} />} path={ROUTES.export} />
-          </Route>
-          <Route element={<LoginRoute />} path={ROUTES.login} />
-          <Route element={<RegisterRoute />} path={ROUTES.register} />
-          <Route element={<ForgotRoute />} path={ROUTES.forgotPassword} />
-          <Route
-            element={<ResetPasswordRoute gateway={container.passwordResets} />}
-            path={ROUTES.resetPassword}
-          />
-          <Route element={<HealthScreen gateway={container.health} />} path={ROUTES.status} />
-        </Routes>
+        <Screens container={container} />
       </SessionProvider>
     </BrowserRouter>
+  );
+}
+
+/**
+ * El arbol de rutas.
+ *
+ * El dictado es una **ruta** y no una hoja, porque lo abren tres pantallas y al cerrarlo hay
+ * que volver a la que estuviera. Para que esa pantalla se siga viendo detras, se navega con la
+ * anterior en el estado y aqui se pinta esa: el modal lo anade el armazon, que es quien esta
+ * dentro de los proveedores. Entrar directo por la direccion tambien funciona, solo que sin
+ * pantalla de fondo.
+ */
+function Screens({ container }: { container: Container }): ReactElement {
+  const location = useLocation();
+  const background = (location.state as { background?: Location } | null)?.background;
+  return (
+    <Routes location={background ?? location}>
+      <Route
+        element={
+          <RequireSession>
+            <TodayProvider clock={container.clock}>
+              <AccountProvider currencies={container.currencies} settings={container.settings}>
+                <PeriodProvider>
+                  <ShellWithQuickAdd
+                    container={container}
+                    dictating={location.pathname === ROUTES.dictate}
+                  />
+                </PeriodProvider>
+              </AccountProvider>
+            </TodayProvider>
+          </RequireSession>
+        }
+      >
+        <Route element={<HomeRoute container={container} />} index />
+        <Route element={<MovementsRoute container={container} />} path={ROUTES.movements} />
+        <Route element={<NewMovementRoute container={container} />} path={ROUTES.newMovement} />
+        <Route element={<LoansRoute container={container} />} path={ROUTES.loans} />
+        <Route element={<NewLoanRoute container={container} />} path={ROUTES.newLoan} />
+        <Route element={<LoanDetailRoute container={container} />} path={ROUTES.loanDetail} />
+        <Route element={<SettingsRoute container={container} />} path={ROUTES.settings} />
+        <Route element={<CategoriesRoute container={container} />} path={ROUTES.categories} />
+        <Route element={<ExportRoute container={container} />} path={ROUTES.export} />
+        {/* El dictado lo pinta el armazon; esta ruta solo existe para que entrar
+            directo por la direccion monte el armazon y sus proveedores. */}
+        <Route element={null} path={ROUTES.dictate} />
+      </Route>
+      <Route element={<LoginRoute />} path={ROUTES.login} />
+      <Route element={<RegisterRoute />} path={ROUTES.register} />
+      <Route element={<ForgotRoute />} path={ROUTES.forgotPassword} />
+      <Route
+        element={<ResetPasswordRoute gateway={container.passwordResets} />}
+        path={ROUTES.resetPassword}
+      />
+      <Route element={<HealthScreen gateway={container.health} />} path={ROUTES.status} />
+    </Routes>
   );
 }
 

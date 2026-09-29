@@ -12,6 +12,7 @@ export const ROUTES = {
   home: '/',
   movements: '/movements',
   newMovement: '/movements/new',
+  dictate: '/dictar',
   loans: '/loans',
   newLoan: '/loans/new',
   loanDetail: '/loans/:loanId',

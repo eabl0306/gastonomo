@@ -11,12 +11,14 @@ import {
 import { createInMemoryHealthGateway } from '../infrastructure/memory/in-memory-health-gateway';
 import {
   createMemoryCategoryGateway,
+  createMemoryDictationGateway,
   createMemoryDownloader,
   createMemoryCurrencyGateway,
   createMemoryLoanGateway,
   createMemoryMovementGateway,
   createMemorySettingsGateway,
   fixedClock,
+  silentSpeech,
 } from '../infrastructure/memory/in-memory-ledger';
 
 import { App } from './app';
@@ -39,6 +41,8 @@ function renderApp(signedIn: boolean, path = '/'): ReturnType<typeof createMemor
     settings: createMemorySettingsGateway(),
     currencies: createMemoryCurrencyGateway(),
     categories: createMemoryCategoryGateway(),
+    dictation: createMemoryDictationGateway(),
+    speech: silentSpeech,
     exports: exportWriter,
     downloader: createMemoryDownloader(),
     clock: fixedClock(),
@@ -113,6 +117,25 @@ describe('App', () => {
     await userEvent.click(await screen.findByRole('button', { name: 'Elegir un rango de fechas' }));
 
     expect(screen.getByRole('dialog', { name: 'Rango de fechas' })).toBeInTheDocument();
+  });
+
+  /**
+   * El dictado se pinta dentro del armazon: fuera se quedaria sin los proveedores de cuenta y
+   * de periodo, y reventaria al montarse.
+   */
+  it('el boton flotante abre el dictado encima de la pantalla', async () => {
+    renderApp(true);
+    await userEvent.click(await screen.findByRole('button', { name: 'Nuevo registro' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Dictar' }));
+
+    expect(await screen.findByRole('dialog', { name: 'Dictar' })).toBeInTheDocument();
+    // La pantalla de debajo se sigue viendo: se navego con ella en el estado.
+    expect(screen.getByText('Hola, Camilo')).toBeInTheDocument();
+  });
+
+  it('entrando directo a dictar tambien funciona, solo que sin pantalla detras', async () => {
+    renderApp(true, '/dictar');
+    expect(await screen.findByRole('dialog', { name: 'Dictar' })).toBeInTheDocument();
   });
 
   it('crear cuenta y recuperar la contrasena tienen su propia direccion', () => {

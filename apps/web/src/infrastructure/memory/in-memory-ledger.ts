@@ -2,17 +2,21 @@ import { success, type Outcome } from '../../application/ports/api-error';
 import type { CategoryGateway } from '../../application/ports/category-gateway';
 import type { Clock } from '../../application/ports/clock';
 import type { CurrencyGateway } from '../../application/ports/currency-gateway';
+import type { DictationGateway } from '../../application/ports/dictation-gateway';
 import type { DownloadableFile, FileDownloader } from '../../application/ports/file-download';
 import type { LoanGateway } from '../../application/ports/loan-gateway';
 import type { MovementGateway } from '../../application/ports/movement-gateway';
 import type { SettingsGateway } from '../../application/ports/settings-gateway';
+import type { SpeechToText } from '../../application/ports/speech';
 import { DEFAULT_SETTINGS, type UserSettings } from '../../domain/account/settings';
 import { isAfter, isBefore } from '../../domain/calendar/day';
+import type { DictationDraft } from '../../domain/dictation/draft';
 import type { Loan } from '../../domain/ledger/loan';
 import type { Movement } from '../../domain/ledger/movement';
 
 import {
   SAMPLE_CATEGORIES,
+  SAMPLE_DRAFT,
   SAMPLE_CURRENCIES,
   SAMPLE_LOANS,
   SAMPLE_MOVEMENTS,
@@ -90,6 +94,26 @@ export function createMemoryCurrencyGateway(): CurrencyGateway {
     rates: () => Promise.resolve(success(SAMPLE_RATES)),
   };
 }
+
+/**
+ * Un dictado en memoria que siempre devuelve el mismo borrador.
+ *
+ * Por defecto interpreta un gasto de 45.000 en Alimentacion, que es el ejemplo del diseno.
+ */
+export function createMemoryDictationGateway(
+  draft: DictationDraft = SAMPLE_DRAFT,
+): DictationGateway {
+  return { parse: () => Promise.resolve(success(draft)) };
+}
+
+/** Un reconocedor que no existe: el navegador de los tests no dicta. */
+export const silentSpeech: SpeechToText = {
+  available: false,
+  listen: (_language, listener) => {
+    listener.onFailed('unsupported');
+    return { stop: () => undefined, cancel: () => undefined };
+  },
+};
 
 /** Un descargador que solo apunta lo que le piden. Para tests y capturas. */
 export function createMemoryDownloader(): FileDownloader & {

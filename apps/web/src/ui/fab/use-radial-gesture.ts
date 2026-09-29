@@ -32,6 +32,21 @@ function trackedBy(
   return { hovered: optionAt(dx, dy)?.key ?? null, moved: movedEnough(dx, dy) };
 }
 
+/**
+ * Sigue el dedo aunque se salga del boton, que es justo lo que hace este gesto.
+ *
+ * Se envuelve porque no siempre se puede capturar: en un navegador sin puntero activo, y en
+ * los tests, lanza. Sin captura el gesto sigue funcionando dentro del boton, asi que no hay
+ * nada que hacer con el error.
+ */
+function capture(event: PointerEvent<HTMLButtonElement>): void {
+  try {
+    event.currentTarget.setPointerCapture(event.pointerId);
+  } catch {
+    // Sin captura, el gesto se limita al boton. Es peor, pero no esta roto.
+  }
+}
+
 function pressedFrom(event: PointerEvent<HTMLButtonElement>, wasOpen: boolean): Pressed {
   const box = event.currentTarget.getBoundingClientRect();
   return {
@@ -82,7 +97,7 @@ export function useRadialGesture(onChoose: (key: string) => void): RadialGesture
       (event: PointerEvent<HTMLButtonElement>) => {
         if (event.button !== 0) return;
         pressed.current = pressedFrom(event, open);
-        event.currentTarget.setPointerCapture(event.pointerId);
+        capture(event);
         setOpen(true);
         setHovered(null);
       },

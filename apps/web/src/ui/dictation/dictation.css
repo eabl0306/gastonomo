@@ -1,0 +1,323 @@
+/*
+ * El dictado.
+ *
+ * Se ve como un modal pero es una ruta: lo abren tres pantallas, y al cerrarlo hay que volver
+ * a la que estuviera.
+ */
+
+.g-dictation__listening {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px 0 4px;
+}
+
+.g-dictation__mic {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 92px;
+  height: 92px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--g-ink);
+  color: var(--g-lime);
+  font-size: 40px;
+  cursor: pointer;
+}
+
+.g-dictation__mic::after {
+  position: absolute;
+  width: 112px;
+  height: 112px;
+  border-radius: 50%;
+  background: var(--g-ink);
+  content: '';
+  opacity: 0.12;
+  animation: g-pulse 1.6s ease-out infinite;
+}
+
+@keyframes g-pulse {
+  from {
+    transform: scale(0.85);
+    opacity: 0.22;
+  }
+
+  to {
+    transform: scale(1.15);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .g-dictation__mic::after {
+    animation: none;
+  }
+}
+
+.g-dictation__mic .g-icon {
+  position: relative;
+  font-size: inherit;
+}
+
+.g-dictation__live {
+  min-height: 60px;
+  max-width: 420px;
+  margin: 22px 0 0;
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+  text-align: center;
+  text-wrap: pretty;
+}
+
+.g-dictation__live[data-empty='true'] {
+  color: var(--g-placeholder);
+}
+
+.g-dictation__tip {
+  margin: 4px 0 0;
+  color: var(--g-muted);
+  font-size: 13px;
+}
+
+.g-dictation__switch {
+  margin-top: 14px;
+  padding: 6px;
+  border: 0;
+  background: none;
+  color: var(--g-ink);
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.g-dictation__reason {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  margin: 8px 0 0;
+  color: var(--g-note);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.g-dictation__reason .g-icon {
+  color: var(--g-amber);
+  font-size: 18px;
+}
+
+.g-dictation__reason span {
+  flex-shrink: 1;
+  min-width: 0;
+}
+
+.g-dictation__text {
+  display: block;
+  width: 100%;
+  margin-top: 12px;
+  padding: 14px;
+  border: 1px solid var(--g-field-line);
+  border-radius: var(--g-radius-field);
+  outline: none;
+  background: var(--g-surface);
+  color: var(--g-ink);
+  font:
+    500 16px 'Plus Jakarta Sans',
+    system-ui,
+    sans-serif;
+  line-height: 1.45;
+  resize: none;
+}
+
+.g-dictation__actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.g-dictation__actions .g-sheet__apply {
+  flex: 1;
+  margin-top: 0;
+}
+
+.g-dictation__mic-small {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: var(--g-height-primary);
+  height: var(--g-height-primary);
+  border: 1px solid var(--g-field-line);
+  border-radius: var(--g-radius-field);
+  background: var(--g-surface);
+  color: var(--g-ink);
+  font-size: 24px;
+  cursor: pointer;
+}
+
+.g-dictation__examples-title {
+  margin: 22px 0 8px;
+  color: var(--g-muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.g-dictation__examples {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.g-dictation__said {
+  margin: 2px 0 0;
+  color: var(--g-muted);
+  font-size: 14px;
+  line-height: 1.45;
+  text-wrap: pretty;
+}
+
+.g-dictation__redo {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 48px;
+  margin-top: 10px;
+  border: 1px solid var(--g-field-line);
+  border-radius: var(--g-radius-nav-item);
+  background: var(--g-surface);
+  color: var(--g-ink);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* La tarjeta de revision */
+.g-draft {
+  margin-top: 14px;
+  padding: 16px;
+  border: 1px solid var(--g-line);
+  border-radius: var(--g-radius-day-card);
+  background: var(--g-surface);
+}
+
+.g-draft__head {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.g-draft__icon {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  font-size: 22px;
+}
+
+.g-draft__icon[data-tone='income'] {
+  background: var(--g-green-bg);
+  color: var(--g-green);
+}
+
+.g-draft__icon[data-tone='expense'] {
+  background: var(--g-red-bg);
+  color: var(--g-red);
+}
+
+.g-draft__icon .g-icon {
+  font-size: inherit;
+}
+
+.g-draft__who {
+  display: block;
+  flex: 1;
+  min-width: 0;
+}
+
+.g-draft__title {
+  display: block;
+  overflow: hidden;
+  font-size: 15px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.g-draft__subtitle {
+  display: block;
+  margin-top: 2px;
+  color: var(--g-muted);
+  font-size: 13px;
+}
+
+.g-draft__amount {
+  display: block;
+  margin-top: 14px;
+  font-size: 34px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+
+.g-draft__equivalent {
+  margin: 2px 0 0;
+  color: var(--g-muted);
+  font-size: 13px;
+}
+
+.g-draft__rows {
+  margin: 12px 0 0;
+  border-top: 1px solid var(--g-row-line);
+}
+
+.g-draft__row {
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--g-row-line);
+  font-size: 14px;
+}
+
+.g-draft__row:last-child {
+  border-bottom: 0;
+}
+
+.g-draft__row dt {
+  color: var(--g-muted);
+}
+
+.g-draft__row dd {
+  margin: 0;
+  font-weight: 600;
+  text-align: right;
+}
+
+.g-draft__missing {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  margin: 12px 0 0;
+  color: var(--g-red);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.g-draft__missing .g-icon {
+  font-size: 18px;
+}
+
+.g-draft__missing span {
+  flex-shrink: 1;
+  min-width: 0;
+}

@@ -2,6 +2,7 @@ import type { AuthGateway } from '../application/ports/auth-gateway';
 import type { CategoryGateway } from '../application/ports/category-gateway';
 import type { Clock } from '../application/ports/clock';
 import type { CurrencyGateway } from '../application/ports/currency-gateway';
+import type { DictationGateway } from '../application/ports/dictation-gateway';
 import type { ExportWriter, FileDownloader } from '../application/ports/file-download';
 import type { HealthGateway } from '../application/ports/health-gateway';
 import type { LoanGateway } from '../application/ports/loan-gateway';
@@ -9,6 +10,7 @@ import type { MovementGateway } from '../application/ports/movement-gateway';
 import type { PasswordResetGateway } from '../application/ports/password-reset-gateway';
 import type { SessionStore } from '../application/ports/session-store';
 import type { SettingsGateway } from '../application/ports/settings-gateway';
+import type { SpeechToText } from '../application/ports/speech';
 import { browserDownloader } from '../infrastructure/export/browser-downloader';
 import { exportWriter } from '../infrastructure/export/serialize';
 import { createApiClient, type ApiClient } from '../infrastructure/http/api-client';
@@ -16,11 +18,13 @@ import type { RotatedTokens } from '../infrastructure/http/api-tokens';
 import { createHttpAuthGateway } from '../infrastructure/http/http-auth-gateway';
 import { createHttpCategoryGateway } from '../infrastructure/http/http-category-gateway';
 import { createHttpCurrencyGateway } from '../infrastructure/http/http-currency-gateway';
+import { createHttpDictationGateway } from '../infrastructure/http/http-dictation-gateway';
 import { createHttpHealthGateway } from '../infrastructure/http/http-health-gateway';
 import { createHttpLoanGateway } from '../infrastructure/http/http-loan-gateway';
 import { createHttpMovementGateway } from '../infrastructure/http/http-movement-gateway';
 import { createHttpPasswordResetGateway } from '../infrastructure/http/http-password-reset-gateway';
 import { createHttpSettingsGateway } from '../infrastructure/http/http-settings-gateway';
+import { browserSpeech } from '../infrastructure/speech/browser-speech';
 import { createLocalSessionStore } from '../infrastructure/storage/local-session-store';
 import { systemClock } from '../infrastructure/time/system-clock';
 
@@ -76,6 +80,8 @@ export interface Container {
   readonly settings: SettingsGateway;
   readonly currencies: CurrencyGateway;
   readonly categories: CategoryGateway;
+  readonly dictation: DictationGateway;
+  readonly speech: SpeechToText;
   readonly exports: ExportWriter;
   readonly downloader: FileDownloader;
   readonly clock: Clock;
@@ -125,6 +131,8 @@ export function createContainer(env: WebEnv): Container {
     settings: createHttpSettingsGateway(client),
     currencies: createHttpCurrencyGateway(client),
     categories: createHttpCategoryGateway(client),
+    dictation: createHttpDictationGateway(client),
+    speech: browserSpeech,
     exports: exportWriter,
     downloader: browserDownloader,
     clock: systemClock,

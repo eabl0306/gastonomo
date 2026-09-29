@@ -4,6 +4,7 @@ import { useNavigate, useParams } from 'react-router';
 import type { PasswordResetGateway } from '../application/ports/password-reset-gateway';
 import { ResetPasswordScreen } from '../ui/auth/reset-password-screen';
 import { CategoriesScreen } from '../ui/categories/categories-screen';
+import { DictationModal } from '../ui/dictation/dictation-modal';
 import { ExportScreen } from '../ui/export/export-screen';
 import { HomeScreen } from '../ui/home/home-screen';
 import { LoanDetailScreen } from '../ui/loans/loan-detail-screen';
@@ -146,6 +147,28 @@ export function ExportRoute({ container }: { container: Container }): ReactEleme
     <ExportScreen
       onBack={() => {
         void navigate(ROUTES.settings);
+      }}
+      ports={container}
+    />
+  );
+}
+
+/**
+ * El dictado.
+ *
+ * Es una ruta y no una hoja aunque se vea como un modal: lo abren tres pantallas, y al cerrarlo
+ * hay que volver a la que estuviera. Al guardar se va a Movimientos, que es donde aparece lo
+ * que se acaba de registrar.
+ */
+export function DictateRoute({ container }: { container: Container }): ReactElement {
+  const navigate = useNavigate();
+  return (
+    <DictationModal
+      onClose={() => {
+        void navigate(-1);
+      }}
+      onSaved={() => {
+        void navigate(ROUTES.movements, { replace: true });
       }}
       ports={container}
     />
