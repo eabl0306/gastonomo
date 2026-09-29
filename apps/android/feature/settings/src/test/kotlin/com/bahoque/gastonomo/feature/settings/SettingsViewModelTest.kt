@@ -7,6 +7,7 @@ import com.bahoque.gastonomo.core.common.Outcome
 import com.bahoque.gastonomo.core.domain.category.Category
 import com.bahoque.gastonomo.core.domain.money.CurrencyCode
 import com.bahoque.gastonomo.core.domain.settings.AppLanguage
+import com.bahoque.gastonomo.core.domain.settings.DeviceSettings
 import com.bahoque.gastonomo.core.testing.fake.FakeCategoryGateway
 import com.bahoque.gastonomo.core.testing.fake.FakeChangeGateway
 import com.bahoque.gastonomo.core.testing.fake.FakeSyncStore
@@ -100,6 +101,27 @@ class SettingsViewModelTest {
         advanceUntilIdle()
         assertEquals(AppLanguage.ENGLISH, viewModel.state.value.settings.language)
         assertNull(viewModel.state.value.sheet)
+    }
+
+    /**
+     * Al entrar en Ajustes el interruptor del cerrojo se encendia solo, con su animacion, porque
+     * el primer valor del flujo llegaba despues de pintar. Lo que se ve no es un dato cargando:
+     * es el valor por defecto cambiando a la vista, y pasaba en cada visita.
+     *
+     * Con los ajustes del telefono ya leidos, el estado inicial trae el bueno: **antes** de
+     * avanzar el reloj, o sea antes de que el flujo emita nada.
+     */
+    @Test
+    fun `it opens with the lock the phone already reported, without waiting for the flow`() = runTest {
+        val dependencies = FakeSettingsDependencies.working()
+        dependencies.devicePreferences.set(DeviceSettings(lockEnabled = true))
+
+        val viewModel = SettingsViewModel(dependencies)
+
+        assertTrue(
+            viewModel.state.value.device.lockEnabled,
+            "la pantalla empezo por el valor por defecto y lo cambio a la vista",
+        )
     }
 
     /**

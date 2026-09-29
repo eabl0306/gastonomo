@@ -1,6 +1,8 @@
 package com.bahoque.gastonomo.feature.settings
 
 import com.bahoque.gastonomo.core.application.port.SyncStore
+import com.bahoque.gastonomo.core.application.state.DevicePreferences
+import com.bahoque.gastonomo.core.application.state.UserPreferences
 import com.bahoque.gastonomo.core.application.usecase.auth.ChangePassword
 import com.bahoque.gastonomo.core.application.usecase.auth.LoadProfile
 import com.bahoque.gastonomo.core.application.usecase.auth.SetUpLocalLock
@@ -44,6 +46,15 @@ interface SettingsDependencies {
     val setUpLocalLock: SetUpLocalLock
 
     val observeDeviceSettings: ObserveDeviceSettings
+
+    /**
+     * Lo que ya se sabe al abrir la pantalla, para no empezar por los valores por defecto y
+     * cambiarlos a la vista. El cerrojo sale de aqui, no del primer valor del flujo.
+     */
+    val devicePreferences: DevicePreferences
+
+    /** Lo mismo para la moneda principal y el idioma, que el tema ya tiene leidos. */
+    val preferences: UserPreferences
 
     /** Solo para el conteo de la fila "Categorias": la pantalla de Categorias es otra feature. */
     val loadCategories: LoadCategories

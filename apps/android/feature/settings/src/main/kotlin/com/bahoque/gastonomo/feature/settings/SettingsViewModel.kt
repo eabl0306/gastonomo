@@ -22,7 +22,20 @@ import kotlinx.coroutines.launch
 class SettingsViewModel(private val dependencies: SettingsDependencies) : ViewModel() {
 
     private val loader = SettingsLoader(dependencies)
-    private val mutableState = MutableStateFlow(SettingsUiState())
+
+    /**
+     * La pantalla arranca con lo que la aplicacion ya sabe, no con los valores por defecto.
+     *
+     * El cerrojo y los ajustes de la cuenta estan leidos desde el arranque, y su primer valor
+     * llegaba un instante despues de pintar: se veia el interruptor del cerrojo encenderse solo
+     * con su animacion, y la moneda cambiar, cada vez que se entraba en Ajustes.
+     */
+    private val mutableState = MutableStateFlow(
+        SettingsUiState(
+            device = dependencies.devicePreferences.settings.value,
+            settings = dependencies.preferences.settings.value,
+        ),
+    )
 
     val state: StateFlow<SettingsUiState> = mutableState.asStateFlow()
 

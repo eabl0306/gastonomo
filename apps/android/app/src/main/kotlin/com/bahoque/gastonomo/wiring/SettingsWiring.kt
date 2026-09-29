@@ -26,6 +26,8 @@ internal fun settingsDependencies(
         override val changePassword = useCases.changePassword
         override val setUpLocalLock = useCases.setUpLocalLock
         override val observeDeviceSettings = useCases.observeDeviceSettings
+        override val devicePreferences = useCases.devicePreferences
+        override val preferences = useCases.preferences
         override val loadCategories = useCases.loadCategories
         override val observePendingWrites = useCases.observePendingWrites
         override val correctPendingWrite = useCases.correctPendingWrite
