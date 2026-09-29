@@ -5,6 +5,8 @@ import com.bahoque.gastonomo.core.application.port.CategoryGateway
 import com.bahoque.gastonomo.core.application.port.ChangeGateway
 import com.bahoque.gastonomo.core.application.port.CurrencyGateway
 import com.bahoque.gastonomo.core.application.port.SettingsGateway
+import com.bahoque.gastonomo.core.application.state.DevicePreferences
+import com.bahoque.gastonomo.core.application.state.UserPreferences
 import com.bahoque.gastonomo.core.application.usecase.auth.ChangePassword
 import com.bahoque.gastonomo.core.application.usecase.auth.LoadProfile
 import com.bahoque.gastonomo.core.application.usecase.auth.SetUpLocalLock
@@ -59,7 +61,9 @@ internal class FakeSettingsDependencies(
     override val signOut = SignOut(authGateway, FakeSessionStore(), localLock)
     override val changePassword = ChangePassword(authGateway)
     override val setUpLocalLock = SetUpLocalLock(localLock, deviceSettings)
-    override val observeDeviceSettings = ObserveDeviceSettings(deviceSettings)
+    override val devicePreferences = DevicePreferences()
+    override val preferences = UserPreferences()
+    override val observeDeviceSettings = ObserveDeviceSettings(deviceSettings, devicePreferences)
     override val loadCategories = LoadCategories(categoryGateway)
     override val observePendingWrites = ObservePendingWrites(pendingGateway)
     override val correctPendingWrite = CorrectPendingWrite(pendingGateway)

@@ -1,5 +1,6 @@
 package com.bahoque.gastonomo
 
+import com.bahoque.gastonomo.core.application.state.DevicePreferences
 import com.bahoque.gastonomo.core.application.state.UserPreferences
 import com.bahoque.gastonomo.core.application.usecase.auth.ChangePassword
 import com.bahoque.gastonomo.core.application.usecase.auth.LoadProfile
@@ -46,7 +47,8 @@ import com.bahoque.gastonomo.core.application.usecase.sync.RetryPendingWrites
 internal class UseCases(
     gateways: Gateways,
     devices: DeviceAdapters,
-    preferences: UserPreferences,
+    /** Los ajustes de la cuenta ya leidos: el tema los aplica y Ajustes arranca con ellos. */
+    val preferences: UserPreferences,
 ) {
 
     val signIn = SignIn(gateways.auth, devices.sessionStore)
@@ -77,7 +79,14 @@ internal class UseCases(
 
     val loadSettings = LoadSettings(gateways.settings, preferences)
     val updateSettings = UpdateSettings(gateways.settings, preferences)
-    val observeDeviceSettings = ObserveDeviceSettings(devices.deviceSettings)
+
+    /**
+     * Los ajustes de este telefono ya leidos, para que una pantalla que llegue despues no
+     * empiece con los valores por defecto. Los rellena [observeDeviceSettings] solo.
+     */
+    val devicePreferences = DevicePreferences()
+
+    val observeDeviceSettings = ObserveDeviceSettings(devices.deviceSettings, devicePreferences)
     val setHideAmounts = SetHideAmounts(devices.deviceSettings)
 
     val loadCurrencyCatalog = LoadCurrencyCatalog(gateways.currencies)
