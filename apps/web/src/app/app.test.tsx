@@ -138,6 +138,26 @@ describe('App', () => {
     expect(await screen.findByRole('dialog', { name: 'Dictar' })).toBeInTheDocument();
   });
 
+  /**
+   * "Editar" tiene que **sustituir** al dictado en la pila: si se apilara, volver atras desde
+   * el formulario reabriria el modal con el borrador ya editado.
+   */
+  it('editar un dictado abre el formulario relleno y deja de estar el modal', async () => {
+    renderApp(true, '/dictar');
+    await userEvent.type(
+      await screen.findByRole('textbox', { name: 'Lo que quieres registrar' }),
+      'Gasté 45 mil en almuerzo',
+    );
+    await userEvent.click(screen.getByRole('button', { name: 'Interpretar' }));
+    await userEvent.click(await screen.findByRole('button', { name: /Editar/u }));
+
+    expect(await screen.findByRole('heading', { name: 'Nuevo movimiento' })).toBeInTheDocument();
+    expect(
+      screen.queryByRole('dialog', { name: /Revisa antes de guardar/u }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: 'Importe' })).toHaveValue('45.000');
+  });
+
   it('crear cuenta y recuperar la contrasena tienen su propia direccion', () => {
     renderApp(false, '/register');
     expect(screen.getByRole('heading', { name: 'Crea tu cuenta' })).toBeInTheDocument();

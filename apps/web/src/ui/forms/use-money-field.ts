@@ -10,6 +10,8 @@ import type { CurrencyCode } from '../../domain/money/currency';
 import type { ExchangeRates } from '../../domain/money/exchange-rates';
 import { parseAmount } from '../format/amount-input';
 
+import type { MoneyPrefill } from './prefill';
+
 export interface MoneyField {
   readonly state: MoneyFieldState;
   readonly view: MoneyFieldView;
@@ -24,9 +26,20 @@ export interface MoneyField {
  *
  * Cambiar de moneda **tira la equivalencia tecleada**: la que habia era para la moneda
  * anterior, y dejarla guardaria una equivalencia que no se corresponde con nada.
+ *
+ * Con [prefill] arranca relleno, que es lo que hace "Editar" en el dictado. La equivalencia
+ * arranca siempre en null: la que corresponda la calcula la tasa de hoy.
  */
-export function useMoneyField(display: CurrencyCode, rates: ExchangeRates): MoneyField {
-  const [state, setState] = useState<MoneyFieldState>(() => emptyMoneyField(display));
+export function useMoneyField(
+  display: CurrencyCode,
+  rates: ExchangeRates,
+  prefill?: MoneyPrefill,
+): MoneyField {
+  const [state, setState] = useState<MoneyFieldState>(() =>
+    prefill === undefined
+      ? emptyMoneyField(display)
+      : { amount: prefill.amount, currency: prefill.currency, conversion: null },
+  );
   const view = useMemo(
     () =>
       viewOfMoneyField({

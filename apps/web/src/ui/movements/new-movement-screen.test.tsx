@@ -13,6 +13,7 @@ import {
 import { SAMPLE_MOVEMENTS, SAMPLE_TODAY } from '../../infrastructure/memory/sample-ledger';
 import { AccountProvider } from '../account/account-context';
 import { TodayProvider } from '../clock/today-context';
+import type { MovementPrefill } from '../forms/prefill';
 import { PeriodProvider } from '../period/period-context';
 
 import { NewMovementScreen } from './new-movement-screen';
@@ -23,7 +24,7 @@ interface Sent {
   readonly key: string;
 }
 
-function renderForm(sent: Sent[] = [], onSaved = vi.fn()): void {
+function renderForm(sent: Sent[] = [], onSaved = vi.fn(), prefill?: MovementPrefill): void {
   const currencies = createMemoryCurrencyGateway();
   const first = SAMPLE_MOVEMENTS[0]!;
   const ports: NewMovementPorts = {
@@ -40,7 +41,7 @@ function renderForm(sent: Sent[] = [], onSaved = vi.fn()): void {
     <AccountProvider currencies={currencies} settings={createMemorySettingsGateway()}>
       <TodayProvider clock={fixedClock(SAMPLE_TODAY)}>
         <PeriodProvider>
-          <NewMovementScreen onClose={vi.fn()} onSaved={onSaved} ports={ports} />
+          <NewMovementScreen onClose={vi.fn()} onSaved={onSaved} ports={ports} prefill={prefill} />
         </PeriodProvider>
       </TodayProvider>
     </AccountProvider>,
@@ -109,6 +110,34 @@ describe('Nuevo movimiento', () => {
     expect(screen.getByText('Equivale a (COP)')).toBeInTheDocument();
     expect(screen.getByRole('textbox', { name: 'Equivalencia en COP' })).toHaveValue('560.000');
     expect(screen.getByText(/Tasa sugerida: 1 USD = 4.000 COP/u)).toBeInTheDocument();
+  });
+
+  /**
+   * Es lo que hace "Editar" en el dictado: el formulario arranca con lo que la API entendio,
+   * asi que un borrador casi bueno se corrige sin volver a teclearlo todo.
+   */
+  it('con prefill arranca relleno y listo para guardar', async () => {
+    const sent: Sent[] = [];
+    renderForm(sent, vi.fn(), {
+      kind: 'in',
+      categoryId: 'c3',
+      note: 'Diseño web',
+      occurredOn: '2026-09-20',
+      amount: '560000',
+      currency: 'COP' as MovementPrefill['currency'],
+    });
+
+    expect(screen.getByRole('textbox', { name: 'Importe' })).toHaveValue('560.000');
+    expect(screen.getByRole('tab', { name: /Ingreso/u })).toHaveAttribute('aria-selected', 'true');
+    expect(screen.getByRole('textbox', { name: /Nota/u })).toHaveValue('Diseño web');
+
+    await userEvent.click(screen.getByRole('button', { name: 'Guardar movimiento' }));
+    expect(sent[0]?.draft).toMatchObject({
+      kind: 'in',
+      categoryId: 'c3',
+      note: 'Diseño web',
+      occurredOn: '2026-09-20',
+    });
   });
 
   it('avisa al guardar con el tipo que se guardo', async () => {

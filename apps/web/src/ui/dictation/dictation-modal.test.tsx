@@ -34,6 +34,7 @@ function renderModal(
   overrides: Partial<DictationModalPorts> = {},
   sent: Sent[] = [],
   onSaved = vi.fn(),
+  onEdit = vi.fn(),
 ): void {
   const ports: DictationModalPorts = {
     dictation: createMemoryDictationGateway(),
@@ -54,7 +55,7 @@ function renderModal(
         currencies={createMemoryCurrencyGateway()}
         settings={createMemorySettingsGateway()}
       >
-        <DictationModal onClose={vi.fn()} onSaved={onSaved} ports={ports} />
+        <DictationModal onClose={vi.fn()} onEdit={onEdit} onSaved={onSaved} ports={ports} />
       </AccountProvider>
     </TodayProvider>,
   );
@@ -127,6 +128,47 @@ describe('Dictar', () => {
     });
     expect(sent[0]?.key).not.toBe('');
     expect(onSaved).toHaveBeenCalled();
+  });
+
+  /** Un borrador casi bueno se salva editandolo, sin volver a teclear todo. */
+  it('Editar avisa con el borrador para abrir el formulario relleno', async () => {
+    const onEdit = vi.fn();
+    renderModal({}, [], vi.fn(), onEdit);
+    await userEvent.type(
+      screen.getByRole('textbox', { name: 'Lo que quieres registrar' }),
+      'Gasté 45 mil en almuerzo',
+    );
+    await userEvent.click(screen.getByRole('button', { name: 'Interpretar' }));
+    await userEvent.click(await screen.findByRole('button', { name: /Editar/u }));
+
+    expect(onEdit).toHaveBeenCalledWith(SAMPLE_DRAFT);
+  });
+
+  /** Ofrecer "Dictar de nuevo" donde no hay microfono seria un callejon sin salida. */
+  it('sin microfono no se ofrece dictar de nuevo', async () => {
+    renderModal();
+    await userEvent.type(screen.getByRole('textbox', { name: 'Lo que quieres registrar' }), 'algo');
+    await userEvent.click(screen.getByRole('button', { name: 'Interpretar' }));
+    await screen.findByRole('button', { name: /Editar/u });
+
+    expect(screen.queryByRole('button', { name: /Dictar de nuevo/u })).not.toBeInTheDocument();
+  });
+
+  it('con microfono, dictar de nuevo vuelve a escuchar', async () => {
+    let listener: SpeechListener | null = null;
+    const speech: SpeechToText = {
+      available: true,
+      listen: (_language: string, handlers: SpeechListener) => {
+        listener = handlers;
+        return { stop: () => undefined, cancel: () => undefined };
+      },
+    };
+    renderModal({ speech });
+    listener!.onFinished('Gasté 45 mil en almuerzo');
+    await screen.findByRole('button', { name: /Editar/u });
+
+    await userEvent.click(screen.getByRole('button', { name: /Dictar de nuevo/u }));
+    expect(await screen.findByText('Te escucho…')).toBeInTheDocument();
   });
 
   it('una cuenta sin permiso recibe 404 y se ve como un fallo', async () => {

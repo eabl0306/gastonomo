@@ -7,6 +7,7 @@ import { monetaryAmountOf } from '../../application/state/money-field';
 import type { Category, MovementKind } from '../../domain/ledger/category';
 import type { CurrencyCode } from '../../domain/money/currency';
 import type { ExchangeRates } from '../../domain/money/exchange-rates';
+import type { MovementPrefill } from '../forms/prefill';
 import { useCategories } from '../forms/use-categories';
 import { useIdempotencyKey } from '../forms/use-idempotency-key';
 import { useMoneyField, type MoneyField } from '../forms/use-money-field';
@@ -40,6 +41,8 @@ export interface NewMovementInput {
   readonly rates: ExchangeRates;
   readonly today: string;
   readonly onSaved: (kind: MovementKind) => void;
+  /** Con que arranca el formulario. Lo rellena "Editar" en el dictado. */
+  readonly prefill?: MovementPrefill | undefined;
 }
 
 /**
@@ -50,13 +53,15 @@ export interface NewMovementInput {
  * no se ve.
  */
 export function useNewMovement(input: NewMovementInput): NewMovementState {
-  const money = useMoneyField(input.display, input.rates);
+  const { prefill } = input;
+  const start = startOf(prefill, input.today);
+  const money = useMoneyField(input.display, input.rates, prefill);
   const idempotencyKey = useIdempotencyKey();
   const categories = useCategories(input.ports.categories);
-  const [kind, setKindState] = useState<MovementKind>('out');
-  const [categoryId, setCategory] = useState<string | null>(null);
-  const [occurredOn, setDate] = useState(input.today);
-  const [note, setNote] = useState('');
+  const [kind, setKindState] = useState<MovementKind>(start.kind);
+  const [categoryId, setCategory] = useState<string | null>(start.categoryId);
+  const [occurredOn, setDate] = useState(start.occurredOn);
+  const [note, setNote] = useState(start.note);
   const { saving, error, save: send } = useSave(useSavedHandler(input.onSaved, kind));
 
   const setKind = useCallback((next: MovementKind) => {
@@ -97,6 +102,22 @@ export function useNewMovement(input: NewMovementInput): NewMovementState {
     setDate,
     setNote,
     save,
+  };
+}
+
+/** Con que arranca el formulario: vacio, o con lo que trajo el dictado. */
+function startOf(
+  prefill: MovementPrefill | undefined,
+  today: string,
+): { kind: MovementKind; categoryId: string | null; occurredOn: string; note: string } {
+  if (prefill === undefined) {
+    return { kind: 'out', categoryId: null, occurredOn: today, note: '' };
+  }
+  return {
+    kind: prefill.kind,
+    categoryId: prefill.categoryId,
+    occurredOn: prefill.occurredOn,
+    note: prefill.note,
   };
 }
 

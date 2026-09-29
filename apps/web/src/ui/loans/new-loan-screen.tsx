@@ -10,6 +10,7 @@ import { useToday } from '../clock/today-context';
 import { messageOf } from '../common/blocks';
 import { AmountField } from '../forms/amount-field';
 import { FormField, FormLayout, SaveButton, SegmentedTabs } from '../forms/form-chrome';
+import type { LoanPrefill } from '../forms/prefill';
 
 import { useNewLoan, type NewLoanState } from './use-new-loan';
 
@@ -28,10 +29,12 @@ export function NewLoanScreen({
   gateway,
   onClose,
   onSaved,
+  prefill,
 }: {
   gateway: LoanGateway;
   onClose: () => void;
   onSaved: () => void;
+  prefill?: LoanPrefill | undefined;
 }): ReactElement {
   const today = useToday();
   const { settings, catalog, rates } = useAccount();
@@ -41,6 +44,7 @@ export function NewLoanScreen({
     rates,
     today,
     onSaved,
+    prefill,
   });
   return (
     <FormLayout

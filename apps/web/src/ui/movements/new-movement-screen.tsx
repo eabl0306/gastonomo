@@ -10,6 +10,7 @@ import { messageOf } from '../common/blocks';
 import { AmountField } from '../forms/amount-field';
 import { CategoryGrid } from '../forms/category-grid';
 import { FormField, FormLayout, SaveButton, SegmentedTabs } from '../forms/form-chrome';
+import type { MovementPrefill } from '../forms/prefill';
 
 import { useNewMovement, type NewMovementPorts, type NewMovementState } from './use-new-movement';
 
@@ -28,10 +29,12 @@ export function NewMovementScreen({
   ports,
   onClose,
   onSaved,
+  prefill,
 }: {
   ports: NewMovementPorts;
   onClose: () => void;
   onSaved: (kind: MovementKind) => void;
+  prefill?: MovementPrefill | undefined;
 }): ReactElement {
   const today = useToday();
   const { settings, catalog, rates } = useAccount();
@@ -41,6 +44,7 @@ export function NewMovementScreen({
     rates,
     today,
     onSaved,
+    prefill,
   });
   return (
     <FormLayout

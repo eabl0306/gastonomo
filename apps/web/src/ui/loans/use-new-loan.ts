@@ -6,6 +6,7 @@ import { monetaryAmountOf } from '../../application/state/money-field';
 import type { LoanDirection } from '../../domain/ledger/loan';
 import type { CurrencyCode } from '../../domain/money/currency';
 import type { ExchangeRates } from '../../domain/money/exchange-rates';
+import type { LoanPrefill } from '../forms/prefill';
 import { useIdempotencyKey } from '../forms/use-idempotency-key';
 import { useMoneyField, type MoneyField } from '../forms/use-money-field';
 import { useSave } from '../forms/use-save';
@@ -32,6 +33,24 @@ export interface NewLoanInput {
   readonly rates: ExchangeRates;
   readonly today: string;
   readonly onSaved: () => void;
+  /** Con que arranca el formulario. Lo rellena "Editar" en el dictado. */
+  readonly prefill?: LoanPrefill | undefined;
+}
+
+/** Con que arranca el formulario: vacio, o con lo que trajo el dictado. */
+function startOf(
+  prefill: LoanPrefill | undefined,
+  today: string,
+): { direction: LoanDirection; person: string; openedOn: string; note: string } {
+  if (prefill === undefined) {
+    return { direction: 'lent', person: '', openedOn: today, note: '' };
+  }
+  return {
+    direction: prefill.direction,
+    person: prefill.person,
+    openedOn: prefill.openedOn,
+    note: prefill.note,
+  };
 }
 
 /**
@@ -41,12 +60,14 @@ export interface NewLoanInput {
  * y la API lo rechazaria de todas formas.
  */
 export function useNewLoan(input: NewLoanInput): NewLoanState {
-  const money = useMoneyField(input.display, input.rates);
+  const { prefill } = input;
+  const start = startOf(prefill, input.today);
+  const money = useMoneyField(input.display, input.rates, prefill);
   const idempotencyKey = useIdempotencyKey();
-  const [direction, setDirection] = useState<LoanDirection>('lent');
-  const [person, setPerson] = useState('');
-  const [openedOn, setDate] = useState(input.today);
-  const [note, setNote] = useState('');
+  const [direction, setDirection] = useState<LoanDirection>(start.direction);
+  const [person, setPerson] = useState(start.person);
+  const [openedOn, setDate] = useState(start.openedOn);
+  const [note, setNote] = useState(start.note);
   const { saving, error, save: send } = useSave(input.onSaved);
 
   const canSave = money.view.valid && person.trim() !== '' && !saving;

@@ -1,7 +1,7 @@
 import type { ReactElement } from 'react';
 
 import { localeOf } from '../../domain/account/settings';
-import { isComplete } from '../../domain/dictation/draft';
+import { isComplete, type DictationDraft } from '../../domain/dictation/draft';
 import { useAccount } from '../account/account-context';
 import { Icon, Notice } from '../auth/auth-chrome';
 import { useToday } from '../clock/today-context';
@@ -25,10 +25,13 @@ export function DictationModal({
   ports,
   onClose,
   onSaved,
+  onEdit,
 }: {
   ports: DictationModalPorts;
   onClose: () => void;
   onSaved: () => void;
+  /** Abre el formulario relleno con lo que se entendio, en lugar del dictado. */
+  onEdit: (draft: DictationDraft) => void;
 }): ReactElement {
   const today = useToday();
   const { settings, rates } = useAccount();
@@ -41,7 +44,7 @@ export function DictationModal({
   });
   return (
     <Sheet onClose={onClose} title={titleOf(state)}>
-      <Body confirm={confirm} state={state} />
+      <Body confirm={confirm} onEdit={onEdit} state={state} />
       {state.error === null ? null : (
         <Notice icon="error" tone="error">
           {messageOf(state.error)}
@@ -59,9 +62,11 @@ function titleOf(state: DictationState): string {
 function Body({
   state,
   confirm,
+  onEdit,
 }: {
   state: DictationState;
   confirm: ReturnType<typeof useConfirmDraft>;
+  onEdit: (draft: DictationDraft) => void;
 }): ReactElement {
   const { settings, rates } = useAccount();
   const phase = state.phase;
@@ -89,11 +94,46 @@ function Body({
       >
         {confirm.saving ? 'Guardando…' : 'Guardar'}
       </button>
-      <button className="g-dictation__redo" onClick={state.toTyping} type="button">
-        <Icon name="edit" />
-        Escribirlo otra vez
-      </button>
+      <ReviewActions draft={phase.draft} onEdit={onEdit} state={state} />
     </>
+  );
+}
+
+/**
+ * Lo que se puede hacer con el borrador aparte de guardarlo.
+ *
+ * "Editar" abre el formulario **relleno** con lo que la API entendio, que es lo que salva un
+ * borrador casi bueno sin tener que volver a teclearlo todo. "Dictar de nuevo" solo sale si el
+ * navegador puede: ofrecerlo donde no hay microfono seria un callejon sin salida.
+ */
+function ReviewActions({
+  draft,
+  state,
+  onEdit,
+}: {
+  draft: DictationDraft;
+  state: DictationState;
+  onEdit: (draft: DictationDraft) => void;
+}): ReactElement {
+  return (
+    <div className="g-dictation__review-actions">
+      <button
+        className="g-dictation__secondary"
+        onClick={() => {
+          onEdit(draft);
+        }}
+        type="button"
+      >
+        <Icon name="edit" />
+        Editar
+      </button>
+      {state.canDictate ? (
+        <button className="g-dictation__secondary" onClick={state.startListening} type="button">
+          <Icon name="mic" />
+          Dictar de nuevo
+        </button>
+      ) : null}
+    </div>
   );
 }
 

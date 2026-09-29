@@ -1,11 +1,12 @@
 import type { ReactElement } from 'react';
-import { useNavigate, useParams } from 'react-router';
+import { useLocation, useNavigate, useParams } from 'react-router';
 
 import type { PasswordResetGateway } from '../application/ports/password-reset-gateway';
 import { ResetPasswordScreen } from '../ui/auth/reset-password-screen';
 import { CategoriesScreen } from '../ui/categories/categories-screen';
 import { DictationModal } from '../ui/dictation/dictation-modal';
 import { ExportScreen } from '../ui/export/export-screen';
+import { prefillOf, type PrefillState } from '../ui/forms/prefill';
 import { HomeScreen } from '../ui/home/home-screen';
 import { LoanDetailScreen } from '../ui/loans/loan-detail-screen';
 import { LoansScreen } from '../ui/loans/loans-screen';
@@ -85,10 +86,11 @@ export function MovementsRoute({ container }: { container: Container }): ReactEl
  */
 export function NewMovementRoute({ container }: { container: Container }): ReactElement {
   const navigate = useNavigate();
+  const prefill = usePrefill().movement;
   const leave = (): void => {
     void navigate(ROUTES.movements, { replace: true });
   };
-  return <NewMovementScreen onClose={leave} onSaved={leave} ports={container} />;
+  return <NewMovementScreen onClose={leave} onSaved={leave} ports={container} prefill={prefill} />;
 }
 
 export function LoansRoute({ container }: { container: Container }): ReactElement {
@@ -107,10 +109,19 @@ export function LoansRoute({ container }: { container: Container }): ReactElemen
 
 export function NewLoanRoute({ container }: { container: Container }): ReactElement {
   const navigate = useNavigate();
+  const prefill = usePrefill().loan;
   const leave = (): void => {
     void navigate(ROUTES.loans, { replace: true });
   };
-  return <NewLoanScreen gateway={container.loans} onClose={leave} onSaved={leave} />;
+  return (
+    <NewLoanScreen gateway={container.loans} onClose={leave} onSaved={leave} prefill={prefill} />
+  );
+}
+
+/** Lo que el dictado dejo en el estado de la navegacion, o nada si se entro por el boton. */
+function usePrefill(): PrefillState {
+  const location = useLocation();
+  return (location.state as PrefillState | null) ?? {};
 }
 
 export function LoanDetailRoute({ container }: { container: Container }): ReactElement {
@@ -166,6 +177,13 @@ export function DictateRoute({ container }: { container: Container }): ReactElem
     <DictationModal
       onClose={() => {
         void navigate(-1);
+      }}
+      // `replace`: el formulario **sustituye** al dictado en la pila. Si se apilara, volver
+      // atras desde el formulario reabriria el modal con el borrador ya editado.
+      onEdit={(draft) => {
+        const prefill = prefillOf(draft);
+        const to = prefill.movement === undefined ? ROUTES.newLoan : ROUTES.newMovement;
+        void navigate(to, { replace: true, state: prefill });
       }}
       onSaved={() => {
         void navigate(ROUTES.movements, { replace: true });
