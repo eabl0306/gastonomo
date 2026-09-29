@@ -1,7 +1,8 @@
 package com.bahoque.gastonomo.core.designsystem.component
 
-import android.app.Activity
 import android.app.DatePickerDialog
+import android.content.Context
+import android.view.ContextThemeWrapper
 import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -13,9 +14,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.TextStyle
@@ -42,10 +45,16 @@ import java.time.ZoneId
  * )
  * ```
  *
- * El selector se abre desde la **actividad**, no desde `LocalContext`. Un dialogo del sistema
- * necesita el token de ventana de una actividad, y `LocalContext` en esta aplicacion es un
- * contexto de configuracion (lo pone el tema para el idioma de Ajustes), que no lo tiene:
- * tocar el campo cerraba la aplicacion con `BadTokenException`.
+ * El selector necesita las dos mitades del contexto y por eso se construye a mano.
+ *
+ * De la **actividad** sale el token de ventana: sin el, un dialogo del sistema no se puede
+ * ensenar y tocar el campo cerraba la aplicacion con `BadTokenException`. Del tema sale la
+ * **configuracion**, que lleva el idioma elegido en Ajustes: sin ella el calendario sale en el
+ * idioma del telefono, en ingles dentro de una aplicacion en castellano.
+ *
+ * `LocalContext` no sirve: es un contexto de configuracion y no lleva a ninguna actividad. La
+ * actividad sola tampoco: lleva el idioma del sistema. Un `ContextThemeWrapper` sobre la
+ * actividad con la configuracion encima tiene las dos cosas.
  *
  * @param compact la variante del sheet de rango: 50 de alto, radio 14 y label mas pequeno.
  */
@@ -60,6 +69,10 @@ fun GastonomoDateField(
     compact: Boolean = false,
 ) {
     val activity = LocalActivity.current
+    val configuration = LocalConfiguration.current
+    val dialogContext = remember(activity, configuration) {
+        activity?.let { ContextThemeWrapper(it, 0).apply { applyOverrideConfiguration(configuration) } }
+    }
     val look = lookOf(compact)
     Column(modifier = modifier.fillMaxWidth()) {
         GastonomoText(
@@ -74,7 +87,7 @@ fun GastonomoDateField(
             // Sin actividad no hay donde ensenar el dialogo. No deberia pasar dentro de la
             // aplicacion; si pasara, el campo no hace nada en vez de cerrarla.
             onClick = {
-                activity?.let { openPicker(it, DateRequest(value, minDate, maxDate), onValueChange) }
+                dialogContext?.let { openPicker(it, DateRequest(value, minDate, maxDate), onValueChange) }
             },
         )
     }
@@ -151,9 +164,9 @@ private data class DateRequest(
     val maximum: LocalDate?,
 )
 
-private fun openPicker(activity: Activity, request: DateRequest, onPick: (LocalDate) -> Unit) {
+private fun openPicker(context: Context, request: DateRequest, onPick: (LocalDate) -> Unit) {
     val dialog = DatePickerDialog(
-        activity,
+        context,
         { _, year, monthIndex, dayOfMonth -> onPick(LocalDate.of(year, monthIndex + 1, dayOfMonth)) },
         request.value.year,
         request.value.monthValue - 1,
