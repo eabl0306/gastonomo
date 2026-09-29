@@ -56,7 +56,7 @@ framework, ni HTTP, ni SQL, ni React, ni Android. Los detalles estan en
   cambia con el idioma de la cuenta, pero no hay traducciones, y por eso Ajustes no ofrece el
   selector de idioma. Las cadenas en ingles estan escritas en el `values-en` de Android.
 
-- **Android**: un modulo por capa, veinticuatro en total. `core:domain`, `core:application` y
+- **Android**: un modulo por capa, veintitres en total. `core:domain`, `core:application` y
   `core:common` son `kotlin("jvm")` puros, asi que el SDK de Android no esta en su classpath.
   `feature:*` nunca depende de `data:*` ni de otra `feature:*`: las une `:app`, con un fichero
   de cableado por feature en `app/src/main/kotlin/com/bahoque/gastonomo/wiring/`. Lo vigilan
