@@ -43,7 +43,7 @@ pub struct AuthDependencies {
     pub access_tokens: Arc<dyn TokenIssuer>,
     /// Reloj, que usa el middleware para saber si el token caduco.
     pub clock: Arc<dyn Clock>,
-    /// Peticiones permitidas por ventana en login, registro y recuperacion.
+    /// Peticiones permitidas por ventana en los cuatro endpoints limitados.
     pub rate_limit_max_requests: u32,
     /// Tamano de la ventana del limite, en segundos.
     pub rate_limit_window_seconds: u64,
@@ -80,15 +80,17 @@ pub fn public_router(dependencies: &AuthDependencies) -> Router {
         .push(Router::with_path("logout").post(LogoutHandler::new(dependencies.logout.clone())))
         .push(
             Router::with_path("password/forgot")
-                .hoop(limit)
+                .hoop(limit.clone())
                 .post(ForgotPasswordHandler::new(
                     dependencies.forgot_password.clone(),
                 )),
         )
         .push(
-            Router::with_path("password/reset").post(ResetPasswordHandler::new(
-                dependencies.reset_password.clone(),
-            )),
+            Router::with_path("password/reset")
+                .hoop(limit)
+                .post(ResetPasswordHandler::new(
+                    dependencies.reset_password.clone(),
+                )),
         )
 }
 

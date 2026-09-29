@@ -4,7 +4,7 @@ use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use gastonomo_application::error::AppError;
 use gastonomo_application::port::PasswordResetTokenRepository;
-use gastonomo_domain::{PasswordResetToken, PasswordResetTokenId, TokenDigest};
+use gastonomo_domain::{PasswordResetToken, PasswordResetTokenId, TokenDigest, UserId};
 use sqlx::PgPool;
 
 use super::mapping::{database_error, password_reset_token};
@@ -40,6 +40,37 @@ impl PasswordResetTokenRepository for PostgresPasswordResetTokenRepository {
         .await
         .map(|_| ())
         .map_err(|error| database_error("could not insert the password reset token", &error))
+    }
+
+    async fn latest_live_for_user(
+        &self,
+        user: UserId,
+        now: DateTime<Utc>,
+    ) -> Result<Option<PasswordResetToken>, AppError> {
+        let row = sqlx::query(
+            "SELECT id, user_id, token_hash, expires_at, used_at, created_at \
+             FROM password_reset_tokens \
+             WHERE user_id = $1 AND used_at IS NULL AND expires_at > $2 \
+             ORDER BY created_at DESC LIMIT 1",
+        )
+        .bind(user.as_uuid())
+        .bind(now)
+        .fetch_optional(&self.pool)
+        .await
+        .map_err(|error| database_error("could not read the last reset token", &error))?;
+        row.as_ref().map(password_reset_token).transpose()
+    }
+
+    async fn discard_all_for_user(&self, user: UserId) -> Result<(), AppError> {
+        // Acotada por `password_reset_tokens_user_id_idx`, que ya existe. Al
+        // llamarse en cada emision, la tabla se queda en una fila por cuenta y no
+        // hace falta ningun planificador de limpieza.
+        sqlx::query("DELETE FROM password_reset_tokens WHERE user_id = $1")
+            .bind(user.as_uuid())
+            .execute(&self.pool)
+            .await
+            .map(|_| ())
+            .map_err(|error| database_error("could not discard the previous reset tokens", &error))
     }
 
     async fn find_by_digest(

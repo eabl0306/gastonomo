@@ -32,7 +32,7 @@ Prefijo `/v1`. Todo JSON, claves en camelCase.
 | `POST /v1/auth/refresh` | Rota el refresh token y devuelve un par nuevo. | 200 / 401 |
 | `POST /v1/auth/logout` | Revoca el refresh token recibido. Idempotente. | 204 |
 | `POST /v1/auth/password/forgot` | Manda el enlace de recuperacion. | 202 / 429 |
-| `POST /v1/auth/password/reset` | Cambia la contrasena con el token del correo. | 204 / 401 / 422 |
+| `POST /v1/auth/password/reset` | Cambia la contrasena con el token del correo. Invalida los enlaces anteriores de esa cuenta. | 204 / 401 / 422 / 429 |
 | `POST /v1/auth/password/change` | Cambia la contrasena estando dentro. | 204 / 401 / 422 |
 | `GET /v1/me` | Perfil: nombre y correo. | 200 / 401 |
 
@@ -203,7 +203,7 @@ separador de nivel.
 | `GASTONOMO__AUTH__ACCESS_TOKEN_MINUTES` | `15` | Validez del access token |
 | `GASTONOMO__AUTH__REFRESH_TOKEN_DAYS` | `30` | Validez del refresh token |
 | `GASTONOMO__AUTH__RESET_LINK_TEMPLATE` | `http://localhost:5173/reset-password?token={token}` | Enlace del correo. `{token}` se sustituye |
-| `GASTONOMO__AUTH__RATE_LIMIT_MAX_REQUESTS` | `10` | Peticiones por ventana en login, registro y recuperacion |
+| `GASTONOMO__AUTH__RATE_LIMIT_MAX_REQUESTS` | `10` | Peticiones por ventana en los cuatro endpoints publicos que tocan credenciales |
 | `GASTONOMO__AUTH__RATE_LIMIT_WINDOW_SECONDS` | `60` | Tamano de la ventana |
 | `GASTONOMO__MAIL__DRIVER` | `log` | `log` escribe el correo en el log, `smtp` lo envia |
 | `GASTONOMO__MAIL__HOST` | `localhost` | Host SMTP |

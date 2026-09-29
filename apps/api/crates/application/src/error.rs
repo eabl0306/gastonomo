@@ -82,9 +82,12 @@ pub enum AppError {
     #[error("the credentials do not match")]
     InvalidCredentials,
     /// Falta el token, esta caducado o no vale. Se traduce a 401.
+    ///
+    /// El `reason` es para el log y **no viaja en la respuesta**: la capa HTTP lo
+    /// cambia por un texto unico. Escribelo todo lo preciso que quieras.
     #[error("unauthorized: {reason}")]
     Unauthorized {
-        /// Motivo, para la traza y el campo `detail`.
+        /// Motivo, solo para la traza del servidor.
         reason: String,
     },
     /// El recurso no existe, o existe y no es del usuario del token.

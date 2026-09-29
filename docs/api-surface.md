@@ -213,6 +213,10 @@ Prefijo `/v1`. Todo JSON. Errores con `application/problem+json` (RFC 9457).
 ```
 
 `code` solo aparece en los conflictos (409) y `errors` solo en las validaciones (422).
+El `detail` de **todos** los 401 es el mismo texto fijo, a proposito: distinguir un token
+que no existe de uno caducado o ya usado diria si se acerto con uno que existe. El motivo
+real se queda en la traza del servidor.
+
 Los `type` que existen: `validation`, `invalid-credentials`, `unauthorized`,
 `not-found`, `conflict`, `too-many-requests`, `service-unavailable`, `internal-error`,
 `method-not-allowed`, `unsupported-media-type`, `payload-too-large` y `bad-request`.
@@ -236,7 +240,7 @@ POST   /v1/auth/login                200  limitado por frecuencia
 POST   /v1/auth/refresh              200
 POST   /v1/auth/logout               204
 POST   /v1/auth/password/forgot      202  limitado por frecuencia
-POST   /v1/auth/password/reset       204
+POST   /v1/auth/password/reset       204  limitado por frecuencia
 POST   /v1/auth/password/change      204  con access token
 GET    /v1/me                        200  con access token
 
@@ -329,10 +333,18 @@ Detalles que el diseno impone y que estan implementados:
   diferencia es de 1,5 ms.
 - **Caducidad del enlace**: 30 minutos, que es lo que dice la pantalla. El token se
   guarda hasheado y es de un solo uso.
-- **Reenviar** usa el mismo endpoint y esta limitado por frecuencia.
+- **Pedir el enlace otra vez invalida los anteriores**, asi que cada cuenta tiene como
+  mucho uno vivo y guardar un token para reintentar no sirve. Con tres reenvios habia
+  tres enlaces abriendo la misma cuenta media hora cada uno, y el usuario no tenia
+  ninguna pantalla donde verlos ni revocarlos. El correo lo avisa.
+- **Reenviar** usa el mismo endpoint, esta limitado por frecuencia y mata el enlace
+  anterior. Dos peticiones muy seguidas **no** matan nada: la segunda no emite y no manda
+  correo, para que nadie pueda dejar a otro sin recuperar la cuenta pidiendo el enlace en
+  bucle con su correo. Sigue respondiendo 202.
 - Cambiar la contrasena revoca todos los refresh tokens del usuario menos el que venga
   en `refreshToken`, que es el del dispositivo desde el que se hace el cambio.
-- **Limite de peticiones** en `register`, `login` y `password/forgot`: 10 peticiones por
+- **Limite de peticiones** en `register`, `login`, `password/forgot` y `password/reset`:
+  los cuatro endpoints publicos que tocan credenciales. 10 peticiones por
   minuto y cliente, configurable. El cliente se identifica por la **ultima** entrada de
   `X-Forwarded-For`, que es la que pone el proxy de confianza, y por la IP del par si la
   cabecera no viene. Leer la primera entrada dejaba saltarse el limite por completo

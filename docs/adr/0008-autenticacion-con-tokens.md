@@ -87,6 +87,14 @@ identidad), este es el sitio donde cambiarlo.
 
 - `password_reset_tokens` guarda el hash, con 30 minutos de caducidad, y es de un solo
   uso: al usarlo se marca `used_at`.
+- **Emitir uno borra los anteriores de esa cuenta**, asi que solo hay uno vivo a la vez.
+  Sin esto, tocar "reenviar" tres veces dejaba tres enlaces abriendo la misma cuenta, y no
+  hay ninguna pantalla donde verlos ni revocarlos. Como efecto util, la tabla se queda en
+  una fila por cuenta y no hace falta ninguna tarea de limpieza.
+- Dos peticiones **muy seguidas** no borran nada: si hay un enlace vivo emitido hace menos
+  de un minuto, la segunda no emite ni manda correo. Sin esa espera, cualquiera que supiera
+  un correo podia borrar en bucle el enlace que su dueno acababa de recibir y dejarle sin
+  recuperar la cuenta. La respuesta sigue siendo 202, asi que tampoco es un oraculo.
 - `POST /v1/auth/password/forgot` responde **202 con el cuerpo vacio siempre**, exista o
   no el correo.
 - **El envio del correo sale de la peticion a una tarea de fondo.** Con el driver de log
@@ -110,11 +118,20 @@ peticiones que ese hilo llevaba a medias, y un pico de logins simultaneos tumbab
 latencia del resto de la API. Por eso el puerto `PasswordHasher` es asincrono aunque el
 algoritmo no espere a ningun IO: lo necesita para poder salirse del hilo.
 
-### Limite de peticiones en las tres puertas
+### Limite de peticiones en las cuatro puertas
 
-`register`, `login` y `password/forgot` llevan un limite de 10 peticiones por minuto y
-cliente, configurable con `GASTONOMO__AUTH__RATE_LIMIT_MAX_REQUESTS` y
-`RATE_LIMIT_WINDOW_SECONDS`.
+`register`, `login`, `password/forgot` y `password/reset` llevan un limite de 10
+peticiones por minuto y cliente, configurable con
+`GASTONOMO__AUTH__RATE_LIMIT_MAX_REQUESTS` y `RATE_LIMIT_WINDOW_SECONDS`.
+
+El criterio es: endpoint publico que toca credenciales. `register` y `login` prueban
+contrasenas contra un hash de Argon2, `forgot` manda correo, y `reset` cambia una
+contrasena y revoca todas las sesiones sin pedir token de acceso. `refresh` y `logout`
+se quedan fuera porque exigen un refresh token valido en el cuerpo.
+
+Lo que este limite **no** es: una defensa contra adivinar un token. Los tokens opacos
+son 256 bits de CSPRNG; no se adivinan ni con limite ni sin el. Lo que acota es el
+ruido, la carga y el correo.
 
 El cliente se identifica por la **ultima** entrada de `X-Forwarded-For`, y por la IP del
 par si la cabecera no viene. Leer la primera entrada, que es lo que se hizo primero,

@@ -77,11 +77,27 @@ impl Harness {
     }
 
     /// Monta el servicio con los probes de salud dados.
+    #[must_use]
+    pub fn with_probes(probes: Vec<Arc<dyn HealthProbe>>) -> Self {
+        Self::build(probes, NO_RATE_LIMIT)
+    }
+
+    /// Monta el servicio con un limite de peticiones que si se puede alcanzar.
     ///
+    /// El resto de la bateria usa [`NO_RATE_LIMIT`], tan alto que ningun test lo
+    /// roza; sin esto no hay forma de provocar un 429.
+    #[must_use]
+    pub fn with_rate_limit(max_requests: u32) -> Self {
+        Self::build(
+            vec![Arc::new(FakeHealthProbe::healthy("database"))],
+            max_requests,
+        )
+    }
+
     /// El cuerpo se reparte en una funcion por contexto: son siete y todas juntas
     /// pasaban del limite de lineas por funcion.
     #[must_use]
-    pub fn with_probes(probes: Vec<Arc<dyn HealthProbe>>) -> Self {
+    fn build(probes: Vec<Arc<dyn HealthProbe>>, rate_limit_max_requests: u32) -> Self {
         let parts = Parts::new();
         let doubles = Doubles::new(&parts);
         let dictation_parts = dictation::dictation_dependencies(
@@ -92,7 +108,7 @@ impl Harness {
         );
         let service = build_service(RouterDependencies {
             health: health_dependencies(probes),
-            auth: auth_dependencies(&parts),
+            auth: auth_dependencies(&parts, rate_limit_max_requests),
             movements: movement_dependencies(&doubles, &parts),
             loans: loan_dependencies(&doubles, &parts),
             categories: category_dependencies(&doubles, &parts),
@@ -292,7 +308,10 @@ impl Parts {
     }
 }
 
-fn auth_dependencies(parts: &Parts) -> AuthDependencies {
+/// Limite tan alto que ningun test lo alcanza sin querer.
+pub const NO_RATE_LIMIT: u32 = 100;
+
+fn auth_dependencies(parts: &Parts, rate_limit_max_requests: u32) -> AuthDependencies {
     AuthDependencies {
         register: Arc::new(RegisterUser::new(
             parts.session.clone(),
@@ -311,7 +330,7 @@ fn auth_dependencies(parts: &Parts) -> AuthDependencies {
         profile: Arc::new(GetProfile::new(parts.users.clone())),
         access_tokens: parts.session.access_tokens.clone(),
         clock: parts.clock.clone(),
-        rate_limit_max_requests: 100,
+        rate_limit_max_requests,
         rate_limit_window_seconds: 60,
     }
 }

@@ -31,6 +31,7 @@ pub(super) fn reset_mail(
                  Pediste crear una contrasena nueva para tu cuenta de Gastonomo.\n\
                  Abre este enlace: {link}\n\n\
                  Caduca en {minutes} minutos y solo sirve una vez.\n\
+                 Si lo pediste varias veces, solo vale el ultimo enlace.\n\
                  Si no lo pediste, no hace falta que hagas nada.\n"
             ),
         ),
@@ -41,6 +42,7 @@ pub(super) fn reset_mail(
                  You asked to create a new password for your Gastonomo account.\n\
                  Open this link: {link}\n\n\
                  It expires in {minutes} minutes and only works once.\n\
+                 If you asked more than once, only the latest link works.\n\
                  If you did not ask for it, you do not need to do anything.\n"
             ),
         ),

@@ -22,8 +22,8 @@ pub mod value_object;
 pub use auth::{
     MAX_PASSWORD_LENGTH, MIN_PASSWORD_LENGTH, NewPasswordResetToken, NewRefreshToken, NewUser,
     Password, PasswordError, PasswordHash, PasswordResetToken, PasswordResetTokenId,
-    RESET_TOKEN_MINUTES, RefreshToken, RefreshTokenId, StoredRefreshToken, TokenDigest,
-    TokenDigestError, User,
+    RESET_REISSUE_COOLDOWN_SECONDS, RESET_TOKEN_MINUTES, RefreshToken, RefreshTokenId,
+    StoredRefreshToken, TokenDigest, TokenDigestError, User,
 };
 pub use category::{
     CategoryKind, CategoryKindError, DEFAULT_CATEGORIES, DefaultCategory, FALLBACK_CATEGORY_NAME,

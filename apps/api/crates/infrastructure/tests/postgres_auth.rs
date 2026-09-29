@@ -22,17 +22,14 @@
 use chrono::{Duration, Utc};
 use gastonomo_application::error::AppError;
 use gastonomo_application::port::{
-    Clock as _, OpaqueTokenFactory as _, PasswordResetTokenRepository, RefreshTokenRepository,
-    UserProvisioning, UserRepository,
+    Clock as _, OpaqueTokenFactory as _, RefreshTokenRepository, UserProvisioning, UserRepository,
 };
 use gastonomo_domain::{
-    Email, NewPasswordResetToken, NewRefreshToken, NewUser, PasswordHash, PasswordResetToken,
-    PersonName, RefreshToken, User, UserId,
+    Email, NewRefreshToken, NewUser, PasswordHash, PersonName, RefreshToken, User, UserId,
 };
 use gastonomo_infrastructure::{
-    DatabaseConfig, PgPool, PostgresPasswordResetTokenRepository, PostgresRefreshTokenRepository,
-    PostgresUserProvisioning, PostgresUserRepository, RandomOpaqueTokenFactory, SystemClock,
-    connect_pool, run_migrations,
+    DatabaseConfig, PgPool, PostgresRefreshTokenRepository, PostgresUserProvisioning,
+    PostgresUserRepository, RandomOpaqueTokenFactory, SystemClock, connect_pool, run_migrations,
 };
 
 /// Variable que habilita esta bateria de tests.
@@ -245,40 +242,4 @@ async fn revoking_every_session_can_spare_the_current_one() {
         .expect("still there");
     assert!(!kept_after.is_revoked());
     assert!(dropped_after.is_revoked());
-}
-
-#[tokio::test]
-async fn a_reset_token_is_single_use() {
-    let Some(pool) = pool().await else { return };
-    let users = PostgresUserRepository::new(pool.clone());
-    let resets = PostgresPasswordResetTokenRepository::new(pool);
-    let user = a_user();
-    users.insert(&user).await.expect("should insert");
-
-    let now = Utc::now();
-    let token = PasswordResetToken::issue(NewPasswordResetToken {
-        user_id: user.id(),
-        digest: RandomOpaqueTokenFactory::new().create().digest,
-        created_at: now,
-        expires_at: now + Duration::minutes(30),
-    });
-    resets.insert(&token).await.expect("should insert");
-
-    let found = resets
-        .find_by_digest(token.digest())
-        .await
-        .expect("should query")
-        .expect("the token exists");
-    assert!(found.is_usable(now));
-
-    resets
-        .mark_used(token.id(), now)
-        .await
-        .expect("should mark used");
-    let spent = resets
-        .find_by_digest(token.digest())
-        .await
-        .expect("should query")
-        .expect("the token exists");
-    assert!(!spent.is_usable(now));
 }

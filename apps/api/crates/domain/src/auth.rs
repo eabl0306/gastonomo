@@ -10,7 +10,8 @@ pub use credentials::{
     MAX_PASSWORD_LENGTH, MIN_PASSWORD_LENGTH, Password, PasswordError, PasswordHash,
 };
 pub use password_reset_token::{
-    NewPasswordResetToken, PasswordResetToken, PasswordResetTokenId, RESET_TOKEN_MINUTES,
+    NewPasswordResetToken, PasswordResetToken, PasswordResetTokenId,
+    RESET_REISSUE_COOLDOWN_SECONDS, RESET_TOKEN_MINUTES,
 };
 pub use refresh_token::{NewRefreshToken, RefreshToken, RefreshTokenId, StoredRefreshToken};
 pub use token_digest::{TokenDigest, TokenDigestError};

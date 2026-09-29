@@ -43,9 +43,15 @@ async function readMessage(response: Response): Promise<string | null> {
  * Adaptador de salida sobre HTTP.
  *
  * Los dos errores que la API distingue son los dos que la pantalla necesita, y
- * por eso no se mezclan: un **401** es el enlace caducado o ya usado, y no hay
- * nada que corregir en el formulario; un **422** es la contrasena, y el mensaje
- * viene en castellano listo para pintar debajo del campo.
+ * por eso no se mezclan: un **401** es el enlace que ya no vale, y no hay nada que
+ * corregir en el formulario; un **422** es la contrasena, y el mensaje viene en
+ * castellano listo para pintar debajo del campo.
+ *
+ * El endpoint tambien esta limitado por frecuencia, asi que un **429** es
+ * alcanzable. No lleva rama propia porque no le hace falta: la API lo manda como
+ * `problem+json` con su `detail` en castellano, y el saco de abajo ya lo lee. Lo
+ * unico que se pierde es el matiz de que se arregla esperando, y el texto de la
+ * API ya lo dice.
  *
  * Va al mismo origen que la web: la API no manda cabeceras CORS a proposito, y
  * en produccion Caddy sirve `/v1/` bajo el dominio de la web.
