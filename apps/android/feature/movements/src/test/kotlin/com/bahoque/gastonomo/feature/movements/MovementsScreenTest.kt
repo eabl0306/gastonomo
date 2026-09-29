@@ -1,17 +1,20 @@
 package com.bahoque.gastonomo.feature.movements
 
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.bahoque.gastonomo.core.application.state.RangeDraft
 import com.bahoque.gastonomo.core.application.state.TransientMessages
+import com.bahoque.gastonomo.core.navigation.TopLevelDestination
 import com.bahoque.gastonomo.core.screenshot.GASTONOMO_QUALIFIERS_ES
-import com.bahoque.gastonomo.core.screenshot.captureGastonomoScreen
+import com.bahoque.gastonomo.core.screenshot.captureGastonomoTabScreen
 import com.bahoque.gastonomo.core.screenshot.screenshotFile
 import org.junit.Rule
 import org.junit.Test
@@ -30,12 +33,14 @@ class MovementsScreenTest {
 
     @Test
     fun `it renders the whole screen to a png`() {
-        compose.captureGastonomoScreen(SCREENSHOT) {
+        compose.captureGastonomoTabScreen(SCREENSHOT, TopLevelDestination.MOVEMENTS) {
             MovementsScreen(MovementsSamples.list, MovementsActions.NONE)
         }
         val file = screenshotFile(SCREENSHOT)
         assertTrue(file.exists(), "Roborazzi did not write ${file.absolutePath}")
-        compose.onNodeWithText("Movimientos").assertIsDisplayed()
+        // Dos veces: el titulo de la pantalla y la etiqueta de su pestana. Con la captura
+        // dentro del armazon, la barra entra en el arbol y "Movimientos" deja de ser unico.
+        compose.onAllNodesWithText("Movimientos").assertCountEquals(2)
         compose.onNodeWithText("$ 3.250.000").assertIsDisplayed()
         compose.onNodeWithText("$ 328.400").assertIsDisplayed()
         compose.onNodeWithText("+$ 2.921.600").assertIsDisplayed()
@@ -43,7 +48,7 @@ class MovementsScreenTest {
 
     @Test
     fun `the days are grouped and named`() {
-        compose.captureGastonomoScreen("movements-groups") {
+        compose.captureGastonomoTabScreen("movements-groups", TopLevelDestination.MOVEMENTS) {
             MovementsScreen(MovementsSamples.list, MovementsActions.NONE)
         }
         compose.onNodeWithText("Martes 15 sept").assertIsDisplayed()
@@ -53,7 +58,7 @@ class MovementsScreenTest {
 
     @Test
     fun `a movement in another currency shows what was typed`() {
-        compose.captureGastonomoScreen("movements-foreign") {
+        compose.captureGastonomoTabScreen("movements-foreign", TopLevelDestination.MOVEMENTS) {
             MovementsScreen(MovementsSamples.list, MovementsActions.NONE)
         }
         compose.onNodeWithText("Freelance · US$ 140,00").assertIsDisplayed()
@@ -62,7 +67,7 @@ class MovementsScreenTest {
     @Test
     fun `the pills ask for a filter`() {
         val chosen = mutableListOf<MovementFilter>()
-        compose.captureGastonomoScreen("movements-pills") {
+        compose.captureGastonomoTabScreen("movements-pills", TopLevelDestination.MOVEMENTS) {
             MovementsScreen(
                 state = MovementsSamples.list.copy(filter = MovementFilter.EXPENSE),
                 actions = MovementsActions.NONE.copy(onFilter = { chosen += it }),
@@ -74,7 +79,7 @@ class MovementsScreenTest {
 
     @Test
     fun `an empty period says so`() {
-        compose.captureGastonomoScreen("movements-empty") {
+        compose.captureGastonomoTabScreen("movements-empty", TopLevelDestination.MOVEMENTS) {
             MovementsScreen(MovementsSamples.emptyList, MovementsActions.NONE)
         }
         compose.onNodeWithText("No hay movimientos en este periodo.").assertIsDisplayed()
@@ -83,7 +88,7 @@ class MovementsScreenTest {
     @Test
     fun `an error offers to try again`() {
         var retried = 0
-        compose.captureGastonomoScreen("movements-error") {
+        compose.captureGastonomoTabScreen("movements-error", TopLevelDestination.MOVEMENTS) {
             MovementsScreen(
                 state = MovementsSamples.emptyList.copy(error = MovementsError.NETWORK),
                 actions = MovementsActions.NONE.copy(onRetry = { retried++ }),
@@ -99,7 +104,7 @@ class MovementsScreenTest {
         var movements = 0
         var loans = 0
         var dictations = 0
-        compose.captureGastonomoScreen("movements-fab") {
+        compose.captureGastonomoTabScreen("movements-fab", TopLevelDestination.MOVEMENTS) {
             MovementsScreen(
                 state = MovementsSamples.list,
                 actions = MovementsActions.NONE.copy(
@@ -120,7 +125,7 @@ class MovementsScreenTest {
 
     @Test
     fun `the toast of a saved movement is shown over the list`() {
-        compose.captureGastonomoScreen("movements-toast") {
+        compose.captureGastonomoTabScreen("movements-toast", TopLevelDestination.MOVEMENTS) {
             MovementsScreen(
                 state = MovementsSamples.list.copy(
                     toast = TransientMessages.MOVEMENT_SAVED_INCOME,
@@ -133,7 +138,7 @@ class MovementsScreenTest {
 
     @Test
     fun `the range sheet opens over the list`() {
-        compose.captureGastonomoScreen("movements-range-sheet") {
+        compose.captureGastonomoTabScreen("movements-range-sheet", TopLevelDestination.MOVEMENTS) {
             MovementsScreen(
                 state = MovementsSamples.list.copy(
                     rangeDraft = RangeDraft(

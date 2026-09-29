@@ -11,8 +11,10 @@ import com.bahoque.gastonomo.core.designsystem.component.LanguageSheet
 import com.bahoque.gastonomo.core.domain.money.CurrencyCode
 import com.bahoque.gastonomo.core.domain.settings.AppLanguage
 import com.bahoque.gastonomo.core.domain.settings.UserSettings
+import com.bahoque.gastonomo.core.navigation.TopLevelDestination
 import com.bahoque.gastonomo.core.screenshot.GASTONOMO_QUALIFIERS_ES
 import com.bahoque.gastonomo.core.screenshot.captureGastonomoScreen
+import com.bahoque.gastonomo.core.screenshot.captureGastonomoTabScreen
 import com.bahoque.gastonomo.core.screenshot.screenshotFile
 import com.bahoque.gastonomo.core.testing.fake.SampleAuth
 import com.bahoque.gastonomo.core.testing.fake.SampleFinance
@@ -33,7 +35,7 @@ class SettingsScreenshotTest {
 
     @Test
     fun `the settings screen renders to a png`() {
-        compose.captureGastonomoScreen(SETTINGS) {
+        compose.captureGastonomoTabScreen(SETTINGS, TopLevelDestination.SETTINGS) {
             SettingsScreen(state = state(), actions = SettingsActions.NONE, version = "0.1.0")
         }
         assertTrue(screenshotFile(SETTINGS).exists())

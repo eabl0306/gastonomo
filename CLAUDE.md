@@ -68,9 +68,17 @@ framework, ni HTTP, ni SQL, ni React, ni Android. Los detalles estan en
 
   Las 14 pantallas del rediseno estan implementadas. Ademas de las capas hay tres modulos de
   presentacion compartida y dos de utilidades de test: `:core:designsystem` (tokens,
-  componentes y formato de dinero y fechas), `:core:navigation` (las rutas tipadas de las 14
-  pantallas), `:core:testing` (dobles de los puertos, JVM puro) y `:core:screenshot` (captura
-  de composables a PNG desde la JVM). El detalle esta en
+  componentes, el armazon `GastonomoShell` y formato de dinero y fechas), `:core:navigation`
+  (las rutas tipadas de las 14 pantallas y las cuatro pestanas), `:core:testing` (dobles de los
+  puertos, JVM puro) y `:core:screenshot` (captura de composables a PNG desde la JVM).
+
+  **El armazon esta en un solo sitio y las capturas lo usan.** La aplicacion y los tests montan
+  el mismo `GastonomoShell`: contenido con peso arriba, tab bar debajo. Cuando cada uno montaba
+  el suyo, las capturas daban a la pantalla los 844 dp enteros y ensenaban 78 dp que en el
+  telefono tapa la barra; eso escondio que el boton de registro rapido flotaba a 92 dp de ella
+  en vez de a 20. Una pantalla con barra se captura con `captureGastonomoTabScreen`.
+
+  El detalle esta en
   [apps/android/README.md](apps/android/README.md).
 
   Dos reglas que rompen el build y conviene saber antes de escribir una pantalla: **un color,

@@ -8,9 +8,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.junit4.ComposeContentTestRule
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.unit.dp
+import com.bahoque.gastonomo.core.designsystem.component.GastonomoShell
 import com.bahoque.gastonomo.core.designsystem.theme.GastonomoTheme
 import com.bahoque.gastonomo.core.domain.money.CurrencyCode
 import com.bahoque.gastonomo.core.domain.settings.AppLanguage
+import com.bahoque.gastonomo.core.navigation.TopLevelDestination
+import com.bahoque.gastonomo.core.navigation.tabItems
 import com.github.takahirom.roborazzi.captureRoboImage
 import java.io.File
 
@@ -57,6 +60,45 @@ fun ComposeContentTestRule.captureGastonomoScreen(
         }
     }
     onRoot().captureRoboImage(screenshotFile(name).path)
+}
+
+/**
+ * Captura una de las cuatro pantallas con tab bar, **dentro del armazon de la aplicacion**.
+ *
+ * Es la diferencia entre auditar el diseno y auditar una maqueta: [captureGastonomoScreen] da a
+ * la pantalla los 844 dp enteros, y en el telefono los ultimos 78 los ocupa la barra. Con la
+ * pantalla sola se ven filas que el usuario no ve, y lo que flota abajo sale donde no va. Asi se
+ * escondio que el boton de registro rapido estaba a 92 dp de la barra en vez de a 20.
+ *
+ * Las otras diez pantallas no llevan barra y siguen usando [captureGastonomoScreen].
+ *
+ * ```
+ * compose.captureGastonomoTabScreen("home", TopLevelDestination.HOME) {
+ *     HomeScreen(state = HomeSamples.loaded, actions = HomeActions.NONE)
+ * }
+ * ```
+ *
+ * Solo para la pantalla de verdad: una hoja suelta, sin su pantalla detras, sale mejor con
+ * [captureGastonomoScreen]. Con el armazon se veria la barra debajo de un hueco vacio.
+ *
+ * No lleva `displayCurrency` porque ninguna captura lo cambia y con el se pasaba del limite de
+ * parametros. Una pantalla con barra en otra moneda se monta con [captureGastonomoScreen] y un
+ * [GastonomoShell] a mano.
+ */
+fun ComposeContentTestRule.captureGastonomoTabScreen(
+    name: String,
+    tab: TopLevelDestination,
+    language: AppLanguage = AppLanguage.SPANISH,
+    content: @Composable () -> Unit,
+) {
+    captureGastonomoScreen(name, language) {
+        GastonomoShell(
+            tabs = tabItems(),
+            selectedTab = tab.ordinal,
+            onSelectTab = {},
+            content = content,
+        )
+    }
 }
 
 /**

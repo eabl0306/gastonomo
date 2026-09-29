@@ -132,10 +132,23 @@ class HomeScreenScreenshotTest {
 }
 ```
 
+Las cuatro pantallas que llevan tab bar se capturan con `captureGastonomoTabScreen`, que las
+mete en el armazon de verdad, el mismo `GastonomoShell` que monta la aplicacion:
+
+```kotlin
+compose.captureGastonomoTabScreen("home", TopLevelDestination.HOME) { HomeScreen(state = sample) }
+```
+
+Sin eso la pantalla se lleva los 844 dp enteros y la captura ensena 78 dp de contenido que en el
+telefono tapa la barra, ademas de sacar lo que flota abajo donde no va. Asi se escondio que el
+boton de registro rapido estaba a 92 dp de la barra en vez de a 20. Las otras diez pantallas no
+llevan barra y siguen con `captureGastonomoScreen`; una hoja suelta, sin su pantalla detras,
+tambien, porque con el armazon se veria la barra debajo de un hueco vacio.
+
 El `robolectric.properties` del modulo tiene que llevar `graphicsMode=NATIVE`, o la captura
 sale en blanco.
 
-Son 54 imagenes y unos 6 MB, y **no estan versionadas**: lo que Roborazzi compararia depende de
+Son 71 imagenes y unos 8 MB, y **no estan versionadas**: lo que Roborazzi compararia depende de
 las fuentes y de la version de Robolectric de la maquina, asi que una referencia fijada aqui
 daria diferencias en la CI que no son regresiones. La CI las sube como artefacto
 (`android-screenshots`) para poder mirarlas desde un PR. Fijarlas como golden pide antes una

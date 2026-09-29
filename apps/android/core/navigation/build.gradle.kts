@@ -15,11 +15,18 @@ quality {
 }
 
 dependencies {
+    // Las pestanas se componen aqui, asi que hace falta el TabItem y las cadenas del sistema
+    // de diseno. La arista va en este sentido y no al reves: el guardian del grafo pone la
+    // navegacion por fuera del sistema de diseno, y el sistema de diseno no puede conocer las
+    // rutas.
+    api(project(":core:designsystem"))
     // Las rutas son tipos serializables: navigation-compose las necesita en el classpath
     // de quien las declara y de quien las consume.
     api(libs.androidx.navigation.compose)
     implementation(libs.kotlinx.serialization.json)
 
+    // El guardian del grafo permite esta arista: :core:screenshot es soporte de test.
+    testImplementation(project(":core:screenshot"))
     testImplementation(libs.androidx.navigation.testing)
     testImplementation(libs.robolectric)
     testImplementation(libs.androidx.test.core)
