@@ -13,8 +13,11 @@ import {
 import { HealthPanel } from './health-panel';
 
 function renderWith(gateway: HealthGateway): void {
-  render(<App gateway={gateway} />);
+  render(<App gateway={gateway} passwordResets={stubPasswordResets} />);
 }
+
+/** La pantalla de restablecer no entra en estos tests; el doble solo cumple el tipo. */
+const stubPasswordResets = { resetPassword: () => Promise.resolve() };
 
 describe('HealthPanel', () => {
   it('muestra el servicio operativo con sus comprobaciones', async () => {

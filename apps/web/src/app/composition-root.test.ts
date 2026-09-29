@@ -9,9 +9,14 @@ describe('composition root', () => {
     );
   });
 
-  it('cae al puerto 8080 local cuando no hay configuracion', () => {
-    expect(resolveApiUrl({})).toBe('http://localhost:8080');
-    expect(resolveApiUrl({ VITE_API_URL: '   ' })).toBe('http://localhost:8080');
+  /**
+   * Sin configuracion la web pide a su propio origen, que es como se sirve
+   * desplegado: Caddy pone la API bajo el dominio de la web. Poner un host aqui
+   * seria hablar con otro origen, y la API no manda CORS a proposito.
+   */
+  it('sin configuracion pide a su propio origen', () => {
+    expect(resolveApiUrl({})).toBe('');
+    expect(resolveApiUrl({ VITE_API_URL: '   ' })).toBe('');
   });
 
   it('construye un adaptador que cumple el puerto', () => {

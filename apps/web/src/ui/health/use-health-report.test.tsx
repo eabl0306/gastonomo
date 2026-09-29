@@ -31,10 +31,13 @@ function deferredGateway(): {
   };
 }
 
+/** La pantalla de restablecer no entra en estos tests; el doble solo cumple el tipo. */
+const stubPasswordResets = { resetPassword: () => Promise.resolve() };
+
 describe('useHealthReport', () => {
   it('mientras la API no contesta, la pantalla sigue cargando', () => {
     const gateway = deferredGateway();
-    render(<App gateway={gateway} />);
+    render(<App gateway={gateway} passwordResets={stubPasswordResets} />);
 
     expect(screen.getByTestId('health-status')).toHaveTextContent('Consultando la API...');
     expect(screen.getByTestId('health-status')).toHaveAttribute('data-tone', 'loading');
@@ -42,7 +45,7 @@ describe('useHealthReport', () => {
 
   it('descarta la respuesta vieja si se reintenta antes de que llegue', async () => {
     const gateway = deferredGateway();
-    render(<App gateway={gateway} />);
+    render(<App gateway={gateway} passwordResets={stubPasswordResets} />);
     expect(gateway.calls()).toBe(1);
 
     await userEvent.click(screen.getByTestId('health-refresh'));

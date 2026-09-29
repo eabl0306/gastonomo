@@ -1,0 +1,105 @@
+/*
+ * Los tokens del diseno de la web, tal cual salen del prototipo.
+ *
+ * Van como variables CSS y no como objeto de JavaScript porque los usa el CSS de
+ * los componentes, y porque asi el tema se puede leer entero desde el navegador
+ * sin abrir el bundle. Los nombres son los del handoff, no los del uso: `--ink`
+ * es un color, no "el color del texto", y por eso vale igual para un fondo.
+ */
+:root {
+  /* Superficies y texto */
+  --g-bg-app: #f5f2ec;
+  --g-surface: #fff;
+  --g-sheet: #fbf9f5;
+  --g-soft: #ece8df;
+  --g-ink: #1b1a17;
+  --g-muted: #736d62;
+  --g-placeholder: #a9a397;
+
+  /* Lineas */
+  --g-line: #e8e3d9;
+  --g-field-line: #e3ded4;
+  --g-row-line: #f0ece4;
+
+  /* Sobre ink */
+  --g-on-ink: #fff;
+  --g-on-ink-muted: #b9b3a6;
+  --g-on-ink-faint: #8b8578;
+  --g-ink-raised: #2a2925;
+  --g-ink-line: #2f2e2a;
+
+  /* Acento y estados */
+  --g-lime: #d4ef7a;
+  --g-green: #2f8a55;
+  --g-red: #c2412f;
+  --g-amber: #b67a1c;
+  --g-note: #5d584e;
+
+  /* Formas */
+  --g-radius-field: 16px;
+  --g-radius-tile: 11px;
+  --g-radius-panel-tile: 12px;
+  --g-radius-large-tile: 20px;
+  --g-radius-check: 7px;
+  --g-radius-bar: 2px;
+
+  /* Alturas del diseno. No son multiplos de una escala: son medidas fijas. */
+  --g-height-primary: 56px;
+  --g-height-secondary: 54px;
+  --g-height-field: 54px;
+  --g-height-text-button: 48px;
+  --g-height-touch: 44px;
+
+  /* El unico corte responsive del diseno. Aqui solo como referencia: las media
+     queries lo repiten porque CSS no admite variables en su condicion. */
+  --g-wide-from: 900px;
+}
+
+/*
+ * El reset del prototipo, con una regla que no es cosmetica: sin
+ * `flex-shrink: 0` los campos de 54px se comprimen dentro de las columnas flex
+ * de los formularios, y el diseno deja de cuadrar en cuanto la pantalla es baja.
+ */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--g-bg-app);
+  color: var(--g-ink);
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+input,
+button,
+label,
+h1,
+p,
+svg {
+  flex-shrink: 0;
+}
+
+input::placeholder {
+  color: var(--g-placeholder);
+}
+
+button {
+  font-family: inherit;
+}
+
+/*
+ * Los iconos son Material Symbols Rounded, y se usan poniendo el nombre del
+ * icono como texto dentro del elemento.
+ */
+.g-icon {
+  font-family: 'Material Symbols Rounded', sans-serif;
+  font-variation-settings: 'FILL' 0;
+  line-height: 1;
+  user-select: none;
+}
+
+.g-icon[data-filled='true'] {
+  font-variation-settings: 'FILL' 1;
+}
