@@ -97,8 +97,11 @@ services:
       GASTONOMO__AUTH__ACCESS_TOKEN_SECRET: ${GASTONOMO__AUTH__ACCESS_TOKEN_SECRET:?generalo con openssl rand -hex 32}
       GASTONOMO__AUTH__ACCESS_TOKEN_MINUTES: ${GASTONOMO__AUTH__ACCESS_TOKEN_MINUTES:-15}
       GASTONOMO__AUTH__REFRESH_TOKEN_DAYS: ${GASTONOMO__AUTH__REFRESH_TOKEN_DAYS:-30}
-      # El enlace que viaja en el correo de recuperacion. Se compone del origen
-      # publico para que el `{token}` que la API exige no se pueda olvidar.
+      # El enlace que viaja en el correo de recuperacion. El `{token}` va escrito
+      # aqui, no en el .env, y lo unico que pone el operador es el origen: asi no
+      # se puede perder editando variables. La API NO lo exige, solo avisa por log
+      # al arrancar si falta; sin marcador el correo sale igual, con un enlace que
+      # no sirve.
       GASTONOMO__AUTH__RESET_LINK_TEMPLATE: ${PUBLIC_WEB_ORIGIN:?e.g. https://gastonomo.bahoque.com}/reset-password?token={token}
       # Ventana en memoria del proceso, por IP. Detras de Caddy la IP sale de la
       # ULTIMA entrada de X-Forwarded-For, que es la que anade el proxy; Caddy la

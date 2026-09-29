@@ -81,15 +81,7 @@ pub fn problem_for(error: &AppError) -> (StatusCode, ProblemDto) {
                 "El correo o la contrasena no coinciden.".to_owned(),
             ),
         ),
-        AppError::Unauthorized { reason } => (
-            StatusCode::UNAUTHORIZED,
-            ProblemDto::new(
-                "unauthorized",
-                "No autorizado",
-                StatusCode::UNAUTHORIZED,
-                reason.clone(),
-            ),
-        ),
+        AppError::Unauthorized { reason } => (StatusCode::UNAUTHORIZED, unauthorized(reason)),
         AppError::NotFound { resource } => (
             StatusCode::NOT_FOUND,
             ProblemDto::new(
@@ -154,6 +146,27 @@ fn unavailable(detail: &str) -> ProblemDto {
         "Servicio no disponible todavia",
         StatusCode::SERVICE_UNAVAILABLE,
         "Todavia no tenemos este dato. Vuelve a intentarlo en un momento.".to_owned(),
+    )
+}
+
+/// El motivo real se queda en la traza y **nunca** viaja en el cuerpo.
+///
+/// Los doce sitios que construyen un [`AppError::Unauthorized`] escriben motivos
+/// distintos y precisos, que es justo lo que no se le puede contar a quien esta
+/// probando: un "token desconocido" frente a un "caducado o ya usado" le dice si
+/// acerto con el token, y el de la reutilizacion le confirma que le han pillado.
+/// Por eso el filtro esta aqui y no en cada llamada: una convencion se olvida al
+/// anadir la trece, y este camino no existe.
+///
+/// El detalle enumera los tres casos a proposito, para no ser un oraculo de
+/// ninguno.
+fn unauthorized(reason: &str) -> ProblemDto {
+    tracing::info!(reason = %reason, "a request was rejected as unauthorized");
+    ProblemDto::new(
+        "unauthorized",
+        "No autorizado",
+        StatusCode::UNAUTHORIZED,
+        "El token no vale, ha caducado o ya se uso.".to_owned(),
     )
 }
 

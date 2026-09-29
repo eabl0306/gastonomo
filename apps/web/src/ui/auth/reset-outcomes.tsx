@@ -70,8 +70,9 @@ export function Changed({ onFinished }: { onFinished: () => void }): ReactElemen
 }
 
 /**
- * El enlace no sirve: caduco, ya se uso, o no es de aqui. Los tres son el mismo
- * callejon para quien lo lee, y por eso la API tampoco los distingue.
+ * El enlace no sirve: caduco, ya se uso, lo mato un enlace mas nuevo, o no es de
+ * aqui. Todos son el mismo callejon para quien lo lee, y por eso la API tampoco
+ * los distingue: hacerlo diria si se acerto con un token que existe.
  */
 export function DeadLink({
   onFinished,
@@ -89,7 +90,7 @@ export function DeadLink({
     >
       {missing
         ? 'Abre el enlace desde el correo que te enviamos, sin quitarle nada a la dirección.'
-        : 'Caducó o ya se usó. Los enlaces duran 30 minutos y solo sirven una vez: pide otro y vuelve a intentarlo.'}
+        : 'Caducó, ya se usó, o pediste otro después: solo vale el último enlace y dura 30 minutos. Pide uno nuevo y vuelve a intentarlo.'}
     </Ending>
   );
 }

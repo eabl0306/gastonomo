@@ -9,6 +9,18 @@ use crate::value_object::UserId;
 /// Validez del enlace, tal y como lo anuncia la pantalla de "Revisa tu correo".
 pub const RESET_TOKEN_MINUTES: i64 = 30;
 
+/// Espera entre dos emisiones seguidas para la misma cuenta.
+///
+/// Emitir un enlace borra los anteriores, asi que sin esta espera cualquiera que
+/// supiera un correo podia pedir el enlace en bucle y borrar el que su dueno
+/// acababa de recibir, dejandole sin poder recuperar la cuenta. El limite de
+/// peticiones no lo impide: cuenta por IP, y el atacante no comparte la de la
+/// victima.
+///
+/// Un minuto es el equilibrio: corta el bucle y deja reenviar de verdad cuando el
+/// correo no llega, que es para lo que existe el boton de "reenviar".
+pub const RESET_REISSUE_COOLDOWN_SECONDS: i64 = 60;
+
 /// Identificador de un token de recuperacion.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct PasswordResetTokenId(Uuid);

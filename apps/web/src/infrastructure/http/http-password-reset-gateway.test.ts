@@ -44,6 +44,28 @@ describe('el adaptador de restablecer contrasena', () => {
   });
 
   /**
+   * El endpoint esta limitado por frecuencia, asi que el 429 es alcanzable desde
+   * que el limite se le colgo. El cuerpo es el que manda la API de verdad, no uno
+   * vacio: con uno vacio se probaba el texto de reserva, que es justo el caso que
+   * esta API nunca produce, y el test habria pasado igual sin nada que lo cubra.
+   */
+  it('el limite de peticiones llega con la explicacion de la API, no con el numero', async () => {
+    const limited = await failureOf(
+      gatewayOver(
+        respondWith(429, {
+          type: 'https://gastonomo.app/problems/too-many-requests',
+          title: 'Demasiadas peticiones',
+          status: 429,
+          detail: 'Has hecho demasiados intentos seguidos. Prueba en un momento.',
+        }),
+      ).resetPassword('t', 'x'),
+    );
+
+    expect(limited.message).toBe('Has hecho demasiados intentos seguidos. Prueba en un momento.');
+    expect(limited.message).not.toContain('429');
+  });
+
+  /**
    * Los dos errores de la API son los dos caminos de la pantalla: con un 401 no
    * hay nada que corregir en el formulario, con un 422 si. Mezclarlos dejaria al
    * usuario reescribiendo la contrasena contra un enlace muerto.

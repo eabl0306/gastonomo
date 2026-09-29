@@ -4,7 +4,7 @@ use std::sync::Mutex;
 
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
-use gastonomo_domain::{PasswordResetToken, PasswordResetTokenId, TokenDigest};
+use gastonomo_domain::{PasswordResetToken, PasswordResetTokenId, TokenDigest, UserId};
 
 use crate::error::AppError;
 use crate::port::PasswordResetTokenRepository;
@@ -42,6 +42,25 @@ impl InMemoryPasswordResetTokenRepository {
 impl PasswordResetTokenRepository for InMemoryPasswordResetTokenRepository {
     async fn insert(&self, token: &PasswordResetToken) -> Result<(), AppError> {
         self.with(|tokens| tokens.push(token.clone()));
+        Ok(())
+    }
+
+    async fn latest_live_for_user(
+        &self,
+        user: UserId,
+        now: DateTime<Utc>,
+    ) -> Result<Option<PasswordResetToken>, AppError> {
+        Ok(self.with(|tokens| {
+            tokens
+                .iter()
+                .filter(|token| token.user_id() == user && token.is_usable(now))
+                .max_by_key(|token| token.created_at())
+                .cloned()
+        }))
+    }
+
+    async fn discard_all_for_user(&self, user: UserId) -> Result<(), AppError> {
+        self.with(|tokens| tokens.retain(|token| token.user_id() != user));
         Ok(())
     }
 

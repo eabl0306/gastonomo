@@ -165,12 +165,76 @@ async fn reusing_a_rotated_refresh_token_answers_401() {
     .await;
 
     assert_eq!(status, Some(StatusCode::UNAUTHORIZED));
+    // El cuerpo NO puede decir por que. Contarle a quien reutiliza un token robado
+    // que se ha detectado la reutilizacion y que la familia esta revocada le avisa
+    // de que le han pillado. El motivo real se queda en la traza del servidor.
+    let detail = body["detail"].as_str().expect("a detail");
     assert!(
-        body["detail"]
-            .as_str()
-            .is_some_and(|detail| detail.contains("reuse")),
-        "the body should say why: {body}"
+        !detail.contains("reuse") && !detail.contains("revoked"),
+        "the body should not explain itself: {body}"
     );
+    assert_eq!(detail, UNAUTHORIZED_DETAIL);
+}
+
+/// Unico detalle que la API da en un 401, sea cual sea el motivo.
+const UNAUTHORIZED_DETAIL: &str = "El token no vale, ha caducado o ya se uso.";
+
+/// Pide el enlace y saca el token del correo que se habria mandado.
+async fn reset_token(harness: &Harness) -> String {
+    let (status, _) = post(
+        harness,
+        "/v1/auth/password/forgot",
+        &json!({"email": "camilo@correo.com"}),
+    )
+    .await;
+    assert_eq!(status, Some(StatusCode::ACCEPTED));
+    let sent = harness.mailer.sent();
+    let body = sent.last().expect("a mail").body.clone();
+    body.split("token=")
+        .nth(1)
+        .and_then(|rest| rest.split_whitespace().next())
+        .map(str::to_owned)
+        .expect("the mail should carry a link with a token")
+}
+
+/// El caso que da nombre a todo esto: un token que no existe y uno ya gastado
+/// tienen que ser indistinguibles desde fuera.
+///
+/// Si se distinguieran, probar tokens a ciegas diria cuando se acierta con uno
+/// que existe, que es la mitad del trabajo de robar una cuenta.
+#[tokio::test]
+async fn an_unknown_reset_token_and_a_spent_one_answer_the_same() {
+    let harness = Harness::new();
+    register(&harness).await;
+    let token = reset_token(&harness).await;
+
+    let (status, _) = post(
+        &harness,
+        "/v1/auth/password/reset",
+        &json!({"token": token, "newPassword": "otra-contrasena-larga"}),
+    )
+    .await;
+    assert_eq!(status, Some(StatusCode::NO_CONTENT), "the first use works");
+
+    // El mismo token, ya gastado.
+    let (spent_status, spent) = post(
+        &harness,
+        "/v1/auth/password/reset",
+        &json!({"token": token, "newPassword": "tercera-contrasena-larga"}),
+    )
+    .await;
+    // Uno que no ha existido nunca.
+    let (unknown_status, unknown) = post(
+        &harness,
+        "/v1/auth/password/reset",
+        &json!({"token": "esto-no-es-un-token", "newPassword": "tercera-contrasena-larga"}),
+    )
+    .await;
+
+    assert_eq!(spent_status, Some(StatusCode::UNAUTHORIZED));
+    assert_eq!(unknown_status, Some(StatusCode::UNAUTHORIZED));
+    assert_eq!(spent, unknown, "the two bodies have to be identical");
+    assert_eq!(spent["detail"].as_str(), Some(UNAUTHORIZED_DETAIL));
 }
 
 #[tokio::test]

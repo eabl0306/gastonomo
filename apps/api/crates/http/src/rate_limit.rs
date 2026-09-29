@@ -1,8 +1,17 @@
 //! Limite de peticiones por cliente y ruta.
 //!
-//! Se cuelga en `login`, `register` y `password/forgot`, que es lo que pide el
-//! analisis: son los tres endpoints que se pueden usar para probar contrasenas o
-//! para inundar de correo a alguien.
+//! Se cuelga en los cuatro endpoints publicos que tocan credenciales: `register` y
+//! `login`, que prueban contrasenas contra un hash de Argon2; `password/forgot`,
+//! que manda correo; y `password/reset`, que cambia una contrasena y revoca todas
+//! las sesiones sin pedir token de acceso.
+//!
+//! `refresh` y `logout` se quedan fuera a proposito: los dos exigen un refresh
+//! token valido en el cuerpo, asi que no son una puerta abierta, y limitarlos
+//! cortaria a un cliente legitimo que renueva a menudo.
+//!
+//! Que quede claro lo que **no** es: no es una defensa contra adivinar un token.
+//! Los tokens opacos son 256 bits de CSPRNG y no se adivinan ni con limite ni sin
+//! el. Lo que acota es el ruido, la carga y el correo.
 //!
 //! Es una ventana fija en memoria del proceso. Con varias replicas cada una lleva
 //! su cuenta, asi que el limite real es el configurado por replica. Para algo mas

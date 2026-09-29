@@ -122,6 +122,125 @@ fn a_link_older_than_thirty_minutes_no_longer_works() {
     assert!(matches!(error, AppError::Unauthorized { .. }));
 }
 
+/// Saca el token del ULTIMO correo, que es el unico que sigue valiendo.
+fn token_from_last_mail(harness: &Harness) -> String {
+    let sent = harness.mailer.sent();
+    let body = sent.last().expect("a mail").body.clone();
+    body.split("token=")
+        .nth(1)
+        .and_then(|rest| rest.split_whitespace().next())
+        .map(str::to_owned)
+        .expect("the mail should carry a link with a token")
+}
+
+/// Pedir el enlace otra vez mata el anterior.
+///
+/// Sin esto, tocar "reenviar" tres veces dejaba tres enlaces abriendo la misma
+/// cuenta durante media hora cada uno. El usuario no los ve ni los puede revocar:
+/// un correo reenviado o un buzon comprometido valian como una llave.
+#[test]
+fn asking_again_kills_the_previous_link() {
+    let harness = Harness::new();
+    block_on(harness.register().execute(registration())).expect("should register");
+    request(&harness, "camilo@correo.com").expect("should accept the request");
+    let first = token_from_mail(&harness);
+
+    // Pasada la espera entre emisiones; sin avanzar el reloj esta peticion no
+    // emitiria nada, que es justo lo que prueba el test de mas abajo.
+    harness.clock.advance(Duration::seconds(61));
+    request(&harness, "camilo@correo.com").expect("should accept the second request");
+    let second = token_from_last_mail(&harness);
+    assert_ne!(first, second, "each request issues its own token");
+
+    let error = reset(&harness, &first, "contrasena-nueva").expect_err("the old link is dead");
+    assert!(matches!(error, AppError::Unauthorized { .. }));
+    reset(&harness, &second, "contrasena-nueva").expect("the last link still works");
+}
+
+/// Y la cara util de lo mismo: la tabla no crece con cada reenvio, asi que no
+/// hace falta ninguna tarea de limpieza.
+#[test]
+fn asking_again_leaves_a_single_row() {
+    let harness = Harness::new();
+    block_on(harness.register().execute(registration())).expect("should register");
+    for _ in 0..5 {
+        harness.clock.advance(Duration::seconds(61));
+        request(&harness, "camilo@correo.com").expect("should accept the request");
+    }
+
+    assert_eq!(harness.reset_tokens.all().len(), 1);
+}
+
+/// Dos peticiones muy seguidas no matan el enlace que la cuenta ya tiene.
+///
+/// Es lo que impide dejar a alguien sin recuperar su cuenta. Emitir borra los
+/// anteriores, y pedir el enlace no exige estar dentro: basta con saber el correo.
+/// Sin esta espera, pedirlo en bucle borraba el enlace que su dueno acababa de
+/// recibir, una y otra vez. El limite de peticiones no lo impide, porque cuenta
+/// por IP y el atacante no comparte la de la victima.
+#[test]
+fn asking_again_right_away_leaves_the_live_link_alone() {
+    let harness = Harness::new();
+    block_on(harness.register().execute(registration())).expect("should register");
+    request(&harness, "camilo@correo.com").expect("should accept the request");
+    let theirs = token_from_mail(&harness);
+
+    // El atacante, que solo sabe el correo, lo pide diez veces seguidas.
+    for _ in 0..10 {
+        request(&harness, "camilo@correo.com").expect("should answer the same as always");
+    }
+
+    // Ni se emitio nada nuevo ni se borro lo que habia.
+    assert_eq!(harness.mailer.sent().len(), 1, "no extra mail goes out");
+    assert_eq!(harness.reset_tokens.all().len(), 1);
+    reset(&harness, &theirs, "contrasena-nueva").expect("the link still works");
+}
+
+/// Y la espera no puede dejar a nadie encerrado: pasado el minuto se vuelve a
+/// emitir con normalidad, que es para lo que existe el boton de reenviar.
+#[test]
+fn after_the_cooldown_the_link_is_issued_again() {
+    let harness = Harness::new();
+    block_on(harness.register().execute(registration())).expect("should register");
+    request(&harness, "camilo@correo.com").expect("should accept the request");
+
+    harness.clock.advance(Duration::seconds(61));
+    request(&harness, "camilo@correo.com").expect("should accept the request");
+
+    assert_eq!(harness.mailer.sent().len(), 2);
+}
+
+/// Un enlace ya usado no cuenta para la espera: si no, cambiar la contrasena y
+/// volver a pedir el enlace dentro del mismo minuto no mandaba nada.
+#[test]
+fn a_spent_link_does_not_hold_the_cooldown() {
+    let harness = Harness::new();
+    block_on(harness.register().execute(registration())).expect("should register");
+    request(&harness, "camilo@correo.com").expect("should accept the request");
+    let token = token_from_mail(&harness);
+    reset(&harness, &token, "contrasena-nueva").expect("should reset");
+
+    request(&harness, "camilo@correo.com").expect("should accept the request");
+
+    assert_eq!(harness.mailer.sent().len(), 2);
+}
+
+/// El correo lo dice, porque si no el usuario que pincha el enlace viejo no
+/// entiende por que no vale. Con el envio SMTP en segundo plano, dos correos
+/// seguidos pueden llegar desordenados de verdad.
+#[test]
+fn the_mail_warns_that_only_the_last_link_works() {
+    let harness = Harness::new();
+    block_on(harness.register().execute(registration())).expect("should register");
+    request(&harness, "camilo@correo.com").expect("should accept the request");
+
+    let body = harness.mailer.sent()[0].body.clone();
+    assert!(
+        body.contains("solo vale el ultimo enlace"),
+        "the mail should warn about it: {body}"
+    );
+}
+
 #[test]
 fn a_short_new_password_is_a_field_error() {
     let harness = Harness::new();

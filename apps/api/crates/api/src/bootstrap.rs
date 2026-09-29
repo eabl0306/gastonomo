@@ -75,6 +75,9 @@ async fn assemble(config: AppConfig, version: ServiceVersion) -> Result<Service,
     if config.auth.uses_development_secret() {
         log::development_secret();
     }
+    if config.auth.reset_link_drops_the_token() {
+        log::reset_link_without_token();
+    }
 
     let wiring = Wiring::new(config, version, pool);
     let dependencies = router_dependencies(&wiring)?;
@@ -146,6 +149,13 @@ mod log {
         tracing::warn!(
             "GASTONOMO__AUTH__ACCESS_TOKEN_SECRET is still the development one: \
              anyone who reads the repository can sign an access token"
+        );
+    }
+
+    pub fn reset_link_without_token() {
+        tracing::warn!(
+            "GASTONOMO__AUTH__RESET_LINK_TEMPLATE has no {{token}} marker: \
+             the recovery mail will carry a link nobody can use"
         );
     }
 }
