@@ -21,6 +21,7 @@ mod in_memory_user_repository;
 mod in_memory_user_settings_repository;
 mod recording_mailer;
 mod recording_user_provisioning;
+mod stub_dictation;
 mod stub_exchange_rate_provider;
 mod stub_movement_category_reader;
 
@@ -43,5 +44,6 @@ pub use in_memory_user_settings_repository::{
 };
 pub use recording_mailer::RecordingMailer;
 pub use recording_user_provisioning::RecordingUserProvisioning;
+pub use stub_dictation::{FakeDictationAccess, StubDictationInterpreter};
 pub use stub_exchange_rate_provider::StubExchangeRateProvider;
 pub use stub_movement_category_reader::StubMovementCategoryReader;
