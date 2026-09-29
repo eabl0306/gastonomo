@@ -17,6 +17,34 @@ async function mockLogin(page: Page, status: number, body: unknown): Promise<voi
   });
 }
 
+/**
+ * Lo que Inicio pide nada mas entrar, todo vacio.
+ *
+ * Sin esto la pantalla se queda en su bloque de carga y el test mide otra cosa: aqui lo que se
+ * comprueba es que se llega, no lo que se ensena.
+ */
+async function mockEmptyAccount(page: Page): Promise<void> {
+  const empty: Record<string, unknown> = {
+    '**/v1/settings': { displayCurrency: 'COP', language: 'es' },
+    '**/v1/currencies': { items: [] },
+    '**/v1/exchange-rates': {
+      base: 'USD',
+      date: '2026-09-22',
+      fetchedAt: '2026-09-22T06:00:00Z',
+      status: 'ok',
+      rates: { USD: '1' },
+    },
+    '**/v1/movements*': { items: [], nextCursor: null },
+    '**/v1/loans*': { items: [] },
+    '**/v1/me': SESSION.user,
+  };
+  for (const [pattern, body] of Object.entries(empty)) {
+    await page.route(pattern, async (route) => {
+      await route.fulfill({ status: 200, headers: JSON_HEADERS, body: JSON.stringify(body) });
+    });
+  }
+}
+
 test.describe('entrar y salir', () => {
   test.skip(USE_REAL_API, 'E2E_USE_REAL_API=1: no se inventan cuentas contra la API real');
 
@@ -32,15 +60,16 @@ test.describe('entrar y salir', () => {
    */
   test('al entrar se llega a Inicio y la sesion aguanta una recarga', async ({ page }) => {
     await mockLogin(page, 200, SESSION);
+    await mockEmptyAccount(page);
     await page.goto('/login');
 
     await page.getByRole('textbox', { name: 'Correo' }).fill('camilo@correo.com');
     await page.getByRole('textbox', { name: 'Contraseña' }).fill('clave de prueba');
     await page.getByRole('button', { name: 'Entrar' }).click();
 
-    await expect(page.getByRole('heading', { name: 'Inicio' })).toBeVisible();
+    await expect(page.getByText('Hola, Camilo')).toBeVisible();
     await page.reload();
-    await expect(page.getByRole('heading', { name: 'Inicio' })).toBeVisible();
+    await expect(page.getByText('Hola, Camilo')).toBeVisible();
   });
 
   test('un correo o una clave que no valen lo dicen, sin decir cual fallo', async ({ page }) => {
@@ -61,6 +90,7 @@ test.describe('entrar y salir', () => {
     page,
   }) => {
     await mockLogin(page, 200, SESSION);
+    await mockEmptyAccount(page);
     await page.route('**/v1/auth/logout', async (route) => {
       await route.fulfill({ status: 204, body: '' });
     });
@@ -68,7 +98,7 @@ test.describe('entrar y salir', () => {
     await page.getByRole('textbox', { name: 'Correo' }).fill('camilo@correo.com');
     await page.getByRole('textbox', { name: 'Contraseña' }).fill('clave de prueba');
     await page.getByRole('button', { name: 'Entrar' }).click();
-    await expect(page.getByRole('heading', { name: 'Inicio' })).toBeVisible();
+    await expect(page.getByText('Hola, Camilo')).toBeVisible();
 
     await page.getByRole('link', { name: 'Ajustes' }).first().click();
     await page.getByRole('button', { name: 'Cerrar sesión' }).click();
