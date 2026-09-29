@@ -4,8 +4,9 @@ API en Rust con Salvo. Arquitectura hexagonal: el nucleo no sabe que existe
 HTTP ni PostgreSQL, y un test lo comprueba en cada build.
 
 El dominio esta completo: salud, autenticacion, movimientos, prestamos con sus
-abonos, categorias, ajustes, monedas y tasas de cambio. Son 24 endpoints, ocho
-migraciones y 36 binarios de test, siete de ellos contra un PostgreSQL de verdad.
+abonos, categorias, ajustes, monedas, tasas de cambio y el dictado de un registro.
+Son 25 endpoints, once migraciones y 33 binarios de test, diez de ellos contra un
+PostgreSQL de verdad.
 
 El contrato completo, con el porque de cada decision, esta en
 [docs/api-surface.md](../../docs/api-surface.md). La referencia ejecutable es
@@ -154,6 +155,37 @@ nada ha fallado, falta un dato que llena una tarea de fondo. Por lo mismo,
 cliente con un 422, y la moneda que la cuenta ya tiene puesta se acepta siempre
 sin mirar el catalogo.
 
+### Dictado
+
+| Endpoint | Que hace | Codigos |
+|---|---|---|
+| `POST /v1/dictation/parse` | Convierte una frase dictada en un borrador. | 200 / 401 / 404 / 422 / 503 |
+
+**No crea nada.** Devuelve un borrador de movimiento o de prestamo para que el
+usuario lo revise, y confirmarlo es una llamada aparte a `POST /v1/movements` o
+`POST /v1/loans` con su `Idempotency-Key`. Por eso este endpoint no acepta esa
+cabecera: repetirlo no puede duplicar dinero.
+
+El borrador sale ya comprobado contra la cuenta y ninguna regla rechaza la
+peticion: una categoria que no existe cae en `Otros`, una moneda sin tasa cae en
+la principal, una fecha futura cae en hoy y un importe que no se entendio sale
+`null`. Lo que el usuario tiene que completar se lista en `missing`, y el cliente
+deja el boton de guardar apagado mientras no este vacio.
+
+Solo lo pueden usar las cuentas que estan en la tabla `dictation_allowlist`. Se
+concede y se quita a mano, porque cada peticion sale a un modelo que se paga por
+palabra:
+
+```sql
+INSERT INTO dictation_allowlist (user_id) VALUES ('<uuid>');
+```
+
+Quien no esta recibe **404 y no 403**, por la misma razon que un recurso de otra
+cuenta: un 403 confirmaria que la capacidad existe. Sin
+`GASTONOMO__CLAUDE__API_KEY` el endpoint responde **503** y el resto de la API
+funciona igual. El porque esta en
+[el ADR 0024](../../docs/adr/0024-dictar-un-registro.md).
+
 ## Configuracion
 
 Variables de entorno con prefijo `GASTONOMO__` y doble guion bajo como
@@ -186,6 +218,11 @@ separador de nivel.
 | `GASTONOMO__EXCHANGE_RATES__REQUEST_TIMEOUT_MS` | `10000` | Espera maxima por peticion a la fuente |
 | `GASTONOMO__EXCHANGE_RATES__RETRY_ATTEMPTS` | `3` | Intentos por pasada, contando el primero |
 | `GASTONOMO__EXCHANGE_RATES__RETRY_BACKOFF_MS` | `2000` | Espera antes del segundo intento. Se duplica en cada intento |
+| `GASTONOMO__CLAUDE__API_KEY` | vacio | Clave de la API de Anthropic para el dictado. Vacia lo apaga y el endpoint responde 503 |
+| `GASTONOMO__CLAUDE__BASE_URL` | `https://api.anthropic.com` | Raiz de la API del modelo |
+| `GASTONOMO__CLAUDE__MODEL` | `claude-haiku-4-5-20251001` | Modelo que interpreta lo dictado |
+| `GASTONOMO__CLAUDE__REQUEST_TIMEOUT_MS` | `12000` | Espera maxima por la llamada al modelo |
+| `GASTONOMO__CLAUDE__MAX_TOKENS` | `512` | Tope de la respuesta del modelo |
 
 ## Estructura
 

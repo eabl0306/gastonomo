@@ -15,7 +15,7 @@ documento y ese JSON no coinciden, el JSON tiene razon.
 
 ## Estado
 
-Las 14 pantallas del rediseno se pueden pintar con lo que existe. Los 24 endpoints, la
+Las 14 pantallas del rediseno se pueden pintar con lo que existe. Los 25 endpoints, la
 tarea de tasas y el esquema completo estan implementados y probados contra un
 PostgreSQL de verdad. Lo que sigue fuera de alcance esta en
 [Lo que no existe](#lo-que-no-existe-todavia), al final.
@@ -87,7 +87,7 @@ identificador del camino no es un UUID.
 
 ## Modelo de datos
 
-Ocho migraciones en `apps/api/migrations`, que la API aplica sola al arrancar.
+Once migraciones en `apps/api/migrations`, que la API aplica sola al arrancar.
 
 ```
 users
@@ -146,6 +146,9 @@ idempotency_keys
   response_status smallint null, response_body bytea null,
   created_at timestamptz, completed_at timestamptz null,
   pk (user_id, endpoint, key)
+
+dictation_allowlist
+  user_id pk fk, granted_at timestamptz
 ```
 
 Indices que el diseno pide de forma directa: `movements (user_id, occurred_on desc, id
@@ -220,7 +223,7 @@ siempre espera JSON. Lo arregla un catcher en `crates/http/src/catcher.rs`, enga
 en `build_service`. Solo actua cuando la respuesta ya tiene estado de error y el cuerpo
 esta vacio, asi que no puede pisar lo que escriba un handler.
 
-## Los 24 endpoints
+## Los 25 endpoints
 
 ```
 GET    /health/live                  200 siempre, sin tocar dependencias
@@ -258,6 +261,8 @@ GET    /v1/changes                   200  ?since=&limit=
 
 GET    /v1/currencies                200
 GET    /v1/exchange-rates            200, o 503 sin ninguna pasada guardada
+
+POST   /v1/dictation/parse           200  devuelve un borrador, no crea nada
 ```
 
 Todo lo de `/v1` menos `auth/register`, `auth/login`, `auth/refresh`, `auth/logout`,
@@ -642,6 +647,119 @@ Sin ninguna pasada guardada, `GET /v1/exchange-rates` responde **503** con
 `type: service-unavailable`. Nada ha fallado: falta un dato que llena una tarea de
 fondo, y un 500 invitaria al cliente a tratarlo como un fallo del servidor.
 
+### Dictado
+
+| Metodo | Ruta                  | Para que                                                 |
+| ------ | --------------------- | -------------------------------------------------------- |
+| POST   | `/v1/dictation/parse` | Convierte una frase dictada en un borrador para revisar. |
+
+La voz la pasa a texto el cliente, con el reconocimiento del sistema: ya sabe el idioma,
+no cuesta nada y no hay que subir audio a ninguna parte. Aqui solo llega el texto.
+
+```json
+{ "text": "gasté 45 mil en el almuerzo", "today": "2026-09-29" }
+```
+
+`today` es opcional y lo manda el cliente porque **la zona horaria es suya**: el servidor
+no sabe si para quien dicta ya es manana. Solo se usa para resolver "ayer" y para cortar
+las fechas futuras. Una fecha ilegible se ignora y se usa el dia del servidor, en vez de
+perder lo que el usuario acaba de decir por el formato de un campo auxiliar.
+
+La respuesta es un borrador, y **no se ha creado nada**:
+
+```json
+{
+  "kind": "movement",
+  "movement": {
+    "kind": "out",
+    "category": { "id": "0b2e3f52-8d45-4a2f-9c0a-6f7f1b1d2c34", "name": "Alimentación" },
+    "note": "Almuerzo"
+  },
+  "loan": null,
+  "amount": "45000.0000",
+  "currency": "COP",
+  "occurredOn": "2026-09-29",
+  "missing": []
+}
+```
+
+`kind` dice cual de los dos objetos viene relleno; el otro es `null`. Para un prestamo
+`kind` es `loan`, `movement` es `null` y `loan` trae el sentido, con quien es y la nota:
+
+```json
+{ "direction": "lent", "person": "Rosa", "note": "" }
+```
+
+**Confirmar es una llamada aparte** a `POST /v1/movements` o `POST /v1/loans`, con su
+`Idempotency-Key`. Por eso este endpoint no acepta esa cabecera: no crea nada, y repetirlo
+no puede duplicar dinero. El historico es de solo anadir y no puede depender de que un
+modelo acierte a la primera.
+
+**El importe viaja como string**, igual que en todo el contrato, y es `null` si no se
+entendio. Al modelo tambien se le pide como texto, para que no pase por coma flotante ni
+un instante.
+
+#### La normalizacion la hace la API, no el cliente
+
+El borrador sale ya comprobado contra la cuenta, y **ninguna regla rechaza la peticion**:
+lo que no encaja se sustituye por algo que si encaja, y lo que falta se avisa en `missing`.
+Un borrador a medias que el usuario completa es mejor que un error sin nada que revisar.
+
+- Una **categoria** que no existe cae en "Otros". Se busca por nombre, sin distinguir
+  mayusculas, entre las del tipo del movimiento.
+- Las **reservadas de prestamos** (`Préstamo` y `Abono préstamo`) no se le ofrecen al
+  modelo y tampoco se le pueden asignar: un movimiento suelto no puede colgarse de ellas.
+- Una **moneda** que hoy no se puede equivaler cae en la moneda principal de la cuenta.
+  Guardar un importe cuya equivalencia nadie puede calcular rompe la regla de los cuatro
+  campos, y el usuario no tiene forma de arreglarlo despues.
+- Una **fecha** futura o ilegible cae en hoy.
+- Un **importe** que no es positivo se devuelve como `null`.
+
+Vive en la API a proposito. En los clientes habria que escribirlo dos veces, en Kotlin y
+en TypeScript, y conseguir que no se separaran nunca.
+
+`missing` lista lo que el usuario tiene que completar antes de poder guardar: `"amount"`,
+`"person"`, o los dos. El cliente deja el boton de guardar apagado mientras no este vacio.
+Que lo diga la API es lo que evita que el movil y la web no coincidan.
+
+#### Solo las cuentas aprobadas
+
+Cada peticion sale a un modelo de lenguaje que se paga por palabra, y quien la paga es el
+dueno de la instancia. Por eso el acceso se concede cuenta a cuenta, y la lista es una
+tabla:
+
+```sql
+INSERT INTO dictation_allowlist (user_id) VALUES ('<uuid>');
+```
+
+Quitar el acceso es borrar la fila. Quien no esta recibe **404, no 403**, por la misma
+razon que un recurso de otra cuenta: un 403 confirmaria que la capacidad existe. La
+comprobacion es lo primero que se hace, antes de leer nada de la cuenta y antes de llamar
+al modelo.
+
+#### Codigos
+
+| Codigo | Cuando                                                             |
+| ------ | ------------------------------------------------------------------ |
+| 200    | Borrador listo para revisar. No se ha creado nada.                 |
+| 401    | Falta el access token o no vale.                                   |
+| 404    | La cuenta no tiene el dictado aprobado.                            |
+| 422    | El texto viene vacio, o pasa de 500 caracteres.                    |
+| 503    | La instancia no tiene clave configurada y el dictado esta apagado. |
+| 500    | Fallo interno, o el interprete no responde.                        |
+
+El 503 sigue el mismo criterio que `GET /v1/exchange-rates` sin ninguna pasada guardada:
+no ha fallado nada, falta un dato de configuracion, y un 500 invitaria al cliente a
+tratarlo como un fallo del servidor. Sin clave la API arranca igual y el resto del
+contrato no se entera.
+
+El limite de 500 caracteres no es del modelo: un registro dictado cabe en una frase, y el
+tope evita que alguien mande un libro a una capacidad que se paga por palabra.
+
+Las cuatro variables de configuracion estan en [.env.example](../.env.example). El porque
+de todo esto, y las alternativas que se descartaron, en el
+[ADR 0024](adr/0024-dictar-un-registro.md).
+
 ## La tarea de refresco de tasas
 
 Los clientes **no llaman a Frankfurter**. Solo llama nuestra API, y guardada la
@@ -786,6 +904,11 @@ Ingresos. Tiene que pedir sin filtrar y filtrar en local, o hacer dos llamadas.
   una app personal no molesta; el calculo ya sale del hilo del runtime.
 - **Zonas horarias.** Las fechas de los registros son `DATE`. Meter `timestamptz` aqui
   haria que un movimiento saltara de dia segun donde este el usuario.
+- **El dictado es la unica parte del contrato que cuesta dinero por peticion**, y sale a
+  internet cada vez. No tiene cache, porque dos frases iguales pueden ser dos registros
+  distintos. Lo que lo acota son tres topes: la lista de aprobados, los 500 caracteres de
+  texto y el tope de palabras de la respuesta. Si la clave no esta puesta el endpoint
+  responde 503 y nada mas del contrato se entera.
 - **`jsonwebtoken` va sin su feature `rust_crypto`** porque arrastra el crate `rsa` con
   RUSTSEC-2023-0071 sin parche, y tumbaria `cargo deny`. El proveedor HS256 esta hecho a
   mano con `hmac` y `sha2` en `crates/infrastructure/src/security/hs256.rs`. Solo
