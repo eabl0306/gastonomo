@@ -36,7 +36,21 @@
   --g-green: #2f8a55;
   --g-red: #c2412f;
   --g-amber: #b67a1c;
+  --g-blue: #2f6fb0;
   --g-note: #5d584e;
+
+  /* Los fondos de los tiles de color, ya calculados: el diseno no los deriva. */
+  --g-green-bg: #e6f2ea;
+  --g-red-bg: #fbeae7;
+  --g-blue-bg: #e3edf7;
+  --g-amber-bg: #f6ecda;
+
+  /* Las dos flechas de la tarjeta oscura, que son mas claras que el verde y el rojo. */
+  --g-income-arrow: #8fd49f;
+  --g-expense-arrow: #f0a293;
+
+  /* El tirador de la hoja. */
+  --g-handle: #d9d4c9;
 
   /* Formas */
   --g-radius-field: 16px;
@@ -47,6 +61,11 @@
   --g-radius-bar: 2px;
   --g-radius-nav-item: 14px;
   --g-radius-nav-pill: 15px;
+  --g-radius-card: 22px;
+  --g-radius-balance: 26px;
+  --g-radius-sub-card: 16px;
+  --g-radius-tile-small: 10px;
+  --g-radius-tile-large: 13px;
 
   /* Alturas del diseno. No son multiplos de una escala: son medidas fijas. */
   --g-height-primary: 56px;
@@ -66,6 +85,13 @@
   --g-content-max-auth: 460px;
   --g-gutter: clamp(20px, 4vw, 56px);
   --g-gutter-auth: 24px;
+
+  /*
+   * La fila del selector de periodo no crece: en una ventana de 1320px se queda corta y
+   * pegada a la izquierda, que es lo que hace el diseno.
+   */
+  --g-period-max: 520px;
+  --g-sheet-max: 480px;
 
   /* El panel de marca de las pantallas de autenticacion, solo en escritorio. */
   --g-auth-panel-width: 44%;

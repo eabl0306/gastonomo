@@ -1,12 +1,11 @@
 import type { ReactElement } from 'react';
 import { BrowserRouter, Route, Routes } from 'react-router';
 
-import type { AuthGateway } from '../application/ports/auth-gateway';
 import type { HealthGateway } from '../application/ports/health-gateway';
-import type { PasswordResetGateway } from '../application/ports/password-reset-gateway';
-import type { SessionStore } from '../application/ports/session-store';
+import { AccountProvider } from '../ui/account/account-context';
 import { HealthGatewayProvider } from '../ui/health/health-gateway-provider';
 import { HealthPanel } from '../ui/health/health-panel';
+import { PeriodProvider } from '../ui/period/period-context';
 import { SessionProvider } from '../ui/session/session-context';
 import { AppShell } from '../ui/shell/app-shell';
 
@@ -18,15 +17,9 @@ import {
   SettingsRoute,
 } from './app-screens';
 import { ForgotRoute, LoginRoute, RegisterRoute } from './auth-screens';
+import type { Container } from './composition-root';
 import { RequireSession } from './require-session';
 import { ROUTES } from './routes';
-
-export interface AppProps {
-  readonly session: SessionStore;
-  readonly auth: AuthGateway;
-  readonly health: HealthGateway;
-  readonly passwordResets: PasswordResetGateway;
-}
 
 /**
  * El arbol de rutas.
@@ -34,20 +27,28 @@ export interface AppProps {
  * Las cuatro principales cuelgan del armazon y exigen sesion; las de autenticacion no la
  * tienen y por eso no llevan armazon. `/estado` se queda fuera de las dos: es una pantalla de
  * diagnostico, no del producto.
+ *
+ * Los ajustes de la cuenta y el filtro de periodo se montan **por encima** de las cuatro,
+ * porque los comparten: el periodo elegido se ve igual en Inicio y en Movimientos, y la
+ * moneda principal decide lo que ensenan todas.
  */
-export function App({ session, auth, health, passwordResets }: AppProps): ReactElement {
+export function App({ container }: { container: Container }): ReactElement {
   return (
     <BrowserRouter>
-      <SessionProvider value={{ session, auth }}>
+      <SessionProvider value={{ session: container.session, auth: container.auth }}>
         <Routes>
           <Route
             element={
               <RequireSession>
-                <AppShell />
+                <AccountProvider currencies={container.currencies} settings={container.settings}>
+                  <PeriodProvider clock={container.clock}>
+                    <AppShell />
+                  </PeriodProvider>
+                </AccountProvider>
               </RequireSession>
             }
           >
-            <Route element={<HomeRoute />} index />
+            <Route element={<HomeRoute container={container} />} index />
             <Route element={<MovementsRoute />} path={ROUTES.movements} />
             <Route element={<LoansRoute />} path={ROUTES.loans} />
             <Route element={<SettingsRoute />} path={ROUTES.settings} />
@@ -56,10 +57,10 @@ export function App({ session, auth, health, passwordResets }: AppProps): ReactE
           <Route element={<RegisterRoute />} path={ROUTES.register} />
           <Route element={<ForgotRoute />} path={ROUTES.forgotPassword} />
           <Route
-            element={<ResetPasswordRoute gateway={passwordResets} />}
+            element={<ResetPasswordRoute gateway={container.passwordResets} />}
             path={ROUTES.resetPassword}
           />
-          <Route element={<HealthScreen gateway={health} />} path={ROUTES.status} />
+          <Route element={<HealthScreen gateway={container.health} />} path={ROUTES.status} />
         </Routes>
       </SessionProvider>
     </BrowserRouter>

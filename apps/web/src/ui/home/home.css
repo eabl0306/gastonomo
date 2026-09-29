@@ -1,0 +1,361 @@
+/*
+ * Inicio.
+ *
+ * El reparto en dos columnas no lo decide el corte de 900px del armazon sino el ancho
+ * disponible: `auto-fit` con un minimo de 400 las junta en cuanto no caben dos. Con la barra
+ * lateral eso pasa alrededor de los 1157px de ventana, no en los 900.
+ */
+
+.g-home__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 18px;
+}
+
+.g-home__date {
+  margin: 0;
+  color: var(--g-muted);
+  font-size: 13px;
+}
+
+.g-home__greeting {
+  margin: 0;
+  font-size: clamp(24px, 2.4vw, 32px);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+/* En escritorio la identidad esta en el pie de la barra lateral. */
+.g-home__avatar {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: var(--g-height-touch);
+  height: var(--g-height-touch);
+  border: 0;
+  border-radius: 50%;
+  background: var(--g-ink);
+  color: var(--g-lime);
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+@media (min-width: 900px) {
+  .g-home__avatar {
+    display: none;
+  }
+}
+
+.g-home__grid {
+  display: grid;
+  gap: 16px;
+  align-items: start;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 400px), 1fr));
+}
+
+.g-home__column {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+
+/* La tarjeta de balance: la unica superficie oscura del diseno. */
+.g-balance {
+  padding: 20px 20px 18px;
+  border-radius: var(--g-radius-balance);
+  background: var(--g-ink);
+  color: var(--g-on-ink);
+}
+
+.g-balance__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.g-balance__label {
+  color: var(--g-on-ink-muted);
+  font-size: 13px;
+}
+
+.g-balance__eye {
+  display: flex;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--g-on-ink-muted);
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.g-balance__amount {
+  display: block;
+  margin-top: 4px;
+  font-size: 36px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+
+.g-balance__trend {
+  position: relative;
+}
+
+.g-trend {
+  display: block;
+  width: 100%;
+  height: 64px;
+  margin: 14px 0 4px;
+}
+
+.g-balance__trend-labels {
+  display: flex;
+  justify-content: space-between;
+  color: var(--g-on-ink-faint);
+  font-size: 11px;
+}
+
+.g-balance__subs {
+  display: grid;
+  gap: 10px;
+  margin-top: 16px;
+  grid-template-columns: 1fr 1fr;
+}
+
+.g-balance__sub {
+  padding: 12px 14px;
+  border-radius: var(--g-radius-sub-card);
+  background: var(--g-ink-raised);
+}
+
+.g-balance__sub-label {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  margin: 0;
+  color: var(--g-on-ink-muted);
+  font-size: 12px;
+}
+
+.g-balance__sub-label .g-icon {
+  font-size: 16px;
+}
+
+.g-balance__sub-label[data-tone='income'] .g-icon {
+  color: var(--g-income-arrow);
+}
+
+.g-balance__sub-label[data-tone='expense'] .g-icon {
+  color: var(--g-expense-arrow);
+}
+
+.g-balance__sub-amount {
+  display: block;
+  margin-top: 4px;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+/* Acciones rapidas */
+.g-quick {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.g-quick__item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  justify-content: center;
+  align-items: center;
+  height: 76px;
+  padding: 0 4px;
+  border: 1px solid var(--g-line);
+  border-radius: var(--g-radius-large-tile);
+  background: var(--g-surface);
+  color: var(--g-ink);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.g-quick__item:active {
+  transform: scale(0.96);
+}
+
+.g-quick__tile {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--g-radius-tile-small);
+  font-size: 20px;
+}
+
+.g-quick__tile[data-tone='income'] {
+  background: var(--g-green-bg);
+  color: var(--g-green);
+}
+
+.g-quick__tile[data-tone='expense'] {
+  background: var(--g-red-bg);
+  color: var(--g-red);
+}
+
+.g-quick__tile[data-tone='loan'] {
+  background: var(--g-blue-bg);
+  color: var(--g-blue);
+}
+
+.g-quick__tile[data-tone='payment'] {
+  background: var(--g-amber-bg);
+  color: var(--g-amber);
+}
+
+/* Me deben / Debo */
+.g-loan-totals {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: 1fr 1fr;
+}
+
+.g-loan-total {
+  padding: 14px;
+  border: 1px solid var(--g-line);
+  border-radius: var(--g-radius-large-tile);
+  background: var(--g-surface);
+  color: var(--g-ink);
+  text-align: left;
+  cursor: pointer;
+}
+
+.g-loan-total__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: var(--g-muted);
+  font-size: 12px;
+}
+
+.g-loan-total__head .g-icon {
+  color: var(--g-ink);
+  font-size: 16px;
+}
+
+.g-loan-total__amount {
+  display: block;
+  margin-top: 6px;
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.g-loan-total[data-tone='lent'] .g-loan-total__amount {
+  color: var(--g-blue);
+}
+
+.g-loan-total[data-tone='borrowed'] .g-loan-total__amount {
+  color: var(--g-amber);
+}
+
+.g-loan-total__count {
+  display: block;
+  margin-top: 2px;
+  color: var(--g-muted);
+  font-size: 12px;
+}
+
+/* Gastos por categoria */
+.g-breakdown__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.g-breakdown__total {
+  color: var(--g-muted);
+  font-size: 13px;
+}
+
+.g-bar {
+  display: flex;
+  gap: 3px;
+  height: 12px;
+  margin: 14px 0 6px;
+}
+
+.g-bar__slice {
+  border-radius: 4px;
+}
+
+.g-breakdown__row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 9px 0;
+  border-top: 1px solid var(--g-row-line);
+}
+
+.g-breakdown__name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  font-size: 14px;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.g-breakdown__percent {
+  width: 36px;
+  color: var(--g-muted);
+  font-size: 12px;
+  text-align: right;
+}
+
+.g-breakdown__amount {
+  width: 92px;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: right;
+}
+
+/* Ultimos movimientos */
+.g-recent__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin: 6px 4px 8px;
+}
+
+.g-recent__all {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--g-muted);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.g-recent__list {
+  padding: 4px 16px;
+}
+
+/*
+ * En movil se ensenan cuatro y en escritorio siete. Se piden siete siempre y CSS esconde los
+ * tres que sobran: volver a llamar a la API al redimensionar la ventana seria peor.
+ */
+@media (max-width: 899px) {
+  .g-recent__list .g-row:nth-child(n + 5) {
+    display: none;
+  }
+
+  .g-recent__list .g-row:nth-child(4) {
+    border-bottom: 0;
+  }
+}

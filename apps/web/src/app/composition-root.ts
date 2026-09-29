@@ -1,13 +1,25 @@
 import type { AuthGateway } from '../application/ports/auth-gateway';
+import type { CategoryGateway } from '../application/ports/category-gateway';
+import type { Clock } from '../application/ports/clock';
+import type { CurrencyGateway } from '../application/ports/currency-gateway';
 import type { HealthGateway } from '../application/ports/health-gateway';
+import type { LoanGateway } from '../application/ports/loan-gateway';
+import type { MovementGateway } from '../application/ports/movement-gateway';
 import type { PasswordResetGateway } from '../application/ports/password-reset-gateway';
 import type { SessionStore } from '../application/ports/session-store';
+import type { SettingsGateway } from '../application/ports/settings-gateway';
 import { createApiClient, type ApiClient } from '../infrastructure/http/api-client';
 import type { RotatedTokens } from '../infrastructure/http/api-tokens';
 import { createHttpAuthGateway } from '../infrastructure/http/http-auth-gateway';
+import { createHttpCategoryGateway } from '../infrastructure/http/http-category-gateway';
+import { createHttpCurrencyGateway } from '../infrastructure/http/http-currency-gateway';
 import { createHttpHealthGateway } from '../infrastructure/http/http-health-gateway';
+import { createHttpLoanGateway } from '../infrastructure/http/http-loan-gateway';
+import { createHttpMovementGateway } from '../infrastructure/http/http-movement-gateway';
 import { createHttpPasswordResetGateway } from '../infrastructure/http/http-password-reset-gateway';
+import { createHttpSettingsGateway } from '../infrastructure/http/http-settings-gateway';
 import { createLocalSessionStore } from '../infrastructure/storage/local-session-store';
+import { systemClock } from '../infrastructure/time/system-clock';
 
 /** Lo unico que la web necesita saber del entorno. */
 export interface WebEnv {
@@ -56,6 +68,12 @@ export interface Container {
   readonly auth: AuthGateway;
   readonly health: HealthGateway;
   readonly passwordResets: PasswordResetGateway;
+  readonly movements: MovementGateway;
+  readonly loans: LoanGateway;
+  readonly settings: SettingsGateway;
+  readonly currencies: CurrencyGateway;
+  readonly categories: CategoryGateway;
+  readonly clock: Clock;
 }
 
 /**
@@ -91,11 +109,17 @@ function createAuthenticatedClient(
 
 export function createContainer(env: WebEnv): Container {
   const session = createLocalSessionStore();
-  const { auth } = createAuthenticatedClient(env, session);
+  const { client, auth } = createAuthenticatedClient(env, session);
   return {
     session,
     auth,
     health: createHealthGateway(env),
     passwordResets: createPasswordResetGateway(env),
+    movements: createHttpMovementGateway(client),
+    loans: createHttpLoanGateway(client),
+    settings: createHttpSettingsGateway(client),
+    currencies: createHttpCurrencyGateway(client),
+    categories: createHttpCategoryGateway(client),
+    clock: systemClock,
   };
 }

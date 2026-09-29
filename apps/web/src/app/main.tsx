@@ -4,6 +4,9 @@ import { createRoot } from 'react-dom/client';
 import '../ui/theme/tokens.css';
 import '../ui/auth/auth.css';
 import '../ui/shell/shell.css';
+import '../ui/common/common.css';
+import '../ui/period/period.css';
+import '../ui/home/home.css';
 import '../ui/styles.css';
 
 import { App } from './app';
@@ -16,11 +19,6 @@ const container = createContainer(import.meta.env);
 
 createRoot(root).render(
   <StrictMode>
-    <App
-      auth={container.auth}
-      health={container.health}
-      passwordResets={container.passwordResets}
-      session={container.session}
-    />
+    <App container={container} />
   </StrictMode>,
 );

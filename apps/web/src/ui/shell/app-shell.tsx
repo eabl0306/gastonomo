@@ -3,6 +3,7 @@ import { NavLink, Outlet } from 'react-router';
 
 import { initialsOf, type User } from '../../domain/account/user';
 import { Icon } from '../auth/auth-chrome';
+import { RangeSheet } from '../period/range-sheet';
 import { useSession } from '../session/use-session';
 
 import { NAV_ITEMS, type NavItem } from './nav-items';
@@ -14,6 +15,9 @@ import { NAV_ITEMS, type NavItem } from './nav-items';
  * decide CSS y no JavaScript**: las dos se pintan siempre y el CSS esconde la que sobra. Con
  * un `matchMedia` en estado habria un primer fotograma con el armazon equivocado, y encima
  * el servidor de desarrollo lo notaria en cada recarga.
+ *
+ * El sheet de rango se monta aqui y no dentro de una pantalla porque el borrador es el mismo
+ * para Inicio y para Movimientos: uno por pantalla serian dos borradores distintos.
  */
 export function AppShell(): ReactElement {
   const session = useSession();
@@ -26,6 +30,7 @@ export function AppShell(): ReactElement {
         </main>
         <BottomNav />
       </div>
+      <RangeSheet />
     </div>
   );
 }

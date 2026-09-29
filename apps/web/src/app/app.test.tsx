@@ -8,8 +8,17 @@ import {
   createMemorySessionStore,
 } from '../infrastructure/memory/in-memory-auth';
 import { createInMemoryHealthGateway } from '../infrastructure/memory/in-memory-health-gateway';
+import {
+  createMemoryCategoryGateway,
+  createMemoryCurrencyGateway,
+  createMemoryLoanGateway,
+  createMemoryMovementGateway,
+  createMemorySettingsGateway,
+  fixedClock,
+} from '../infrastructure/memory/in-memory-ledger';
 
 import { App } from './app';
+import type { Container } from './composition-root';
 
 const STUB_RESETS = { resetPassword: () => Promise.resolve() };
 
@@ -18,14 +27,19 @@ function renderApp(signedIn: boolean, path = '/'): ReturnType<typeof createMemor
   const session = createMemorySessionStore(
     signedIn ? { accessToken: 'a1', refreshToken: 'r1', user: SAMPLE_USER } : null,
   );
-  render(
-    <App
-      auth={createMemoryAuthGateway()}
-      health={createInMemoryHealthGateway({})}
-      passwordResets={STUB_RESETS}
-      session={session}
-    />,
-  );
+  const container: Container = {
+    session,
+    auth: createMemoryAuthGateway(),
+    health: createInMemoryHealthGateway({}),
+    passwordResets: STUB_RESETS,
+    movements: createMemoryMovementGateway(),
+    loans: createMemoryLoanGateway(),
+    settings: createMemorySettingsGateway(),
+    currencies: createMemoryCurrencyGateway(),
+    categories: createMemoryCategoryGateway(),
+    clock: fixedClock(),
+  };
+  render(<App container={container} />);
   return session;
 }
 
@@ -36,9 +50,9 @@ describe('App', () => {
     expect(screen.getByRole('heading', { name: 'Bienvenido de nuevo' })).toBeInTheDocument();
   });
 
-  it('con sesion, la raiz es Inicio y sale el armazon', () => {
+  it('con sesion, la raiz es Inicio y sale el armazon', async () => {
     renderApp(true);
-    expect(screen.getByRole('heading', { name: 'Inicio' })).toBeInTheDocument();
+    expect(await screen.findByText('Hola, Camilo')).toBeInTheDocument();
     expect(screen.getAllByRole('navigation', { name: 'Secciones' })).toHaveLength(2);
   });
 
@@ -68,15 +82,27 @@ describe('App', () => {
     expect(await screen.findByRole('heading', { name: 'Bienvenido de nuevo' })).toBeInTheDocument();
   });
 
-  it('entrando ya con sesion no se ensena el formulario: se pasa de largo', () => {
+  it('entrando ya con sesion no se ensena el formulario: se pasa de largo', async () => {
     renderApp(true, '/login');
-    expect(screen.getByRole('heading', { name: 'Inicio' })).toBeInTheDocument();
+    expect(await screen.findByText('Hola, Camilo')).toBeInTheDocument();
   });
 
   it('el panel de salud vive fuera del producto, sin armazon', async () => {
     renderApp(false, '/estado');
     expect(await screen.findByRole('heading', { name: 'Estado del servicio' })).toBeInTheDocument();
     expect(screen.queryByRole('navigation', { name: 'Secciones' })).not.toBeInTheDocument();
+  });
+
+  /**
+   * El sheet vive en el armazon y no en una pantalla: el borrador es el mismo para Inicio y
+   * para Movimientos. Este test existe porque montarlo solo en la pantalla pasaba todos los
+   * demas y dejaba el boton de rango sin hacer nada en la aplicacion de verdad.
+   */
+  it('el boton de rango abre el sheet desde Inicio', async () => {
+    renderApp(true);
+    await userEvent.click(await screen.findByRole('button', { name: 'Elegir un rango de fechas' }));
+
+    expect(screen.getByRole('dialog', { name: 'Rango de fechas' })).toBeInTheDocument();
   });
 
   it('crear cuenta y recuperar la contrasena tienen su propia direccion', () => {
