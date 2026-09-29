@@ -19,6 +19,9 @@ pub enum StartupError {
     /// La configuracion de correo no es valida.
     #[error(transparent)]
     Mail(#[from] MailError),
+    /// El cliente del modelo del dictado no se pudo construir.
+    #[error("the dictation interpreter could not be built: {0}")]
+    Dictation(#[source] Box<gastonomo_infrastructure::dictation::InterpreterError>),
     /// El documento OpenAPI no se pudo serializar.
     #[error("could not build the OpenAPI document: {0}")]
     OpenApi(String),

@@ -26,6 +26,11 @@ on:
         # una sutileza de inherit y para que la lista diga lo que hace falta.
         description: clave API del proveedor de correo, la contrasena SMTP
         required: true
+      GASTONOMO__CLAUDE__API_KEY:
+        # Opcional: sin ella la API arranca igual y el dictado responde 503. Es una
+        # capacidad que se paga por uso, asi que una instancia puede querer no tenerla.
+        description: clave de la API de Anthropic, para el dictado de registros
+        required: false
 
 permissions:
   contents: read
@@ -67,7 +72,7 @@ jobs:
       # Regenerarlo entero se llevaria por delante la contrasena de la base de datos y el
       # secreto de los tokens, que se generaron en la maquina y no estan en ningun sitio
       # mas.
-      - name: Poner la configuracion de correo en el .env del servidor
+      - name: Poner la configuracion de correo y del dictado en el .env del servidor
         env:
           HOST: ${{ secrets.DEPLOY_HOST }}
           DEPLOY_AS: ${{ secrets.DEPLOY_USER }}
@@ -76,6 +81,9 @@ jobs:
           # misma pantalla de GitHub. Si esta vacia, se respeta lo que haya en la maquina,
           # que es como estaba antes de existir esta variable.
           MAIL_FROM: ${{ vars.GASTONOMO__MAIL__FROM }}
+          # El dictado es opcional. Vacia, no se escribe nada y se respeta lo que haya
+          # en la maquina, igual que el remitente.
+          CLAUDE_API_KEY: ${{ secrets.GASTONOMO__CLAUDE__API_KEY }}
         run: |
           if [ -z "${MAIL_PASSWORD}" ]; then
             echo "::error::falta el secreto GASTONOMO__MAIL__PASSWORD"
@@ -86,7 +94,7 @@ jobs:
           # Se acepta por ser el patron que ya hay; si algun dia se cambia, hay que
           # cambiar los dos.
           ssh -i ~/.ssh/deploy "$DEPLOY_AS@$HOST" \
-            "MAIL_PASSWORD='$MAIL_PASSWORD' MAIL_FROM='$MAIL_FROM' bash -euo pipefail" <<'REMOTE'
+            "MAIL_PASSWORD='$MAIL_PASSWORD' MAIL_FROM='$MAIL_FROM' CLAUDE_API_KEY='$CLAUDE_API_KEY' bash -euo pipefail" <<'REMOTE'
           cd /srv/apps/gastonomo
 
           # Cambia la linea si existe y la anade si no. El valor nunca pasa por el argv de
@@ -129,6 +137,21 @@ jobs:
             || { echo "falta GASTONOMO__MAIL__FROM: ponlo en la variable GASTONOMO__MAIL__FROM de Actions"; exit 1; }
 
           echo "correo configurado: smtp.resend.com:587"
+
+          # El dictado es opcional, asi que la clave solo se escribe si viene. Sin ella
+          # la API arranca igual y el endpoint responde 503: una capacidad que se paga
+          # por uso no puede impedir que el servicio funcione.
+          #
+          # Ojo al orden inverso: esta clave NO se puede poner en el .env antes de
+          # desplegar el codigo que la declara. La configuracion rechaza claves
+          # desconocidas y el proceso no arranca. Escribirla desde aqui lo evita, porque
+          # el contenedor nuevo se levanta despues, en el paso siguiente.
+          if [ -n "${CLAUDE_API_KEY:-}" ]; then
+            upsert GASTONOMO__CLAUDE__API_KEY "$CLAUDE_API_KEY"
+            echo "dictado: configurado"
+          else
+            echo "dictado: sin clave, el endpoint respondera 503"
+          fi
           REMOTE
 
       - name: Bajar la etiqueta nueva y reiniciar

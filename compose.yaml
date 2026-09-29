@@ -53,6 +53,12 @@ services:
       # repositorio del host como root cada vez que se levanta la pila, y ahi
       # se queda: git lo ve, los guards lo recorren y no se puede borrar sin
       # sudo. En una ruta suya solo existe dentro del contenedor.
+      # El dictado. Vacio por defecto: en desarrollo el endpoint responde 503 y
+      # nadie gasta creditos sin querer. Para probarlo de verdad, exporta la clave
+      # antes de levantar la pila.
+      GASTONOMO__CLAUDE__API_KEY: ${GASTONOMO__CLAUDE__API_KEY:-}
+      GASTONOMO__CLAUDE__BASE_URL: ${GASTONOMO__CLAUDE__BASE_URL:-https://api.anthropic.com}
+
       CARGO_TARGET_DIR: /cargo-target
     ports:
       - '${API_PORT:-8080}:8080'
