@@ -1,0 +1,120 @@
+/*
+ * El boton flotante con su menu en arco.
+ *
+ * Dos medidas que parecen la misma y no lo son: las opciones se **dibujan** a 132 px del
+ * centro, pero empiezan a **elegirse** a 46. Tener que llegar hasta la opcion para elegirla
+ * haria el gesto imposible en una pantalla pequena.
+ */
+
+.g-fab__scrim {
+  position: fixed;
+  z-index: 18;
+  border: 0;
+  background: var(--g-fab-scrim);
+  opacity: 0;
+  transition: opacity 0.2s;
+  pointer-events: none;
+  inset: 0;
+}
+
+.g-fab[data-open='true'] .g-fab__scrim {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.g-fab__dock {
+  position: fixed;
+  right: var(--g-gutter);
+  bottom: 92px;
+  z-index: 19;
+  width: 64px;
+  height: 64px;
+}
+
+@media (min-width: 900px) {
+  .g-fab__dock {
+    bottom: 32px;
+  }
+}
+
+.g-fab__hint {
+  position: absolute;
+  right: 0;
+  bottom: 190px;
+  margin: 0;
+  color: var(--g-on-ink);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  opacity: 0.8;
+}
+
+.g-fab__button {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 22px;
+  background: var(--g-ink);
+  box-shadow: 0 12px 26px -8px rgb(0 0 0 / 45%);
+  cursor: pointer;
+  inset: 0;
+  touch-action: none;
+  user-select: none;
+}
+
+.g-fab__button .g-icon {
+  color: var(--g-lime);
+  font-size: 30px;
+  transition: transform 0.2s;
+}
+
+.g-fab[data-open='true'] .g-fab__button .g-icon {
+  transform: rotate(45deg);
+}
+
+.g-fab__option {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--g-surface);
+  box-shadow: 0 10px 24px -10px rgb(0 0 0 / 50%);
+  color: var(--g-ink);
+  opacity: 0;
+  transition:
+    transform 0.24s cubic-bezier(0.3, 1.35, 0.5, 1),
+    opacity 0.16s,
+    background 0.12s;
+  pointer-events: none;
+  cursor: pointer;
+}
+
+.g-fab[data-open='true'] .g-fab__option {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.g-fab__option[data-hovered='true'] {
+  background: var(--g-lime);
+}
+
+.g-fab__option .g-icon {
+  font-size: 26px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .g-fab__scrim,
+  .g-fab__button .g-icon,
+  .g-fab__option {
+    transition-duration: 0.01ms;
+  }
+}

@@ -10,7 +10,14 @@ pnpm install                          # desde la raiz del repo
 pnpm --filter @gastonomo/web dev      # http://localhost:5173
 ```
 
-La URL de la API se lee de `VITE_API_URL` (por defecto `http://localhost:8080`).
+La URL de la API se lee de `VITE_API_URL`. Vacia significa **el mismo origen**, que es como
+se sirve desplegado: Caddy pone la API bajo el dominio de la web. En desarrollo lo consigue
+el proxy de Vite, que manda `/v1`, `/health` y `/openapi.json` a `VITE_DEV_API_TARGET`
+(por defecto `http://127.0.0.1:8080`).
+
+```bash
+VITE_DEV_API_TARGET=http://127.0.0.1:8090 pnpm --filter @gastonomo/web dev
+```
 
 ## Capas
 
@@ -27,9 +34,51 @@ fuerza `eslint-plugin-boundaries`. Si `src/domain` importa de `src/infrastructur
 el lint falla con un mensaje que lo dice tal cual. Los ficheros de test son una
 categoria aparte: pueden montar cualquier adaptador, porque ese es su trabajo.
 
-El caso de uso implementado es uno solo, `checkApiHealth`, de punta a punta. Sirve de
-plantilla: cuando llegue el dominio real, se anaden modelos en `domain`, puertos y casos
-de uso en `application`, y adaptadores en `infrastructure`, sin tocar nada mas.
+Para anadir algo nuevo: modelo en `domain`, puerto y caso de uso en `application`, adaptador
+en `infrastructure`, pantalla en `ui` y cableado en `src/app/composition-root.ts`. En ese
+orden, y sin tocar nada mas.
+
+## Pantallas
+
+Entrar, crear cuenta, recuperar y restablecer la contrasena; Inicio, Movimientos, Prestamos
+y su detalle; los formularios de movimiento, prestamo y abono; Ajustes, Categorias y
+Exportar; y el dictado. `/estado` es una pantalla de diagnostico que se queda fuera del
+producto: no lleva armazon ni pide sesion.
+
+Tres cosas que no son evidentes al leer el codigo:
+
+- **El periodo lo comparten Inicio y Movimientos**, y por eso vive en un contexto por encima
+  de las dos. Los prestamos **no** dependen de el: son saldos de hoy.
+- **Los ajustes, el catalogo de monedas y las tasas se cargan una vez** por sesion, en
+  `AccountProvider`. De ahi salen la moneda con la que se convierte todo y el idioma con el
+  que se formatea, asi que dos pantallas con dos copias distintas no cuadrarian entre si.
+- **El dictado es una ruta y no una hoja**, porque lo abren tres pantallas. Se navega con la
+  pantalla actual en el estado para poder pintarla de fondo, y el modal lo pinta el armazon,
+  que es quien esta dentro de los proveedores.
+
+## Dinero
+
+Todo importe es decimal exacto sobre `BigInt` (`src/domain/money/decimal.ts`) y viaja como
+cadena. Nunca pasa por coma flotante, ni siquiera para formatear: a `Intl.NumberFormat` se le
+pasa la cadena, que la entiende desde ES2023.
+
+Cada registro lleva cuatro campos: lo que se teclo y su equivalencia en la moneda principal.
+**La equivalencia se guarda tal como quede en el formulario**, con la tasa que el usuario pudo
+editar, y la API no recalcula nada. Convertir para mostrar es del cliente
+(`src/domain/money/displayed-amount.ts`).
+
+Los tres POST que crean dinero mandan `Idempotency-Key`. La clave se genera **una vez por
+formulario y no se regenera al reintentar**: el historico no se puede borrar, asi que un
+reintento con clave nueva dejaria el gasto dos veces.
+
+## Formato
+
+`src/ui/format/` es el espejo de `:core:designsystem/format` de Android: mismos nombres de
+mes y dia, mismos simbolos de moneda y las mismas tres funciones de signo. Los nombres de
+fecha van en tablas propias y no salen de `Intl.DateTimeFormat`, que en castellano los
+devuelve con punto ("sept.") y en ingles cambia el orden.
+
+Ningun componente formatea por su cuenta: se lee del contexto con `useFormats()`.
 
 ## Comandos
 

@@ -1,0 +1,220 @@
+/*
+ * Piezas que usan varias pantallas: la tarjeta blanca, el tile de categoria, la fila de
+ * movimiento, los bloques de carga y fallo, y el importe con cifras tabulares.
+ */
+
+.g-card {
+  border: 1px solid var(--g-line);
+  border-radius: var(--g-radius-card);
+  background: var(--g-surface);
+  padding: 18px;
+}
+
+.g-card__title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.g-card__empty {
+  margin: 0;
+  padding: 18px 0 4px;
+  color: var(--g-muted);
+  font-size: 14px;
+}
+
+/*
+ * Todo importe lleva cifras tabulares. Sin esto las columnas bailan en cuanto un valor
+ * cambia de ancho, que es justo lo que pasa al cambiar de periodo.
+ */
+[data-amount] {
+  font-variant-numeric: tabular-nums;
+}
+
+/* El cuadrado de color con el icono de una categoria. */
+.g-tile {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+}
+
+.g-tile[data-size='small'] {
+  width: 30px;
+  height: 30px;
+  border-radius: var(--g-radius-tile-small);
+  font-size: 18px;
+}
+
+.g-tile[data-size='large'] {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--g-radius-tile-large);
+  font-size: 20px;
+}
+
+.g-tile .g-icon {
+  font-size: inherit;
+}
+
+/* Una fila de movimiento */
+.g-row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--g-row-line);
+}
+
+/*
+ * La ultima fila no lleva linea. El prototipo si la dibuja, pero con el padding de la
+ * tarjeta queda una raya suelta a cuatro pixeles del borde; Android ya la quito.
+ */
+.g-row:last-child {
+  border-bottom: 0;
+}
+
+.g-row__body {
+  flex: 1;
+  min-width: 0;
+}
+
+.g-row__title {
+  margin: 0;
+  overflow: hidden;
+  font-size: 14px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.g-row__subtitle {
+  margin: 2px 0 0;
+  color: var(--g-muted);
+  font-size: 12px;
+}
+
+.g-row__amount {
+  flex: none;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+/* Carga, fallo y aviso */
+.g-block {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+  padding: 44px 20px;
+  border: 1px solid var(--g-line);
+  border-radius: var(--g-radius-card);
+  background: var(--g-surface);
+}
+
+.g-block__text {
+  margin: 0;
+  color: var(--g-muted);
+  font-size: 14px;
+  text-align: center;
+}
+
+.g-block__retry {
+  height: var(--g-height-touch);
+  padding: 0 22px;
+  border: 0;
+  border-radius: var(--g-radius-nav-item);
+  background: var(--g-ink);
+  color: var(--g-on-ink);
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.g-spinner {
+  width: 30px;
+  height: 30px;
+  border: 3px solid var(--g-field-line);
+  border-top-color: var(--g-ink);
+  border-radius: 50%;
+  animation: g-spin 0.8s linear infinite;
+}
+
+@keyframes g-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .g-spinner {
+    animation-duration: 3s;
+  }
+}
+
+.g-note-line {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin: 0 0 12px;
+  color: var(--g-note);
+  font-size: 13px;
+}
+
+.g-note-line .g-icon {
+  font-size: 18px;
+}
+
+/* Lo que solo leen los lectores de pantalla. */
+.g-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* Una fila de pills de filtro, de las que solo una esta activa. */
+.g-filters {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.g-filter {
+  height: 36px;
+  padding: 0 16px;
+  border: 1px solid var(--g-line);
+  border-radius: 18px;
+  background: var(--g-surface);
+  color: var(--g-ink);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.g-filter[data-active='true'] {
+  border-color: var(--g-ink);
+  background: var(--g-ink);
+  color: var(--g-on-ink);
+}
+
+/* El hueco de una lista vacia. */
+.g-empty {
+  padding: 48px 20px;
+  color: var(--g-muted);
+  font-size: 14px;
+  text-align: center;
+}
+
+.g-empty__icon {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--g-empty-icon);
+  font-size: 36px;
+}
+
+.g-empty__icon .g-icon {
+  font-size: inherit;
+}

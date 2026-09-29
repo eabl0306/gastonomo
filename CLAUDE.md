@@ -29,9 +29,34 @@ framework, ni HTTP, ni SQL, ni React, ni Android. Los detalles estan en
   `crates/api/src/bootstrap.rs`.
 - **Web**: una carpeta por capa en `apps/web/src` (`domain`, `application`,
   `infrastructure`, `ui`, `app`). Lo verifica `eslint-plugin-boundaries` con denegacion
-  por defecto. `src/domain` no puede importar ni siquiera un paquete de npm. La raiz de
-  composicion es `src/app/composition-root.ts`.
-- **Android**: un modulo por capa, veinticuatro en total. `core:domain`, `core:application` y
+  por defecto. `src/domain` no puede importar ni siquiera un paquete de npm, y `ui` no puede
+  importar `infrastructure` ni `app`. La raiz de composicion es `src/app/composition-root.ts`.
+
+  Las 14 pantallas estan implementadas. Cuatro cosas que conviene saber antes de tocarlas:
+
+  **Los ajustes, el catalogo de monedas y las tasas se cargan una sola vez**, en
+  `AccountProvider`. De ahi salen la moneda con la que se convierte todo y el idioma con el que
+  se formatea; una pantalla que se los pida por su cuenta acabara ensenando cifras que no
+  cuadran con las de al lado. **El periodo lo comparten Inicio y Movimientos** y vive en un
+  contexto por encima de las dos; los prestamos **no** dependen de el.
+
+  **Ningun componente formatea por su cuenta**: se lee del contexto con `useFormats()`. Los
+  nombres de mes y dia van en tablas propias (`src/ui/format/calendar-names.ts`) y no salen de
+  `Intl.DateTimeFormat`, que en castellano los devuelve con punto ("sept.") y en ingles cambia
+  el orden. Los importes si pasan por `Intl.NumberFormat`, pero **como cadena**: convertirlos a
+  `number` perderia cifras en un importe grande.
+
+  **El dictado es una ruta y no una hoja**, porque lo abren tres pantallas. Se navega con la
+  pantalla actual en `location.state.background` para poder pintarla de fondo, y el modal lo
+  pinta el armazon, no el arbol de rutas: fuera se quedaria sin los proveedores. Ojo con leer
+  `useLocation` dentro de un `<Routes location={...}>`: devuelve la que se le paso, que ahi es
+  justo la pantalla de fondo.
+
+  **Los textos de la interfaz estan solo en castellano.** El formato de numeros y fechas ya
+  cambia con el idioma de la cuenta, pero no hay traducciones, y por eso Ajustes no ofrece el
+  selector de idioma. Las cadenas en ingles estan escritas en el `values-en` de Android.
+
+- **Android**: un modulo por capa, veintitres en total. `core:domain`, `core:application` y
   `core:common` son `kotlin("jvm")` puros, asi que el SDK de Android no esta en su classpath.
   `feature:*` nunca depende de `data:*` ni de otra `feature:*`: las une `:app`, con un fichero
   de cableado por feature en `app/src/main/kotlin/com/bahoque/gastonomo/wiring/`. Lo vigilan

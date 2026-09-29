@@ -1,14 +1,15 @@
-:root {
-  color-scheme: light dark;
-  font-family: system-ui, sans-serif;
-  line-height: 1.5;
-}
-
-body {
-  margin: 0;
+/*
+ * La pantalla de diagnostico. Es lo unico que queda del andamio anterior y vive en
+ * `/estado`, fuera del producto.
+ *
+ * Lo que tenia aqui de `:root` y `body` se quito a proposito: ponia la pagina en
+ * un grid centrado y eso deformaba el armazon, que ocupa la ventana entera. El
+ * cuerpo lo define `tokens.css`, que es donde vive el tema.
+ */
+.health-panel--page {
   display: grid;
   place-items: start center;
-  min-height: 100vh;
+  min-height: 100dvh;
 }
 
 .health-panel {

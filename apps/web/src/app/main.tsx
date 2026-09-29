@@ -3,19 +3,30 @@ import { createRoot } from 'react-dom/client';
 
 import '../ui/theme/tokens.css';
 import '../ui/auth/auth.css';
+import '../ui/shell/shell.css';
+import '../ui/common/common.css';
+import '../ui/period/period.css';
+import '../ui/home/home.css';
+import '../ui/movements/movements.css';
+import '../ui/loans/loans.css';
+import '../ui/forms/forms.css';
+import '../ui/fab/fab.css';
+import '../ui/settings/settings.css';
+import '../ui/categories/categories.css';
+import '../ui/export/export.css';
+import '../ui/dictation/dictation.css';
 import '../ui/styles.css';
 
 import { App } from './app';
-import { createHealthGateway, createPasswordResetGateway } from './composition-root';
+import { createContainer } from './composition-root';
 
-const container = document.getElementById('root');
-if (container === null) throw new Error('No existe el elemento #root en index.html');
+const root = document.getElementById('root');
+if (root === null) throw new Error('No existe el elemento #root en index.html');
 
-createRoot(container).render(
+const container = createContainer(import.meta.env);
+
+createRoot(root).render(
   <StrictMode>
-    <App
-      gateway={createHealthGateway(import.meta.env)}
-      passwordResets={createPasswordResetGateway(import.meta.env)}
-    />
+    <App container={container} />
   </StrictMode>,
 );
