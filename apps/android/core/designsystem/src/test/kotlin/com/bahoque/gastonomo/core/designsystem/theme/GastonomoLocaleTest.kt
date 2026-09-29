@@ -1,6 +1,8 @@
 package com.bahoque.gastonomo.core.designsystem.theme
 
 import androidx.activity.compose.LocalActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.res.stringResource
@@ -68,6 +70,30 @@ class GastonomoLocaleTest {
             activity,
             "LocalActivity se calcula a partir de LocalContext, y el tema lo sustituye: hay que " +
                 "volver a fijarlo o nadie dentro de la aplicacion puede abrir nada del sistema",
+        )
+    }
+
+    /**
+     * El registro de resultados de actividad se busca igual, subiendo por `LocalContext`, y es por
+     * donde pasan los permisos del sistema. Sin fijarlo, pedir el microfono no fallaba en silencio:
+     * cerraba la aplicacion.
+     */
+    @Test
+    fun `asking for a permission inside the theme does not blow up`() {
+        var launcher: Any? = null
+        compose.setContent {
+            GastonomoTheme(language = AppLanguage.SPANISH, displayCurrency = CurrencyCode.COP) {
+                val current = rememberLauncherForActivityResult(
+                    contract = ActivityResultContracts.RequestPermission(),
+                ) { }
+                SideEffect { launcher = current }
+            }
+        }
+        compose.waitForIdle()
+        assertNotNull(
+            launcher,
+            "rememberLauncherForActivityResult busca su registro subiendo por LocalContext, y el " +
+                "tema lo sustituye: sin volver a fijarlo, pedir un permiso cierra la aplicacion",
         )
     }
 

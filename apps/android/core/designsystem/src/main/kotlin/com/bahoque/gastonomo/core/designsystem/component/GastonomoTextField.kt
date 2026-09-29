@@ -60,6 +60,9 @@ import com.bahoque.gastonomo.core.designsystem.theme.GastonomoTheme
  *     error = state.emailError,
  * )
  * ```
+ *
+ * @param lines cuantas lineas admite. Con 1 el campo es de una sola linea y alto fijo, que es lo
+ *   normal; con mas, crece y el texto se puede partir. El dictado escrito usa 3.
  */
 @Composable
 fun GastonomoTextField(
@@ -78,6 +81,7 @@ fun GastonomoTextField(
     height: Dp = GastonomoTheme.dimens.textField,
     radius: Dp = GastonomoTheme.radii.control,
     contentPadding: Dp = FIELD_PADDING,
+    lines: Int = 1,
     leading: (@Composable () -> Unit)? = null,
     trailing: (@Composable () -> Unit)? = null,
 ) {
@@ -102,6 +106,7 @@ fun GastonomoTextField(
             height = height,
             radius = radius,
             contentPadding = contentPadding,
+            lines = lines,
             leading = leading,
             trailing = trailing,
         )
@@ -159,6 +164,7 @@ private fun FieldBox(
     height: Dp,
     radius: Dp,
     contentPadding: Dp,
+    lines: Int,
     leading: (@Composable () -> Unit)?,
     trailing: (@Composable () -> Unit)?,
 ) {
@@ -176,8 +182,10 @@ private fun FieldBox(
             .heightIn(min = height)
             .background(GastonomoTheme.colors.surface, shape)
             .border(GastonomoTheme.dimens.divider, borderColor, shape)
-            .padding(horizontal = contentPadding),
-        verticalAlignment = Alignment.CenterVertically,
+            .padding(horizontal = contentPadding, vertical = if (lines > 1) contentPadding else 0.dp),
+        // Un campo de varias lineas crece hacia abajo y su texto empieza arriba; uno de una sola
+        // se centra en su alto fijo.
+        verticalAlignment = if (lines > 1) Alignment.Top else Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(GAP),
     ) {
         leading?.invoke()
@@ -187,14 +195,15 @@ private fun FieldBox(
                     text = placeholder,
                     style = GastonomoTheme.typography.body,
                     color = GastonomoTheme.colors.faint,
-                    maxLines = 1,
+                    maxLines = lines,
                 )
             }
             BasicTextField(
                 value = value,
                 onValueChange = onValueChange,
                 enabled = enabled,
-                singleLine = true,
+                singleLine = lines == 1,
+                maxLines = lines,
                 interactionSource = interactionSource,
                 textStyle = GastonomoTheme.typography.body.copy(color = GastonomoTheme.colors.ink),
                 cursorBrush = SolidColor(GastonomoTheme.colors.ink),

@@ -60,3 +60,6 @@ include(":feature:loans")
 include(":feature:settings")
 include(":feature:categories")
 include(":feature:export")
+// El dictado. Lo abren Inicio, Movimientos y Prestamos, y ninguno de los tres lo conoce: los
+// une :app, que es quien monta su grafo.
+include(":feature:dictation")

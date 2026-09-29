@@ -6,6 +6,7 @@ import com.bahoque.gastonomo.core.application.port.BiometricLock
 import com.bahoque.gastonomo.core.application.port.DeviceSettingsStore
 import com.bahoque.gastonomo.core.application.port.LocalLock
 import com.bahoque.gastonomo.core.application.port.SessionStore
+import com.bahoque.gastonomo.core.application.port.SpeechToText
 
 /**
  * Las fabricas de los adaptadores de este modulo. El contenedor de la aplicacion las llama
@@ -34,3 +35,6 @@ fun createBiometricLock(
     context: Context,
     activityProvider: () -> FragmentActivity?,
 ): BiometricLock = AndroidBiometricLock(context, activityProvider)
+
+/** El reconocimiento de voz del sistema, para el dictado. */
+fun createSpeechToText(context: Context): SpeechToText = AndroidSpeechToText(context)

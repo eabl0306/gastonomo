@@ -11,5 +11,20 @@ data class LoansActions(
     val onOpenLoan: (LoanRow) -> Unit,
     val onRegisterPayment: (LoanRow) -> Unit,
     val onNewLoan: () -> Unit,
+    val onNewMovement: () -> Unit,
+    val onDictate: () -> Unit,
     val onRetry: () -> Unit,
-)
+) {
+    companion object {
+        /** Unas acciones que no hacen nada, para tests y capturas. */
+        val NONE = LoansActions(
+            onFilter = {},
+            onOpenLoan = {},
+            onRegisterPayment = {},
+            onNewLoan = {},
+            onNewMovement = {},
+            onDictate = {},
+            onRetry = {},
+        )
+    }
+}

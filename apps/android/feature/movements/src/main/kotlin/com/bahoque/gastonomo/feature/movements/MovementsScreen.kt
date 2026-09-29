@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -22,9 +21,9 @@ import com.bahoque.gastonomo.core.designsystem.component.DateRangeSheet
 import com.bahoque.gastonomo.core.designsystem.component.EmptyState
 import com.bahoque.gastonomo.core.designsystem.component.FilterPill
 import com.bahoque.gastonomo.core.designsystem.component.FilterPillRow
-import com.bahoque.gastonomo.core.designsystem.component.GastonomoFab
 import com.bahoque.gastonomo.core.designsystem.component.GastonomoLoadingBlock
 import com.bahoque.gastonomo.core.designsystem.component.GastonomoNoteLine
+import com.bahoque.gastonomo.core.designsystem.component.GastonomoQuickAdd
 import com.bahoque.gastonomo.core.designsystem.component.GastonomoRetryBlock
 import com.bahoque.gastonomo.core.designsystem.component.GastonomoScreen
 import com.bahoque.gastonomo.core.designsystem.component.GastonomoSheetHost
@@ -75,12 +74,10 @@ fun MovementsScreen(
                 Spacer(Modifier.height(BOTTOM_GAP))
             }
         }
-        GastonomoFab(
-            text = stringResource(R.string.movements_new),
-            onClick = actions.onNewMovement,
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(end = FAB_SIDE, bottom = FAB_BOTTOM),
+        GastonomoQuickAdd(
+            onNewMovement = actions.onNewMovement,
+            onNewLoan = actions.onNewLoan,
+            onDictate = actions.onDictate,
         )
         Overlays(state = state, actions = actions)
     }
@@ -178,11 +175,3 @@ private val SUMMARY_GAP = 14.dp
 private val EMPTY_PADDING = 40.dp
 private val GROUP_GAP = 10.dp
 private val BOTTOM_GAP = 96.dp
-private val FAB_SIDE = 20.dp
-
-/**
- * El diseno pone el FAB a 92 del borde inferior de la pantalla, contando la tab bar por debajo.
- * Aqui la tab bar es hermana del contenido y no lo tapa, asi que la distancia es la que queda:
- * 92 menos los 78 de la barra.
- */
-private val FAB_BOTTOM = 14.dp

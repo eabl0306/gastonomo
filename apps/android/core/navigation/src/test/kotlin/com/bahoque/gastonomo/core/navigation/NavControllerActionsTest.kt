@@ -37,11 +37,11 @@ class NavControllerActionsTest {
 
     @Test
     fun `switching tab empties the stack`() {
-        controller.navigate(GastonomoRoute.NewLoan)
+        controller.navigate(GastonomoRoute.NewLoan())
         assertEquals(3, controller.currentBackStack.value.size)
         controller.switchTab(TopLevelDestination.LOANS)
         assertEquals(2, controller.currentBackStack.value.size)
-        assertEquals(routeOf(GastonomoRoute.Loans), controller.currentDestination?.route)
+        assertEquals(routeOf(GastonomoRoute.Loans), currentRoute())
     }
 
     /**
@@ -60,26 +60,50 @@ class NavControllerActionsTest {
         assertEquals(stack, controller.currentBackStack.value.size)
     }
 
+    /**
+     * Corregir un dictado sustituye la pantalla: volver atras desde el formulario tiene que llevar
+     * a la pantalla desde la que se dicto, no a un borrador que ya no vale.
+     */
+    @Test
+    fun `replacing the current screen does not leave it in the stack`() {
+        controller.navigate(GastonomoRoute.Loans)
+        val before = controller.currentBackStack.value.size
+        controller.replaceCurrent(GastonomoRoute.NewLoan())
+        assertEquals(routeOf(GastonomoRoute.NewLoan()), currentRoute())
+        assertEquals(before, controller.currentBackStack.value.size)
+        controller.popBackStack()
+        assertEquals(routeOf(GastonomoRoute.Home), currentRoute())
+    }
+
     @Test
     fun `replacing leaves only the new screen`() {
-        controller.navigate(GastonomoRoute.NewLoan)
+        controller.navigate(GastonomoRoute.NewLoan())
         controller.replaceWith(GastonomoRoute.Login)
-        assertEquals(routeOf(GastonomoRoute.Login), controller.currentDestination?.route)
+        assertEquals(routeOf(GastonomoRoute.Login), currentRoute())
         assertEquals(2, controller.currentBackStack.value.size)
     }
 
     @Test
     fun `the actions of a real controller navigate it`() {
         val actions = GastonomoNavActions.of(controller)
-        actions.navigateTo(GastonomoRoute.NewLoan)
-        assertEquals(routeOf(GastonomoRoute.NewLoan), controller.currentDestination?.route)
+        actions.navigateTo(GastonomoRoute.NewLoan())
+        assertEquals(routeOf(GastonomoRoute.NewLoan()), currentRoute())
         actions.back()
-        assertEquals(routeOf(GastonomoRoute.Home), controller.currentDestination?.route)
+        assertEquals(routeOf(GastonomoRoute.Home), currentRoute())
         actions.switchTab(TopLevelDestination.LOANS)
-        assertEquals(routeOf(GastonomoRoute.Loans), controller.currentDestination?.route)
+        assertEquals(routeOf(GastonomoRoute.Loans), currentRoute())
         actions.replaceWith(GastonomoRoute.Login)
-        assertEquals(routeOf(GastonomoRoute.Login), controller.currentDestination?.route)
+        assertEquals(routeOf(GastonomoRoute.Login), currentRoute())
     }
 
+    /**
+     * El nombre de la ruta, sin los argumentos.
+     *
+     * Con rutas tipadas, `route` es el nombre cualificado de la clase mas la plantilla de sus
+     * argumentos detras: `...NewLoan?person={person}&...`. Lo que se compara es la pantalla.
+     */
     private fun routeOf(route: GastonomoRoute): String = route::class.qualifiedName.orEmpty()
+
+    private fun currentRoute(): String? =
+        controller.currentDestination?.route?.substringBefore('?')
 }

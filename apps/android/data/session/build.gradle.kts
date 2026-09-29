@@ -21,6 +21,14 @@ quality {
         "com.bahoque.gastonomo.data.session.KeystoreCipher",
         "com.bahoque.gastonomo.data.session.AndroidBiometricLock",
         "com.bahoque.gastonomo.data.session.AndroidBiometricLock*",
+        // El reconocimiento de voz es un servicio del sistema que Robolectric no trae: sin el,
+        // isRecognitionAvailable contesta que no y no hay forma de ejecutar el resto. Lo que si
+        // se puede probar sin dispositivo, la traduccion de los codigos de error, esta en
+        // SpeechFailures.kt, que NO esta aqui y tiene su test.
+        "com.bahoque.gastonomo.data.session.AndroidSpeechToText",
+        "com.bahoque.gastonomo.data.session.AndroidSpeechSession",
+        "com.bahoque.gastonomo.data.session.AndroidSpeechSession*",
+        "com.bahoque.gastonomo.data.session.SilentRecognitionListener",
     )
 }
 

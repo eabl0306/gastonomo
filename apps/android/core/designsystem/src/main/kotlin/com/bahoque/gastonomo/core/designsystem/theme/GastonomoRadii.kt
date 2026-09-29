@@ -25,8 +25,11 @@ class GastonomoRadii {
     /** Listas y tarjetas corrientes. */
     val card: Dp = 20.dp
 
-    /** Tile de 64 del estado enviado de Recuperar, y el FAB. */
+    /** Tile de 64 del estado enviado de Recuperar, y el FAB de una palabra. */
     val fab: Dp = 20.dp
+
+    /** El FAB de registro rapido, que es un cuadrado redondeado y no un circulo. */
+    val fabRadial: Dp = 22.dp
 
     /** Tarjetas pequenas: acciones rapidas, caja de conversion. */
     val smallCard: Dp = 18.dp

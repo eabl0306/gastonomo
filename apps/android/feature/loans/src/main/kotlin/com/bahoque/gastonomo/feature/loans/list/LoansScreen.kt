@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -16,7 +15,7 @@ import com.bahoque.gastonomo.core.designsystem.GastonomoStrings
 import com.bahoque.gastonomo.core.designsystem.component.EmptyState
 import com.bahoque.gastonomo.core.designsystem.component.FilterPill
 import com.bahoque.gastonomo.core.designsystem.component.FilterPillRow
-import com.bahoque.gastonomo.core.designsystem.component.GastonomoFab
+import com.bahoque.gastonomo.core.designsystem.component.GastonomoQuickAdd
 import com.bahoque.gastonomo.core.designsystem.component.GastonomoScreen
 import com.bahoque.gastonomo.core.designsystem.component.GastonomoText
 import com.bahoque.gastonomo.core.designsystem.icon.GastonomoIcons
@@ -53,13 +52,10 @@ fun LoansScreen(
             )
             LoanList(state = state, actions = actions)
         }
-        GastonomoFab(
-            text = stringResource(R.string.loans_fab),
-            onClick = actions.onNewLoan,
-            icon = GastonomoIcons.ADD,
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(end = GastonomoTheme.dimens.screenPadding, bottom = FAB_BOTTOM),
+        GastonomoQuickAdd(
+            onNewMovement = actions.onNewMovement,
+            onNewLoan = actions.onNewLoan,
+            onDictate = actions.onDictate,
         )
     }
 }
@@ -120,8 +116,6 @@ private fun LoanList(state: LoansUiState, actions: LoansActions) {
     }
 }
 
-/** El hueco que deja el FAB por encima de la tab bar, que la pinta `:app`. */
-private val FAB_BOTTOM = 14.dp
 private val TITLE_TOP = 12.dp
 private val TITLE_BOTTOM = 16.dp
 private val LIST_BOTTOM = 96.dp

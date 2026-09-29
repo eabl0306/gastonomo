@@ -41,6 +41,10 @@ fun ComposeContentTestRule.renderNavGraph(
                 switchTab = { recorded += it.route },
                 back = { navController.popBackStack() },
                 replaceWith = { recorded += it },
+                replaceCurrent = {
+                    recorded += it
+                    navController.navigate(it)
+                },
             )
             NavHost(navController = navController, startDestination = start) {
                 graph(actions)

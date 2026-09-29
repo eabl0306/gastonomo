@@ -36,6 +36,8 @@ fun LoansRoute(
     createdSignal: LoanCreatedSignal,
     onOpenLoan: (LoanId) -> Unit,
     onNewLoan: () -> Unit,
+    onNewMovement: () -> Unit,
+    onDictate: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val loans: LoansViewModel = viewModel {
@@ -65,6 +67,8 @@ fun LoansRoute(
                     onOpenLoan = { onOpenLoan(it.loan.id) },
                     onRegisterPayment = { payment.open(it.loan, it.summary, state.context) },
                     onNewLoan = onNewLoan,
+                    onNewMovement = onNewMovement,
+                    onDictate = onDictate,
                     onRetry = loans::reload,
                 )
             },

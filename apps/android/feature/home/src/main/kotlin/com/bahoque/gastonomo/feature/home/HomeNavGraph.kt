@@ -25,7 +25,8 @@ fun NavGraphBuilder.homeNavGraph(
         HomeRoute(
             dependencies = dependencies,
             onNewMovement = { kind -> actions.navigateTo(GastonomoRoute.NewMovement(kind.wire)) },
-            onNewLoan = { actions.navigateTo(GastonomoRoute.NewLoan) },
+            onNewLoan = { actions.navigateTo(GastonomoRoute.NewLoan()) },
+            onDictate = { actions.navigateTo(GastonomoRoute.Dictate) },
             onOpenLoans = { actions.switchTab(TopLevelDestination.LOANS) },
             onOpenMovements = { actions.switchTab(TopLevelDestination.MOVEMENTS) },
             onOpenSettings = { actions.switchTab(TopLevelDestination.SETTINGS) },

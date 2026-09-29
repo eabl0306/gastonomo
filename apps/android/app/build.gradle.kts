@@ -45,6 +45,7 @@ dependencies {
 
     implementation(project(":feature:auth"))
     implementation(project(":feature:categories"))
+    implementation(project(":feature:dictation"))
     implementation(project(":feature:export"))
     implementation(project(":feature:home"))
     implementation(project(":feature:loans"))

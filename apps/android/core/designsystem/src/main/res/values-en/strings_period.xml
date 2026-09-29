@@ -25,5 +25,11 @@
     <string name="gastonomo_conversion_equivalent_own_only">Equals %1$s</string>
     <string name="gastonomo_conversion_rate_missing">There is no rate for %1$s. Type your own.</string>
 
+    <string name="gastonomo_quick_add">New record</string>
+    <string name="gastonomo_quick_add_close">Close the menu</string>
+    <string name="gastonomo_quick_add_movement">New movement</string>
+    <string name="gastonomo_quick_add_loan">New loan</string>
+    <string name="gastonomo_quick_add_dictate">Dictate</string>
+
     <string name="gastonomo_date_field_open">Pick a date</string>
 </resources>

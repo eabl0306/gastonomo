@@ -8,7 +8,6 @@
     <string name="movements_income">Ingresos</string>
     <string name="movements_expense">Gastos</string>
     <string name="movements_net">Neto</string>
-    <string name="movements_new">Nuevo</string>
     <string name="movements_empty">No hay movimientos en este periodo.</string>
     <string name="movements_error_conflict">Ese movimiento ya se había guardado.</string>
     <string name="movements_toast_income_saved">Ingreso guardado</string>

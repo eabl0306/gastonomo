@@ -19,6 +19,7 @@ import com.bahoque.gastonomo.core.application.usecase.category.RestoreCategory
 import com.bahoque.gastonomo.core.application.usecase.category.SaveCategory
 import com.bahoque.gastonomo.core.application.usecase.currency.LoadCurrencyCatalog
 import com.bahoque.gastonomo.core.application.usecase.currency.LoadExchangeRates
+import com.bahoque.gastonomo.core.application.usecase.dictation.ParseDictation
 import com.bahoque.gastonomo.core.application.usecase.loan.CreateLoan
 import com.bahoque.gastonomo.core.application.usecase.loan.LoadLoanDetail
 import com.bahoque.gastonomo.core.application.usecase.loan.LoadLoans
@@ -71,6 +72,11 @@ internal class UseCases(
     val loadLoanDetail = LoadLoanDetail(gateways.loans)
     val createLoan = CreateLoan(gateways.loans)
     val registerLoanPayment = RegisterLoanPayment(gateways.loans)
+
+    val parseDictation = ParseDictation(gateways.dictation, devices.clock)
+
+    /** El reconocimiento de voz, que el dictado usa tal cual: no hay caso de uso que envolver. */
+    val speechToText = devices.speechToText
 
     val loadCategories = LoadCategories(gateways.categories)
     val saveCategory = SaveCategory(gateways.categories)

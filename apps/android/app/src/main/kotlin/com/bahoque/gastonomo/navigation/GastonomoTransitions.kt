@@ -23,6 +23,15 @@ internal enum class ScreenKind {
     /** Un formulario de creacion. Entra con `close`, no con `arrow_back`. */
     FORM,
 
+    /**
+     * Un modal que se pinta encima de la pantalla anterior, como el dictado.
+     *
+     * Es una ruta y no una hoja dentro de una pantalla porque la abren tres pantallas distintas, y
+     * una feature no conoce a otra. Se anima **sola**, con su propio velo y su propio panel, asi
+     * que la navegacion no la mueve: moverla tambien desde aqui la animaria dos veces.
+     */
+    MODAL,
+
     /** Cualquier otra: se apila encima de la anterior. */
     PUSHED,
 }
@@ -37,6 +46,9 @@ internal enum class NavMotion {
 
     /** De abajo arriba, como un modal. */
     SHEET,
+
+    /** Nada: la pantalla que llega se anima por dentro. */
+    NONE,
 }
 
 /**
@@ -69,6 +81,7 @@ internal class GastonomoTransitions(private val motion: GastonomoMotion) {
 
     private fun entering(nav: NavMotion, popping: Boolean): EnterTransition = when {
         !motion.enabled -> EnterTransition.None
+        nav == NavMotion.NONE -> EnterTransition.None
         nav == NavMotion.FADE -> fadeIn(motion.enterSpec())
         // Al volver de un formulario, lo que hay debajo no se movio: solo reaparece.
         nav == NavMotion.SHEET && popping -> fadeIn(motion.enterSpec())
@@ -79,6 +92,7 @@ internal class GastonomoTransitions(private val motion: GastonomoMotion) {
 
     private fun leaving(nav: NavMotion, popping: Boolean): ExitTransition = when {
         !motion.enabled -> ExitTransition.None
+        nav == NavMotion.NONE -> ExitTransition.None
         nav == NavMotion.FADE -> fadeOut(motion.exitSpec())
         // El formulario se va hacia abajo; la pantalla que tapaba se queda quieta debajo.
         nav == NavMotion.SHEET && popping -> slideOutVertically(motion.exitSpec()) { it } + fadeOut(motion.exitSpec())
@@ -104,6 +118,9 @@ internal class GastonomoTransitions(private val motion: GastonomoMotion) {
  * ser predecible.
  */
 internal fun navMotionOf(from: ScreenKind, to: ScreenKind): NavMotion = when {
+    // El modal trae su propia animacion. Va antes que todo lo demas: si la navegacion tambien lo
+    // deslizara, el panel subiria dos veces y el velo entraria torcido.
+    from == ScreenKind.MODAL || to == ScreenKind.MODAL -> NavMotion.NONE
     from == ScreenKind.FORM || to == ScreenKind.FORM -> NavMotion.SHEET
     from == ScreenKind.TAB && to == ScreenKind.TAB -> NavMotion.FADE
     else -> NavMotion.PUSH
@@ -118,11 +135,24 @@ internal fun navMotionOf(from: ScreenKind, to: ScreenKind): NavMotion = when {
 internal fun screenKindOf(destination: NavDestination?): ScreenKind {
     val name = destination?.route?.substringBefore('/')?.substringBefore('?')
     return when (name) {
+        in MODAL_ROUTES -> ScreenKind.MODAL
         in FORM_ROUTES -> ScreenKind.FORM
         in TAB_ROUTES -> ScreenKind.TAB
         else -> ScreenKind.PUSHED
     }
 }
+
+/**
+ * True si el destino es un modal que se pinta encima de la pantalla anterior.
+ *
+ * Lo pregunta el armazon: la tab bar se queda detras de un modal, velada, y sin esto desaparecia
+ * al abrir el dictado y volvia al cerrarlo.
+ */
+internal fun isModal(destination: NavDestination?): Boolean =
+    screenKindOf(destination) == ScreenKind.MODAL
+
+/** Los modales, que se animan solos. */
+private val MODAL_ROUTES: Set<String?> = setOf(GastonomoRoute.Dictate::class.qualifiedName)
 
 /** Los dos formularios de creacion, que son los que el diseno abre con `close`. */
 private val FORM_ROUTES: Set<String?> = setOf(

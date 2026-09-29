@@ -24,6 +24,9 @@ data class HomeActions(
     val onToastHidden: () -> Unit,
     val onNewMovement: (MovementKind) -> Unit,
     val onNewLoan: () -> Unit,
+
+    /** Abre el dictado desde el boton de registro rapido. */
+    val onDictate: () -> Unit,
     val onOpenLoans: () -> Unit,
     val onOpenMovements: () -> Unit,
     val onOpenSettings: () -> Unit,
@@ -44,6 +47,7 @@ data class HomeActions(
             onToastHidden = {},
             onNewMovement = {},
             onNewLoan = {},
+            onDictate = {},
             onOpenLoans = {},
             onOpenMovements = {},
             onOpenSettings = {},

@@ -35,6 +35,13 @@
     <string name="gastonomo_conversion_equivalent_own_only">Equivale a %1$s</string>
     <string name="gastonomo_conversion_rate_missing">No hay tasa disponible para %1$s. Escribe la tuya.</string>
 
+    <!-- Boton de registro rapido -->
+    <string name="gastonomo_quick_add">Nuevo registro</string>
+    <string name="gastonomo_quick_add_close">Cerrar el menú</string>
+    <string name="gastonomo_quick_add_movement">Nuevo movimiento</string>
+    <string name="gastonomo_quick_add_loan">Nuevo préstamo</string>
+    <string name="gastonomo_quick_add_dictate">Dictar</string>
+
     <!-- Campo de fecha -->
     <string name="gastonomo_date_field_open">Elegir fecha</string>
 

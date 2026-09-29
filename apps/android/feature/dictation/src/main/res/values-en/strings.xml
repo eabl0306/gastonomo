@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Traduccion al ingles del dictado. -->
+<resources xmlns:tools="http://schemas.android.com/tools" tools:locale="en">
+
+    <string name="dictation_title">Dictate an entry</string>
+    <string name="dictation_review_title">Check the entry</string>
+
+    <string name="dictation_stop">Stop dictating</string>
+    <string name="dictation_start">Dictate</string>
+    <string name="dictation_hearing">Listening…</string>
+    <string name="dictation_tap_to_finish">Tap to finish, or hold while you speak</string>
+    <string name="dictation_prefer_typing">I would rather type it</string>
+
+    <string name="dictation_text_hint">E.g. I spent 45 thousand on lunch</string>
+    <string name="dictation_interpret">Interpret</string>
+    <string name="dictation_examples">Try with</string>
+    <string name="dictation_example_lunch">I spent 45 thousand on lunch</string>
+    <string name="dictation_example_taxi">I paid 12 thousand for a taxi yesterday</string>
+    <string name="dictation_example_salary">I got 3 million in salary</string>
+    <string name="dictation_example_loan">I lent 200 thousand to Rosa</string>
+
+    <string name="dictation_processing">Interpreting…</string>
+
+    <string name="dictation_expense">Expense</string>
+    <string name="dictation_income">Income</string>
+    <string name="dictation_loan_lent">Loan: owed to you</string>
+    <string name="dictation_loan_borrowed">Loan: you owe</string>
+    <string name="dictation_row_date">Date</string>
+    <string name="dictation_row_category">Category</string>
+    <string name="dictation_row_person">Person</string>
+    <string name="dictation_no_amount">No amount</string>
+    <string name="dictation_edit">Edit</string>
+    <string name="dictation_save">Save</string>
+    <string name="dictation_redo">Dictate again</string>
+    <string name="dictation_missing_amount">We did not catch the amount. Dictate again and say it in full.</string>
+    <string name="dictation_missing_person">We did not catch who the loan is with. Dictate again and say the name.</string>
+    <string name="dictation_no_rate">We do not have the exchange rate for this currency right now. Dictate the amount in your main currency.</string>
+
+    <string name="dictation_mic_unavailable">This device cannot dictate by voice. Type the entry and we will interpret it all the same.</string>
+    <string name="dictation_mic_denied">We need the microphone to dictate. You can grant permission or type the entry.</string>
+    <string name="dictation_mic_offline">Voice dictation needs a connection. Type the entry and we will interpret it all the same.</string>
+    <string name="dictation_mic_no_match">We did not hear you. Try again or type the entry.</string>
+    <string name="dictation_mic_failed">The microphone could not be started. Type the entry.</string>
+
+    <string name="dictation_error_unavailable">Dictation is not available on your account.</string>
+    <string name="dictation_error_network">No connection. Dictation needs the internet to interpret what you said.</string>
+    <string name="dictation_error_service">The interpreter is unavailable right now. Try again in a moment.</string>
+    <string name="dictation_error_too_many">You have dictated many times in a row. Wait a moment and try again.</string>
+    <string name="dictation_error_unclear">We did not understand the entry. Try saying the amount and what it was for.</string>
+    <string name="dictation_error_unexpected">We could not interpret the dictation. Try again.</string>
+
+</resources>
