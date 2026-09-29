@@ -1,0 +1,285 @@
+/*
+ * Las cuatro pantallas de autenticacion comparten un mismo esqueleto: en
+ * escritorio, un panel de marca a la izquierda y el formulario a la derecha; por
+ * debajo de 900px, solo el formulario. El corte es el unico del diseno.
+ */
+.g-auth {
+  display: flex;
+  min-height: 100dvh;
+  background: var(--g-bg-app);
+}
+
+.g-auth__panel {
+  display: none;
+}
+
+@media (min-width: 900px) {
+  .g-auth__panel {
+    display: flex;
+    flex: none;
+    flex-direction: column;
+    width: 44%;
+    max-width: 640px;
+    padding: 48px clamp(32px, 4vw, 64px);
+    background: var(--g-ink);
+    color: var(--g-on-ink);
+  }
+}
+
+.g-auth__panel-spacer {
+  flex: 1;
+}
+
+.g-auth__claim {
+  font-size: clamp(36px, 3.6vw, 56px);
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+}
+
+.g-auth__claim-note {
+  max-width: 440px;
+  margin-top: 18px;
+  color: var(--g-on-ink-muted);
+  font-size: 17px;
+  line-height: 1.5;
+  text-wrap: pretty;
+}
+
+.g-auth__panel-footer {
+  color: var(--g-on-ink-faint);
+  font-size: 13px;
+}
+
+.g-auth__column {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  width: 100%;
+  max-width: 460px;
+  margin: 0 auto;
+  padding: 20px 24px 24px;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+/* Marca */
+.g-brand {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.g-brand__tile {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--g-radius-tile);
+  background: var(--g-ink);
+  color: var(--g-lime);
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.g-brand__word {
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+/* En el panel oscuro los colores se invierten y el tile es mayor. */
+.g-brand[data-on-ink='true'] .g-brand__tile {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--g-radius-panel-tile);
+  background: var(--g-lime);
+  color: var(--g-ink);
+  font-size: 20px;
+}
+
+.g-brand[data-on-ink='true'] .g-brand__word {
+  font-size: 19px;
+}
+
+/* Titulos */
+.g-auth__title {
+  margin: 20px 0 8px;
+  font-size: 30px;
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+}
+
+.g-auth__lead {
+  margin: 0 0 28px;
+  color: var(--g-muted);
+  font-size: 15px;
+  line-height: 1.5;
+  text-wrap: pretty;
+}
+
+.g-auth__lead strong {
+  color: var(--g-ink);
+}
+
+/* Campos */
+.g-field__label {
+  margin-bottom: 8px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.g-field__shell {
+  position: relative;
+}
+
+.g-field__input {
+  width: 100%;
+  height: var(--g-height-field);
+  padding: 0 16px;
+  border: 1px solid var(--g-field-line);
+  border-radius: var(--g-radius-field);
+  outline: none;
+  background: var(--g-surface);
+  color: var(--g-ink);
+  font:
+    500 16px 'Plus Jakarta Sans',
+    system-ui,
+    sans-serif;
+}
+
+.g-field__input:focus-visible {
+  border-color: var(--g-ink);
+  /* El diseno solo cambia el borde. Se anade un halo porque un borde de 1px no
+     llega al contraste que pide WCAG para el indicador de foco. */
+  box-shadow: 0 0 0 3px rgb(27 26 23 / 15%);
+}
+
+.g-field__input[data-invalid='true'] {
+  border-color: var(--g-red);
+}
+
+.g-field__input[data-with-affordance='true'] {
+  padding-right: 52px;
+}
+
+.g-field__affordance {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  border: 0;
+  border-radius: 12px;
+  background: none;
+  color: var(--g-muted);
+  font-size: 22px;
+  cursor: pointer;
+}
+
+/* Aviso en linea. El vocabulario del prototipo: sin fondo y sin borde. */
+.g-notice {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  margin-top: 12px;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.g-notice[data-tone='error'] {
+  color: var(--g-red);
+}
+
+.g-notice[data-tone='warning'] {
+  color: var(--g-note);
+}
+
+.g-notice[data-tone='warning'] .g-icon {
+  color: var(--g-amber);
+}
+
+.g-notice .g-icon {
+  font-size: 18px;
+}
+
+/* Botones */
+.g-button {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: var(--g-radius-field);
+  cursor: pointer;
+}
+
+.g-button[data-variant='primary'] {
+  height: var(--g-height-primary);
+  background: var(--g-ink);
+  color: var(--g-on-ink);
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.g-button[data-variant='primary']:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.g-button[data-variant='text'] {
+  height: var(--g-height-text-button);
+  margin-top: 6px;
+  background: none;
+  color: var(--g-muted);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.g-button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* Medidor de fuerza */
+.g-strength {
+  display: flex;
+  gap: 4px;
+  margin: 10px 0 4px;
+}
+
+.g-strength__bar {
+  flex: 1;
+  height: 4px;
+  border-radius: var(--g-radius-bar);
+  background: var(--g-field-line);
+}
+
+.g-strength__label {
+  margin-bottom: 20px;
+  color: var(--g-muted);
+  font-size: 12px;
+}
+
+/* Confirmacion */
+.g-auth__badge {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  margin-top: 40px;
+  border-radius: var(--g-radius-large-tile);
+  background: var(--g-lime);
+  font-size: 32px;
+}
+
+.g-auth__spacer {
+  flex: 1;
+  min-height: 24px;
+}
