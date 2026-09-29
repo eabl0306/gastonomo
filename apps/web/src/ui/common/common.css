@@ -174,3 +174,47 @@
   clip-path: inset(50%);
   white-space: nowrap;
 }
+
+/* Una fila de pills de filtro, de las que solo una esta activa. */
+.g-filters {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.g-filter {
+  height: 36px;
+  padding: 0 16px;
+  border: 1px solid var(--g-line);
+  border-radius: 18px;
+  background: var(--g-surface);
+  color: var(--g-ink);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.g-filter[data-active='true'] {
+  border-color: var(--g-ink);
+  background: var(--g-ink);
+  color: var(--g-on-ink);
+}
+
+/* El hueco de una lista vacia. */
+.g-empty {
+  padding: 48px 20px;
+  color: var(--g-muted);
+  font-size: 14px;
+  text-align: center;
+}
+
+.g-empty__icon {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--g-empty-icon);
+  font-size: 36px;
+}
+
+.g-empty__icon .g-icon {
+  font-size: inherit;
+}

@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router';
 import type { PasswordResetGateway } from '../application/ports/password-reset-gateway';
 import { ResetPasswordScreen } from '../ui/auth/reset-password-screen';
 import { HomeScreen } from '../ui/home/home-screen';
+import { MovementsScreen } from '../ui/movements/movements-screen';
 import { PendingScreen } from '../ui/shell/pending-screen';
 import { SettingsScreen } from '../ui/shell/settings-screen';
 
@@ -57,22 +58,14 @@ export function HomeRoute({ container }: { container: Container }): ReactElement
   );
 }
 
-/**
- * Las dos pantallas que todavia no estan.
- *
- * Se declaran juntas para que se vea de un vistazo lo que falta, y para que quitarlas cuando
- * lleguen las de verdad sea borrar una linea.
- */
-export function MovementsRoute(): ReactElement {
-  return (
-    <PendingScreen
-      icon="swap_vert"
-      title="Movimientos"
-      what="Aquí irá la lista agrupada por día, con el filtro de periodo y el resumen de ingresos, gastos y neto."
-    />
-  );
+export function MovementsRoute({ container }: { container: Container }): ReactElement {
+  return <MovementsScreen ports={container} />;
 }
 
+/**
+ * La pantalla que todavia no esta. Se queda declarada aqui para que quitarla cuando llegue la
+ * de verdad sea borrar una linea.
+ */
 export function LoansRoute(): ReactElement {
   return (
     <PendingScreen

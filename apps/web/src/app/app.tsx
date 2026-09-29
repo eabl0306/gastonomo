@@ -49,7 +49,7 @@ export function App({ container }: { container: Container }): ReactElement {
             }
           >
             <Route element={<HomeRoute container={container} />} index />
-            <Route element={<MovementsRoute />} path={ROUTES.movements} />
+            <Route element={<MovementsRoute container={container} />} path={ROUTES.movements} />
             <Route element={<LoansRoute />} path={ROUTES.loans} />
             <Route element={<SettingsRoute />} path={ROUTES.settings} />
           </Route>

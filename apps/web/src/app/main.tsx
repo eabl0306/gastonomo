@@ -7,6 +7,7 @@ import '../ui/shell/shell.css';
 import '../ui/common/common.css';
 import '../ui/period/period.css';
 import '../ui/home/home.css';
+import '../ui/movements/movements.css';
 import '../ui/styles.css';
 
 import { App } from './app';

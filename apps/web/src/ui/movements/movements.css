@@ -1,0 +1,72 @@
+/*
+ * Movimientos: el resumen de tres columnas, las pills y la lista agrupada por dia.
+ *
+ * En escritorio los grupos se reparten en columnas de 380 con `auto-fill`, asi que un mes con
+ * muchos dias no obliga a bajar mil pixeles de scroll.
+ */
+
+.g-summary {
+  display: grid;
+  margin-bottom: 14px;
+  padding: 12px 4px;
+  border: 1px solid var(--g-line);
+  border-radius: var(--g-radius-large-tile);
+  background: var(--g-surface);
+  grid-template-columns: 1fr 1fr 1fr;
+}
+
+.g-summary__column {
+  text-align: center;
+}
+
+/* Las dos lineas que separan las tres columnas van en la del medio. */
+.g-summary__column[data-tone='out'] {
+  border-right: 1px solid var(--g-row-line);
+  border-left: 1px solid var(--g-row-line);
+}
+
+.g-summary__label {
+  margin: 0;
+  color: var(--g-muted);
+  font-size: 11px;
+}
+
+.g-summary__amount {
+  display: block;
+  margin-top: 3px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.g-summary__column[data-tone='in'] .g-summary__amount {
+  color: var(--g-green);
+}
+
+.g-summary__column[data-tone='out'] .g-summary__amount {
+  color: var(--g-red);
+}
+
+.g-groups {
+  display: grid;
+  align-items: start;
+  gap: 0 20px;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 380px), 1fr));
+}
+
+.g-day {
+  min-width: 0;
+}
+
+.g-day__head {
+  display: flex;
+  justify-content: space-between;
+  margin: 18px 4px 8px;
+  color: var(--g-muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.g-day__list {
+  padding: 0 16px;
+  border-radius: var(--g-radius-day-card);
+}

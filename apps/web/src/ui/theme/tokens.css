@@ -16,6 +16,9 @@
   --g-muted: #736d62;
   --g-placeholder: #a9a397;
 
+  /* El icono apagado de una lista vacia. */
+  --g-empty-icon: #c9c3b6;
+
   /* Lineas */
   --g-line: #e8e3d9;
   --g-field-line: #e3ded4;
@@ -66,6 +69,7 @@
   --g-radius-sub-card: 16px;
   --g-radius-tile-small: 10px;
   --g-radius-tile-large: 13px;
+  --g-radius-day-card: 20px;
 
   /* Alturas del diseno. No son multiplos de una escala: son medidas fijas. */
   --g-height-primary: 56px;

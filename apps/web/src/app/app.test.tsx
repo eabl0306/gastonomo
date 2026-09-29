@@ -64,14 +64,20 @@ describe('App', () => {
 
   it('las cuatro pestanas llevan a sus pantallas', async () => {
     renderApp(true);
-    for (const [label, heading] of [
-      ['Movimientos', 'Movimientos'],
-      ['Préstamos', 'Préstamos'],
-      ['Ajustes', 'Ajustes'],
-    ] as const) {
+    for (const label of ['Movimientos', 'Préstamos', 'Ajustes'] as const) {
       await userEvent.click(screen.getAllByRole('link', { name: label })[0]!);
-      expect(screen.getByRole('heading', { name: heading })).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: label })).toBeInTheDocument();
     }
+  });
+
+  /** El periodo es el mismo objeto para Inicio y para Movimientos. */
+  it('el periodo elegido se ve en las dos pantallas', async () => {
+    renderApp(true);
+    await userEvent.click(await screen.findByRole('button', { name: 'Mes anterior' }));
+    expect(screen.getByText('Agosto 2026')).toBeInTheDocument();
+
+    await userEvent.click(screen.getAllByRole('link', { name: 'Movimientos' })[0]!);
+    expect(screen.getByText('Agosto 2026')).toBeInTheDocument();
   });
 
   it('cerrar sesion borra la sesion y devuelve a Entrar', async () => {
