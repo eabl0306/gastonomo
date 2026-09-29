@@ -16,6 +16,8 @@ export const ROUTES = {
   newLoan: '/loans/new',
   loanDetail: '/loans/:loanId',
   settings: '/settings',
+  categories: '/settings/categories',
+  export: '/settings/export',
   login: '/login',
   register: '/register',
   forgotPassword: '/forgot-password',

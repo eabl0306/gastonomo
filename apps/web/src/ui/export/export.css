@@ -1,0 +1,139 @@
+/* Exportar datos. */
+
+.g-export {
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.g-export__title {
+  margin: 22px 0 10px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.g-export__formats {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: 1fr 1fr;
+}
+
+.g-export__format {
+  position: relative;
+  padding: 14px;
+  border: 1.5px solid var(--g-line);
+  border-radius: var(--g-radius-large-tile);
+  background: var(--g-surface);
+  color: var(--g-ink);
+  text-align: left;
+  cursor: pointer;
+}
+
+.g-export__format[data-active='true'] {
+  border-color: var(--g-ink);
+}
+
+.g-export__format-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 11px;
+  font-size: 20px;
+}
+
+.g-export__format[data-value='xlsx'] .g-export__format-icon {
+  background: var(--g-green-bg);
+  color: var(--g-green);
+}
+
+.g-export__format[data-value='csv'] .g-export__format-icon {
+  background: var(--g-neutral-bg);
+  color: var(--g-note);
+}
+
+.g-export__format-icon .g-icon {
+  font-size: inherit;
+}
+
+.g-export__format-label {
+  display: block;
+  margin-top: 10px;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.g-export__format-note {
+  display: block;
+  margin-top: 2px;
+  color: var(--g-muted);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.g-export__set {
+  display: block;
+  flex: 1;
+  min-width: 0;
+}
+
+.g-export__set-name {
+  display: block;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.g-export__set-rows {
+  display: block;
+  margin-top: 1px;
+  color: var(--g-muted);
+  font-size: 12px;
+}
+
+.g-export__check {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border: 1.5px solid var(--g-ink);
+  border-radius: 7px;
+  color: var(--g-lime);
+  font-size: 18px;
+}
+
+.g-export__check[data-active='true'] {
+  background: var(--g-ink);
+}
+
+.g-export__check .g-icon {
+  font-size: inherit;
+}
+
+.g-export__go {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: var(--g-height-primary);
+  margin: 24px 0;
+  border: 0;
+  border-radius: var(--g-radius-field);
+  background: var(--g-ink);
+  color: var(--g-on-ink);
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.g-export__go:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.g-export__go .g-icon {
+  color: var(--g-lime);
+  font-size: 20px;
+}

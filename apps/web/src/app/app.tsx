@@ -10,6 +10,8 @@ import { PeriodProvider } from '../ui/period/period-context';
 import { SessionProvider } from '../ui/session/session-context';
 
 import {
+  CategoriesRoute,
+  ExportRoute,
   HomeRoute,
   LoanDetailRoute,
   LoansRoute,
@@ -60,7 +62,9 @@ export function App({ container }: { container: Container }): ReactElement {
             <Route element={<LoansRoute container={container} />} path={ROUTES.loans} />
             <Route element={<NewLoanRoute container={container} />} path={ROUTES.newLoan} />
             <Route element={<LoanDetailRoute container={container} />} path={ROUTES.loanDetail} />
-            <Route element={<SettingsRoute />} path={ROUTES.settings} />
+            <Route element={<SettingsRoute container={container} />} path={ROUTES.settings} />
+            <Route element={<CategoriesRoute container={container} />} path={ROUTES.categories} />
+            <Route element={<ExportRoute container={container} />} path={ROUTES.export} />
           </Route>
           <Route element={<LoginRoute />} path={ROUTES.login} />
           <Route element={<RegisterRoute />} path={ROUTES.register} />

@@ -1,0 +1,186 @@
+/*
+ * Ajustes: el perfil, los grupos de filas y cerrar sesion.
+ *
+ * En escritorio los grupos se reparten en columnas de 360, igual que los grupos de dia de
+ * Movimientos: una lista de ajustes en una sola columna deja media pantalla vacia.
+ */
+
+.g-settings__groups {
+  display: grid;
+  gap: 0 20px;
+  align-items: start;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 360px), 1fr));
+}
+
+.g-settings__group {
+  min-width: 0;
+}
+
+.g-settings__title {
+  margin: 24px 4px 8px;
+  color: var(--g-muted);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.g-settings__card {
+  padding: 0 16px;
+  border: 1px solid var(--g-line);
+  border-radius: var(--g-radius-day-card);
+  background: var(--g-surface);
+}
+
+.g-settings__row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  width: 100%;
+  height: 56px;
+  padding: 0;
+  border: 0;
+  border-bottom: 1px solid var(--g-row-line);
+  background: none;
+  color: var(--g-ink);
+  text-align: left;
+  cursor: pointer;
+}
+
+.g-settings__row[data-static] {
+  cursor: default;
+}
+
+.g-settings__card > :last-child {
+  border-bottom: 0;
+}
+
+.g-settings__icon {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--g-radius-tile-small);
+  background: var(--g-selected);
+  font-size: 18px;
+}
+
+.g-settings__icon .g-icon {
+  font-size: inherit;
+}
+
+.g-settings__label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  font-size: 15px;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.g-settings__value {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  color: var(--g-muted);
+  font-size: 14px;
+}
+
+.g-settings__value[data-tone='ok'] {
+  color: var(--g-green);
+}
+
+.g-settings__note {
+  margin: 8px 4px 0;
+  color: var(--g-muted);
+  font-size: 12px;
+  line-height: 1.5;
+  text-wrap: pretty;
+}
+
+.g-settings__version {
+  margin-top: 16px;
+  color: var(--g-placeholder);
+  font-size: 12px;
+  text-align: center;
+}
+
+.g-settings__fields {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* La tarjeta de perfil, la unica superficie oscura de Ajustes. */
+.g-profile {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  max-width: 720px;
+  padding: 18px;
+  border-radius: 24px;
+  background: var(--g-ink);
+  color: var(--g-on-ink);
+}
+
+.g-profile__avatar {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: var(--g-ink);
+  color: var(--g-lime);
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.g-profile__identity {
+  min-width: 0;
+}
+
+.g-profile__name,
+.g-profile__email {
+  margin: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.g-profile__name {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.g-profile__email {
+  color: var(--g-on-ink-muted);
+  font-size: 13px;
+}
+
+.g-signout {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 360px;
+  height: var(--g-height-secondary);
+  margin-top: 24px;
+  border: 1px solid var(--g-line);
+  border-radius: var(--g-radius-field);
+  background: var(--g-surface);
+  color: var(--g-red);
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.g-signout:disabled {
+  opacity: 0.4;
+  cursor: default;
+}

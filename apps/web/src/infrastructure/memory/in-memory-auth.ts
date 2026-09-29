@@ -95,5 +95,6 @@ export function createMemoryAuthGateway(options: MemoryAuthOptions = {}): AuthGa
     },
     profile: () => Promise.resolve(answer(session.user)),
     requestPasswordReset: () => Promise.resolve(answer(undefined)),
+    changePassword: () => Promise.resolve(answer(undefined)),
   };
 }

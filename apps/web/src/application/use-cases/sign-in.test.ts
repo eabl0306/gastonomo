@@ -45,6 +45,7 @@ function gatewayOf(result: Outcome<Session>, signOutResult?: Outcome<void>): Aut
     signOut: () => Promise.resolve(signOutResult ?? { ok: true, value: undefined }),
     profile: () => Promise.resolve({ ok: false, error: { kind: 'unauthorized' } }),
     requestPasswordReset: () => Promise.resolve({ ok: true, value: undefined }),
+    changePassword: () => Promise.resolve({ ok: true, value: undefined }),
   };
 }
 

@@ -2,12 +2,15 @@ import type { AuthGateway } from '../application/ports/auth-gateway';
 import type { CategoryGateway } from '../application/ports/category-gateway';
 import type { Clock } from '../application/ports/clock';
 import type { CurrencyGateway } from '../application/ports/currency-gateway';
+import type { ExportWriter, FileDownloader } from '../application/ports/file-download';
 import type { HealthGateway } from '../application/ports/health-gateway';
 import type { LoanGateway } from '../application/ports/loan-gateway';
 import type { MovementGateway } from '../application/ports/movement-gateway';
 import type { PasswordResetGateway } from '../application/ports/password-reset-gateway';
 import type { SessionStore } from '../application/ports/session-store';
 import type { SettingsGateway } from '../application/ports/settings-gateway';
+import { browserDownloader } from '../infrastructure/export/browser-downloader';
+import { exportWriter } from '../infrastructure/export/serialize';
 import { createApiClient, type ApiClient } from '../infrastructure/http/api-client';
 import type { RotatedTokens } from '../infrastructure/http/api-tokens';
 import { createHttpAuthGateway } from '../infrastructure/http/http-auth-gateway';
@@ -73,6 +76,8 @@ export interface Container {
   readonly settings: SettingsGateway;
   readonly currencies: CurrencyGateway;
   readonly categories: CategoryGateway;
+  readonly exports: ExportWriter;
+  readonly downloader: FileDownloader;
   readonly clock: Clock;
 }
 
@@ -120,6 +125,8 @@ export function createContainer(env: WebEnv): Container {
     settings: createHttpSettingsGateway(client),
     currencies: createHttpCurrencyGateway(client),
     categories: createHttpCategoryGateway(client),
+    exports: exportWriter,
+    downloader: browserDownloader,
     clock: systemClock,
   };
 }

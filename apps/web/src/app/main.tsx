@@ -11,6 +11,9 @@ import '../ui/movements/movements.css';
 import '../ui/loans/loans.css';
 import '../ui/forms/forms.css';
 import '../ui/fab/fab.css';
+import '../ui/settings/settings.css';
+import '../ui/categories/categories.css';
+import '../ui/export/export.css';
 import '../ui/styles.css';
 
 import { App } from './app';

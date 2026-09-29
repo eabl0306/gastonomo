@@ -3,13 +3,15 @@ import { useNavigate, useParams } from 'react-router';
 
 import type { PasswordResetGateway } from '../application/ports/password-reset-gateway';
 import { ResetPasswordScreen } from '../ui/auth/reset-password-screen';
+import { CategoriesScreen } from '../ui/categories/categories-screen';
+import { ExportScreen } from '../ui/export/export-screen';
 import { HomeScreen } from '../ui/home/home-screen';
 import { LoanDetailScreen } from '../ui/loans/loan-detail-screen';
 import { LoansScreen } from '../ui/loans/loans-screen';
 import { NewLoanScreen } from '../ui/loans/new-loan-screen';
 import { MovementsScreen } from '../ui/movements/movements-screen';
 import { NewMovementScreen } from '../ui/movements/new-movement-screen';
-import { SettingsScreen } from '../ui/shell/settings-screen';
+import { SettingsScreen } from '../ui/settings/settings-screen';
 
 import { useResetToken } from './auth-screens';
 import type { Container } from './composition-root';
@@ -29,13 +31,22 @@ export function ResetPasswordRoute({ gateway }: { gateway: PasswordResetGateway 
   );
 }
 
-export function SettingsRoute(): ReactElement {
+export function SettingsRoute({ container }: { container: Container }): ReactElement {
   const navigate = useNavigate();
   return (
     <SettingsScreen
-      onSignedOut={() => {
-        void navigate(ROUTES.login, { replace: true });
+      actions={{
+        onOpenCategories: () => {
+          void navigate(ROUTES.categories);
+        },
+        onOpenExport: () => {
+          void navigate(ROUTES.export);
+        },
+        onSignedOut: () => {
+          void navigate(ROUTES.login, { replace: true });
+        },
       }}
+      ports={container}
     />
   );
 }
@@ -112,6 +123,30 @@ export function LoanDetailRoute({ container }: { container: Container }): ReactE
         },
       }}
       loanId={loanId ?? ''}
+      ports={container}
+    />
+  );
+}
+
+export function CategoriesRoute({ container }: { container: Container }): ReactElement {
+  const navigate = useNavigate();
+  return (
+    <CategoriesScreen
+      gateway={container.categories}
+      onBack={() => {
+        void navigate(ROUTES.settings);
+      }}
+    />
+  );
+}
+
+export function ExportRoute({ container }: { container: Container }): ReactElement {
+  const navigate = useNavigate();
+  return (
+    <ExportScreen
+      onBack={() => {
+        void navigate(ROUTES.settings);
+      }}
       ports={container}
     />
   );

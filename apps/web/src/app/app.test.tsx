@@ -2,6 +2,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 
+import { exportWriter } from '../infrastructure/export/serialize';
 import {
   SAMPLE_USER,
   createMemoryAuthGateway,
@@ -10,6 +11,7 @@ import {
 import { createInMemoryHealthGateway } from '../infrastructure/memory/in-memory-health-gateway';
 import {
   createMemoryCategoryGateway,
+  createMemoryDownloader,
   createMemoryCurrencyGateway,
   createMemoryLoanGateway,
   createMemoryMovementGateway,
@@ -37,6 +39,8 @@ function renderApp(signedIn: boolean, path = '/'): ReturnType<typeof createMemor
     settings: createMemorySettingsGateway(),
     currencies: createMemoryCurrencyGateway(),
     categories: createMemoryCategoryGateway(),
+    exports: exportWriter,
+    downloader: createMemoryDownloader(),
     clock: fixedClock(),
   };
   render(<App container={container} />);

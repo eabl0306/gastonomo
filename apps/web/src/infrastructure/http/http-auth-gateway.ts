@@ -69,5 +69,13 @@ export function createHttpAuthGateway(client: ApiClient): AuthGateway {
       const outcome = await postPublic(client, 'auth/password/forgot', { email });
       return outcome.ok ? success(undefined) : outcome;
     },
+
+    changePassword: async (currentPassword, newPassword, refreshToken) => {
+      const outcome = await client.request('auth/password/change', {
+        method: 'POST',
+        body: { currentPassword, newPassword, refreshToken },
+      });
+      return outcome.ok ? success(undefined) : outcome;
+    },
   };
 }

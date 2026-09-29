@@ -2,6 +2,7 @@ import { success, type Outcome } from '../../application/ports/api-error';
 import type { CategoryGateway } from '../../application/ports/category-gateway';
 import type { Clock } from '../../application/ports/clock';
 import type { CurrencyGateway } from '../../application/ports/currency-gateway';
+import type { DownloadableFile, FileDownloader } from '../../application/ports/file-download';
 import type { LoanGateway } from '../../application/ports/loan-gateway';
 import type { MovementGateway } from '../../application/ports/movement-gateway';
 import type { SettingsGateway } from '../../application/ports/settings-gateway';
@@ -87,6 +88,19 @@ export function createMemoryCurrencyGateway(): CurrencyGateway {
   return {
     catalog: () => Promise.resolve(success(SAMPLE_CURRENCIES)),
     rates: () => Promise.resolve(success(SAMPLE_RATES)),
+  };
+}
+
+/** Un descargador que solo apunta lo que le piden. Para tests y capturas. */
+export function createMemoryDownloader(): FileDownloader & {
+  readonly saved: DownloadableFile[];
+} {
+  const saved: DownloadableFile[] = [];
+  return {
+    saved,
+    download: (files) => {
+      saved.push(...files);
+    },
   };
 }
 

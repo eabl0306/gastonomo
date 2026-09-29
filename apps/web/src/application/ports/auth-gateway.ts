@@ -22,4 +22,15 @@ export interface AuthGateway {
   /** `GET /v1/me`. */
   profile: () => Promise<Outcome<User>>;
   requestPasswordReset: (email: string) => Promise<Outcome<void>>;
+  /**
+   * Cambia la contrasena desde dentro.
+   *
+   * Se manda el refresh token de esta sesion para no cerrarla: sin el, la API revoca todas y
+   * quien acaba de cambiar su contrasena se encuentra en la pantalla de entrar.
+   */
+  changePassword: (
+    currentPassword: string,
+    newPassword: string,
+    refreshToken: string,
+  ) => Promise<Outcome<void>>;
 }
