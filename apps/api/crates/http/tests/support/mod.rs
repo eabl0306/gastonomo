@@ -50,6 +50,8 @@ use gastonomo_http::router::{
 pub const VERSION: ServiceVersion = ServiceVersion::new(0, 1, 0);
 
 /// Todo lo que un test necesita mirar despues de una peticion.
+pub mod dictation;
+
 pub struct Harness {
     pub service: salvo::Service,
     pub categories: Arc<InMemoryCategoryRepository>,
@@ -64,6 +66,7 @@ pub struct Harness {
     pub users: Arc<InMemoryUserRepository>,
     pub refresh_tokens: Arc<InMemoryRefreshTokenRepository>,
     pub clock: Arc<FixedClock>,
+    pub dictation: dictation::DictationDoubles,
 }
 
 impl Harness {
@@ -81,6 +84,12 @@ impl Harness {
     pub fn with_probes(probes: Vec<Arc<dyn HealthProbe>>) -> Self {
         let parts = Parts::new();
         let doubles = Doubles::new(&parts);
+        let dictation_parts = dictation::dictation_dependencies(
+            doubles.categories.clone(),
+            doubles.settings.clone(),
+            doubles.exchange_rates.clone(),
+            parts.clock.clone(),
+        );
         let service = build_service(RouterDependencies {
             health: health_dependencies(probes),
             auth: auth_dependencies(&parts),
@@ -90,6 +99,7 @@ impl Harness {
             settings: settings_dependencies(&doubles, &parts),
             currencies: currency_dependencies(&doubles, &parts),
             changes: changes_dependencies(&doubles),
+            dictation: dictation_parts.0,
         })
         .expect("service should build");
 
@@ -107,6 +117,7 @@ impl Harness {
             users: parts.users,
             refresh_tokens: parts.refresh_tokens,
             clock: parts.clock,
+            dictation: dictation_parts.1,
         }
     }
 }

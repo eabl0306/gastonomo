@@ -36,8 +36,8 @@ pub use problem::{
 pub use rate_limit::RateLimit;
 pub use router::{
     AuthDependencies, CategoryDependencies, ChangesDependencies, CurrencyDependencies,
-    HealthDependencies, LoanDependencies, MovementDependencies, RouterDependencies,
-    SettingsDependencies, build_router,
+    DictationDependencies, HealthDependencies, LoanDependencies, MovementDependencies,
+    RouterDependencies, SettingsDependencies, build_router,
 };
 
 /// Monta el servicio HTTP completo: el router mas el catcher del contrato.

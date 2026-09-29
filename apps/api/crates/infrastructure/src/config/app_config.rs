@@ -8,6 +8,7 @@ use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
 use super::auth_config::AuthConfig;
+use super::claude_config::ClaudeConfig;
 use super::exchange_rates_config::ExchangeRatesConfig;
 use super::mail_config::MailConfig;
 
@@ -128,6 +129,8 @@ pub struct AppConfig {
     pub mail: MailConfig,
     /// Tarea de refresco de las tasas de cambio.
     pub exchange_rates: ExchangeRatesConfig,
+    /// Interprete del dictado.
+    pub claude: ClaudeConfig,
 }
 
 impl AppConfig {

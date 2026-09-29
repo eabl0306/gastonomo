@@ -6,6 +6,7 @@
 
 pub mod clock;
 pub mod config;
+pub mod dictation;
 pub mod exchange_rate;
 pub mod mail;
 pub mod persistence;
@@ -14,8 +15,8 @@ pub mod telemetry;
 
 pub use clock::SystemClock;
 pub use config::{
-    AppConfig, AuthConfig, ConfigError, DEVELOPMENT_SECRET, DatabaseConfig, ExchangeRatesConfig,
-    MailConfig, MailDriver, ServerConfig, TelemetryConfig,
+    AppConfig, AuthConfig, ClaudeConfig, ConfigError, DEVELOPMENT_SECRET, DatabaseConfig,
+    ExchangeRatesConfig, MailConfig, MailDriver, ServerConfig, TelemetryConfig,
 };
 pub use exchange_rate::{ExchangeRateScheduler, FrankfurterExchangeRateProvider, ProviderError};
 pub use mail::{LoggingMailer, MailError, SmtpMailer, build_mailer};

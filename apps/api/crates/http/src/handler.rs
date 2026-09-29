@@ -9,6 +9,7 @@ pub mod auth;
 pub mod category;
 pub mod changes;
 pub mod currency;
+pub mod dictation;
 pub mod loan;
 pub mod movement;
 pub mod settings;

@@ -19,6 +19,7 @@ mod auth;
 mod categories;
 mod changes;
 mod currencies;
+mod dictation;
 mod health;
 mod loans;
 mod movements;
@@ -30,6 +31,7 @@ pub use auth::AuthDependencies;
 pub use categories::CategoryDependencies;
 pub use changes::ChangesDependencies;
 pub use currencies::CurrencyDependencies;
+pub use dictation::DictationDependencies;
 pub use health::HealthDependencies;
 pub use loans::LoanDependencies;
 pub use movements::MovementDependencies;
@@ -62,6 +64,8 @@ pub struct RouterDependencies {
     pub currencies: CurrencyDependencies,
     /// Feed de cambios incrementales.
     pub changes: ChangesDependencies,
+    /// Dictado de un registro.
+    pub dictation: DictationDependencies,
 }
 
 /// Construye el router completo del servicio.
@@ -97,6 +101,7 @@ fn v1_router(dependencies: RouterDependencies) -> Router {
                 .push(categories::router(dependencies.categories))
                 .push(settings::router(dependencies.settings))
                 .push(currencies::router(dependencies.currencies))
-                .push(changes::router(dependencies.changes)),
+                .push(changes::router(dependencies.changes))
+                .push(dictation::router(dependencies.dictation)),
         )
 }

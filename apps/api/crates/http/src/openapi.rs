@@ -12,6 +12,7 @@ mod auth_paths;
 mod category_paths;
 mod changes_paths;
 mod currency_paths;
+mod dictation_paths;
 mod health_paths;
 mod idempotency_docs;
 mod loan_paths;
@@ -62,6 +63,7 @@ fn paths() -> Paths {
     let builder = category_paths::paths(builder);
     let builder = settings_paths::paths(builder);
     let builder = changes_paths::paths(builder);
+    let builder = dictation_paths::paths(builder);
     currency_paths::paths(builder).build()
 }
 
@@ -75,6 +77,7 @@ fn components() -> Components {
     let builder = category_paths::schemas(builder);
     let builder = settings_paths::schemas(builder);
     let builder = changes_paths::schemas(builder);
+    let builder = dictation_paths::schemas(builder);
     currency_paths::schemas(builder).build()
 }
 

@@ -9,6 +9,7 @@ mod auth;
 mod categories;
 mod changes;
 mod currencies;
+mod dictation;
 mod health;
 mod loans;
 mod movements;
@@ -98,6 +99,7 @@ fn router_dependencies(wiring: &Wiring) -> Result<RouterDependencies, StartupErr
         settings: settings::dependencies(wiring),
         currencies: currencies::dependencies(wiring),
         changes: changes::dependencies(wiring),
+        dictation: dictation::dependencies(wiring)?,
     })
 }
 

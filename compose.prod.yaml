@@ -127,6 +127,12 @@ services:
       GASTONOMO__MAIL__FROM: ${GASTONOMO__MAIL__FROM:?e.g. Gastonomo <no-reply@bahoque.com>}
       GASTONOMO__MAIL__STARTTLS: ${GASTONOMO__MAIL__STARTTLS:-true}
 
+      # El dictado. Opcional: sin clave la API arranca igual y el endpoint
+      # responde 503, que es lo que dice "no ha fallado nada, falta un dato".
+      # Es una capacidad que se paga por uso, asi que una instancia puede
+      # querer no tenerla y el resto de la aplicacion no se entera.
+      GASTONOMO__CLAUDE__API_KEY: ${GASTONOMO__CLAUDE__API_KEY:-}
+
       # Aqui SI sale a Frankfurter: es el unico sitio donde se quiere. La tarea
       # refresca a las 06:00 y 18:00 UTC y al arrancar si hace falta. Apagada,
       # /v1/exchange-rates responde 503 y el catalogo de monedas sale vacio.
