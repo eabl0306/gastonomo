@@ -54,12 +54,27 @@ sealed interface GastonomoRoute {
     /**
      * 7. Nuevo movimiento.
      *
+     * Los campos de relleno vienen vacios salvo cuando se llega desde el dictado, que abre el
+     * formulario con lo que se entendio para poder corregirlo. Van sueltos y como texto porque
+     * asi lo quiere navigation-compose: son argumentos de una ruta, no un objeto de dominio.
+     *
      * @property kind el tipo con el que se abre el formulario: `out` desde el FAB y desde
      *   la accion rapida Gasto, `in` desde la accion rapida Ingreso. Es el `wire` de
      *   [com.bahoque.gastonomo.core.domain.movement.MovementKind].
+     * @property amount importe con punto decimal y sin separador de miles.
+     * @property currency codigo ISO 4217. Vacio significa la moneda principal de la cuenta.
+     * @property categoryId la categoria ya elegida.
+     * @property occurredOn la fecha en `YYYY-MM-DD`. Vacia significa hoy.
      */
     @Serializable
-    data class NewMovement(val kind: String) : GastonomoRoute
+    data class NewMovement(
+        val kind: String,
+        val amount: String = "",
+        val currency: String = "",
+        val categoryId: String = "",
+        val note: String = "",
+        val occurredOn: String = "",
+    ) : GastonomoRoute
 
     /** 8. Prestamos. Lleva tab bar. */
     @Serializable
@@ -69,9 +84,32 @@ sealed interface GastonomoRoute {
     @Serializable
     data class LoanDetail(val loanId: String) : GastonomoRoute
 
-    /** 10. Nuevo prestamo. */
+    /**
+     * 10. Nuevo prestamo.
+     *
+     * Igual que [NewMovement]: los campos vienen vacios salvo cuando se llega desde el dictado.
+     *
+     * @property direction `lent` o `borrowed`. Vacio abre el formulario como esta por defecto.
+     */
     @Serializable
-    data object NewLoan : GastonomoRoute
+    data class NewLoan(
+        val person: String = "",
+        val direction: String = "",
+        val amount: String = "",
+        val currency: String = "",
+        val note: String = "",
+        val openedOn: String = "",
+    ) : GastonomoRoute
+
+    /**
+     * Dictar un registro.
+     *
+     * Es una pantalla de la pila y no una hoja dentro de otra, aunque se vea como un modal,
+     * porque la abren tres pantallas distintas. Como hoja habria que montarla en las tres y
+     * las tres tendrian que conocer la feature del dictado.
+     */
+    @Serializable
+    data object Dictate : GastonomoRoute
 
     /** 12. Ajustes. Lleva tab bar. */
     @Serializable

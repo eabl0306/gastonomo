@@ -31,7 +31,7 @@ framework, ni HTTP, ni SQL, ni React, ni Android. Los detalles estan en
   `infrastructure`, `ui`, `app`). Lo verifica `eslint-plugin-boundaries` con denegacion
   por defecto. `src/domain` no puede importar ni siquiera un paquete de npm. La raiz de
   composicion es `src/app/composition-root.ts`.
-- **Android**: un modulo por capa, veintitres en total. `core:domain`, `core:application` y
+- **Android**: un modulo por capa, veinticuatro en total. `core:domain`, `core:application` y
   `core:common` son `kotlin("jvm")` puros, asi que el SDK de Android no esta en su classpath.
   `feature:*` nunca depende de `data:*` ni de otra `feature:*`: las une `:app`, con un fichero
   de cableado por feature en `app/src/main/kotlin/com/bahoque/gastonomo/wiring/`. Lo vigilan
@@ -57,6 +57,26 @@ framework, ni HTTP, ni SQL, ni React, ni Android. Los detalles estan en
   `values`, ingles en `values-en`, las mismas claves en las dos salvo las `translatable="false"`.
   Las decisiones estan en el [ADR 0013](docs/adr/0013-sistema-de-diseno-en-android.md) y el
   [ADR 0014](docs/adr/0014-sesion-en-el-cliente-android.md).
+
+  **Inicio, Movimientos y Prestamos comparten un solo boton flotante**, con su menu en arco de
+  tres opciones: movimiento, prestamo y dictar. Se maneja manteniendo y deslizando o con dos
+  toques. Dos trampas que costaron una tarde: **un hijo que se sale de su padre se pinta pero no
+  se puede tocar**, asi que la caja del menu tiene que cubrir el arco entero; y la distancia a la
+  que empieza a elegirse una opcion (`dimens.radialSelection`) **no** es la distancia a la que se
+  dibujan (`dimens.radialReach`).
+
+  **El dictado es una ruta y no una hoja**, aunque se vea como un modal, porque lo abren tres
+  pantallas y una feature no conoce a otra. El reconocimiento de voz lo hace el sistema y a la API
+  solo viaja el texto. **Ningun fallo del microfono deja sin salida**: los cinco acaban en el modo
+  escrito con su explicacion. Guardar pasa por los mismos casos de uso que los formularios, con su
+  clave de idempotencia, y "Editar" abre el formulario relleno **sustituyendo** al dictado en la
+  pila. Solo lo pueden usar las cuentas de `dictation_allowlist`; el resto recibe 404.
+
+  **Lo que se calcula a partir de `LocalContext` se rompe dentro del tema.** El tema sustituye
+  `LocalContext` por un contexto de configuracion para poner el idioma, y ese contexto **no lleva
+  a la actividad**. `LocalActivity` y el registro de resultados de actividad (el de los permisos)
+  se vuelven a fijar en `ProvideLocalizedResources`; sin eso, exportar no abria nada y pedir el
+  microfono cerraba la aplicacion.
 
   **Las animaciones de navegacion se deciden en un solo sitio**, `GastonomoTransitions` en `:app`,
   porque dependen de las dos pantallas: apilar desliza en horizontal, cambiar de tab solo funde y

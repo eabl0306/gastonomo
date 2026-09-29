@@ -9,4 +9,16 @@
          sin esperar a que falle una peticion, y el chip de moneda se apaga sin conexion. -->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
+    <!-- El dictado usa el reconocimiento del sistema, que necesita el microfono. El audio no
+         sale de la aplicacion: a la API solo viaja el texto. -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+
+    <!-- Desde Android 11 una aplicacion no ve los servicios de otras salvo que las consulte, y
+         sin esto SpeechRecognizer.isRecognitionAvailable contesta siempre que no hay. -->
+    <queries>
+        <intent>
+            <action android:name="android.speech.RecognitionService" />
+        </intent>
+    </queries>
+
 </manifest>

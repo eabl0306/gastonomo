@@ -97,8 +97,32 @@ class GastonomoDimens {
     /** Alto del handle del bottom sheet. */
     val sheetHandleHeight: Dp = 4.dp
 
-    /** Alto del FAB. */
+    /** Alto del FAB de una palabra, el de Categorias. */
     val fab: Dp = 56.dp
+
+    /** Lado del FAB de registro rapido, el que abre el menu radial. */
+    val fabRadial: Dp = 64.dp
+
+    /** Lado del boton de microfono del dictado, el circulo grande que se toca para hablar. */
+    val dictationMic: Dp = 112.dp
+
+    /** Lado de cada opcion del menu radial. */
+    val radialOption: Dp = 56.dp
+
+    /**
+     * Distancia del centro del FAB al centro de cada opcion.
+     *
+     * Es la misma para las tres: el diseno las coloca en un arco de 90 grados, a 90, 135 y 180.
+     */
+    val radialReach: Dp = 132.dp
+
+    /**
+     * Cuanto tiene que alejarse el dedo del centro del FAB para que empiece a elegir una opcion.
+     *
+     * Es mucho menor que [radialReach] a proposito: elegir es cuestion de angulo, y exigir el
+     * recorrido entero hasta la opcion convertiria un gesto corto en un arrastre largo.
+     */
+    val radialSelection: Dp = 46.dp
 
     /** Alto de una celda del grid de categorias. */
     val categoryCell: Dp = 78.dp

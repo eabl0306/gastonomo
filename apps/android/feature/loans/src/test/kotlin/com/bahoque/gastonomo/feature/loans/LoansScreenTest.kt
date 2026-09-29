@@ -57,7 +57,7 @@ class LoansScreenTest {
     @Test
     fun `the pills ask for the filter`() {
         val chosen = mutableListOf<LoanDirection?>()
-        render(LoansSamples.loans, LoansActions(onFilter = { chosen += it }, {}, {}, {}, {}))
+        render(LoansSamples.loans, LoansActions.NONE.copy(onFilter = { chosen += it }))
 
         compose.onNodeWithText("Debo").performClick()
 
@@ -83,7 +83,7 @@ class LoansScreenTest {
     @Test
     fun `a failure offers to retry`() {
         var retries = 0
-        render(LoansSamples.loansProblem, LoansActions({}, {}, {}, {}, onRetry = { retries++ }))
+        render(LoansSamples.loansProblem, LoansActions.NONE.copy(onRetry = { retries++ }))
 
         compose.onNodeWithText("Reintentar").performClick()
 
@@ -96,12 +96,9 @@ class LoansScreenTest {
         val payments = mutableListOf<String>()
         render(
             LoansSamples.loans,
-            LoansActions(
-                onFilter = {},
+            LoansActions.NONE.copy(
                 onOpenLoan = { opened += it.loan.id.value },
                 onRegisterPayment = { payments += it.loan.id.value },
-                onNewLoan = {},
-                onRetry = {},
             ),
         )
 
@@ -113,7 +110,7 @@ class LoansScreenTest {
 
     private fun render(
         state: LoansUiState,
-        actions: LoansActions = LoansActions({}, {}, {}, {}, {}),
+        actions: LoansActions = LoansActions.NONE,
     ) = compose.setContent {
         GastonomoTheme { LoansScreen(state = state, actions = actions) }
     }

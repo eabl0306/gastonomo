@@ -13,7 +13,6 @@
     <string name="loans_owed_to_me">Te deben</string>
     <string name="loans_i_owe">Debes</string>
     <string name="loans_empty">No tienes préstamos en esta lista.</string>
-    <string name="loans_fab">Préstamo</string>
 
     <!-- Tarjeta de prestamo -->
     <string name="loan_owes_me">Me debe</string>

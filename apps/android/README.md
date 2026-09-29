@@ -3,6 +3,28 @@
 App nativa en Kotlin con arquitectura hexagonal y multi-modulo. Implementa el rediseno
 completo: 14 pantallas, multimoneda y sesion con refresco de tokens.
 
+## Registrar rapido y dictar
+
+Inicio, Movimientos y Prestamos comparten un solo boton flotante. Se puede **mantener y
+deslizar** hacia la opcion, o **tocar y volver a tocar**; lo que distingue las dos formas es
+cuanto se movio el dedo antes de soltar. El arco y la eleccion por angulo son aritmetica pura y
+estan aparte del composable, en `RadialFabGeometry`, porque lo delicado no es como se ve: es que
+el dedo elija lo que el usuario cree que esta eligiendo.
+
+La tercera opcion es dictar. El reconocimiento de voz lo hace **el sistema**, que ya sabe el
+idioma y no manda audio a ningun sitio; a la API solo viaja el texto, y el borrador que devuelve
+se revisa antes de guardar. Guardar pasa por los mismos casos de uso que los formularios, con su
+clave de idempotencia: un borrador no es un registro.
+
+**Ningun fallo del microfono deja sin salida.** No haber reconocimiento, no dar el permiso, estar
+sin conexion o no entenderse acaban en el modo escrito, con su explicacion y con lo que se hubiera
+entendido ya puesto en el campo. Y "Editar" abre el formulario completo con lo que se entendio,
+sustituyendo al dictado en la pila: volver atras desde el formulario lleva a la pantalla desde la
+que se dicto, no a un borrador que ya no vale.
+
+El dictado solo lo pueden usar las cuentas aprobadas: para el resto la API responde 404 y la hoja
+lo dice. Como se aprueba una cuenta esta en el [README de la API](../api/README.md).
+
 ## Modulos
 
 | Modulo                | Tipo                | Que contiene                                                          |
@@ -15,7 +37,7 @@ completo: 14 pantallas, multimoneda y sesion con refresco de tokens.
 | `:core:testing`       | Kotlin JVM puro     | Dobles de los puertos y datos de ejemplo (solo para tests)            |
 | `:core:screenshot`    | Android library     | Captura de composables a PNG desde la JVM (solo para tests)           |
 | `:data:network`       | Android library     | Cliente Ktor, refresco serializado, `problem+json` e idempotencia     |
-| `:data:session`       | Android library     | Sesion cifrada, PIN y huella                                          |
+| `:data:session`       | Android library     | Sesion cifrada, PIN, huella, red y reconocimiento de voz              |
 | `:data:auth`          | Android library     | `AuthGateway`                                                         |
 | `:data:finance`       | Android library     | `MovementGateway` y `LoanGateway`                                     |
 | `:data:catalog`       | Android library     | `CategoryGateway`, `SettingsGateway` y `CurrencyGateway`              |
@@ -185,6 +207,11 @@ Se dice aqui porque no se ve en el arbol de verde:
 - **`KeystoreCipher` y `AndroidBiometricLock` no se han ejecutado.** Robolectric no trae
   proveedor `AndroidKeyStore` ni sensor de huella. Estan excluidos del calculo de cobertura de
   `:data:session` y hay que comprobarlos con `just android-connected`.
+- **El dictado por voz no se ha probado con voz.** El emulador no tiene microfono: lo que se ha
+  ejercitado de punta a punta es el modo escrito, contra una API local, incluida la interpretacion
+  y el guardado. Del reconocimiento en si solo se prueba la traduccion de sus codigos de error, en
+  `SpeechFailuresTest`; `AndroidSpeechToText` esta excluido de la cobertura por la misma razon que
+  la huella.
 - **Nadie ha visto una respuesta real de la API desde la app.** Los DTO se revisaron contra
   [docs/api-surface.md](../../docs/api-surface.md) y hay tests contra un mock de Ktor, pero el
   contrato no se ha ejercitado contra el servidor.

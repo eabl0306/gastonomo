@@ -7,9 +7,11 @@ import com.bahoque.gastonomo.core.domain.loan.LoanDirection
 import com.bahoque.gastonomo.core.domain.money.CurrencyCode
 import com.bahoque.gastonomo.core.testing.fake.FakeLoanGateway
 import com.bahoque.gastonomo.core.testing.fake.FixedClock
+import com.bahoque.gastonomo.feature.loans.form.LoanPrefill
 import com.bahoque.gastonomo.feature.loans.form.NewLoanViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
@@ -17,6 +19,7 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import java.math.BigDecimal
+import java.time.LocalDate
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
@@ -179,6 +182,44 @@ class NewLoanViewModelTest {
             assertEquals(CurrencyCode.COP, suggestion.money.baseCurrency)
             assertTrue(suggestion.money.base > BigDecimal.ZERO)
         }
+
+    @Test
+    fun `coming from the dictation it opens with everything it understood`() = runTest {
+        val dependencies = TestLoansDependencies()
+        val model = NewLoanViewModel(
+            createLoan = dependencies.createLoan,
+            contextLoader = dependencies.moneyContextLoader(),
+            clock = dependencies.clock,
+            prefill = LoanPrefill(
+                person = "Rosa",
+                direction = LoanDirection.BORROWED,
+                amount = "200000",
+                currency = CurrencyCode.USD,
+                note = "Teléfono",
+                openedOn = LocalDate.of(2026, 9, 20),
+            ),
+        )
+        advanceUntilIdle()
+        val state = model.state.value
+        assertEquals("Rosa", state.person)
+        assertEquals(LoanDirection.BORROWED, state.direction)
+        assertEquals("200000", state.entry.amountRaw)
+        assertEquals(CurrencyCode.USD, state.entry.currency)
+        assertEquals("Teléfono", state.note)
+        assertEquals(LocalDate.of(2026, 9, 20), state.date)
+        assertTrue(state.canSave)
+    }
+
+    @Test
+    fun `an empty prefill opens the form exactly as the quick add button does`() = runTest {
+        val model = viewModel()
+        advanceUntilIdle()
+        val state = model.state.value
+        assertEquals("", state.person)
+        assertEquals(LoanDirection.LENT, state.direction)
+        assertEquals("", state.entry.amountRaw)
+        assertEquals(FixedClock.PROTOTYPE_TODAY, state.date)
+    }
 
     private fun viewModel(): NewLoanViewModel {
         val dependencies = TestLoansDependencies()

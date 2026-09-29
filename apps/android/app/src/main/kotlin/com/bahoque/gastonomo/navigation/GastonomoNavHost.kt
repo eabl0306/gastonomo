@@ -11,8 +11,10 @@ import com.bahoque.gastonomo.core.navigation.GastonomoNavActions
 import com.bahoque.gastonomo.core.navigation.GastonomoRoute
 import com.bahoque.gastonomo.feature.auth.authNavGraph
 import com.bahoque.gastonomo.feature.categories.categoriesNavGraph
+import com.bahoque.gastonomo.feature.dictation.dictationNavGraph
 import com.bahoque.gastonomo.feature.export.exportNavGraph
 import com.bahoque.gastonomo.feature.home.homeNavGraph
+import com.bahoque.gastonomo.feature.loans.LoanCreatedSignal
 import com.bahoque.gastonomo.feature.loans.loansNavGraph
 import com.bahoque.gastonomo.feature.movements.movementsNavGraph
 import com.bahoque.gastonomo.feature.settings.settingsNavGraph
@@ -33,6 +35,9 @@ fun GastonomoNavHost(
     // cada una significa esta en GastonomoTransitions.
     val motion = GastonomoTheme.motion
     val transitions = remember(motion) { GastonomoTransitions(motion) }
+    // El aviso de "se creo un prestamo" lo levantan dos sitios, el formulario y el dictado, y lo
+    // lee Prestamos. Se crea aqui porque es el unico punto que ve a los dos.
+    val loanCreated = remember { LoanCreatedSignal() }
     NavHost(
         navController = navController,
         startDestination = startDestination,
@@ -45,9 +50,10 @@ fun GastonomoNavHost(
         authNavGraph(container.auth, actions)
         homeNavGraph(container.home, actions)
         movementsNavGraph(container.movements, actions)
-        loansNavGraph(container.loans, actions)
+        loansNavGraph(container.loans, actions, loanCreated)
         settingsNavGraph(container.settings, actions)
         categoriesNavGraph(container.categories, actions)
         exportNavGraph(container.export, actions)
+        dictationNavGraph(container.dictation, actions, onLoanCreated = loanCreated::raise)
     }
 }

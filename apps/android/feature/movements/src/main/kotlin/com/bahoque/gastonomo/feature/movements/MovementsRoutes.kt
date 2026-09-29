@@ -15,6 +15,8 @@ import com.bahoque.gastonomo.core.domain.movement.MovementKind
 internal fun MovementsRoute(
     dependencies: MovementsDependencies,
     onNewMovement: () -> Unit,
+    onNewLoan: () -> Unit,
+    onDictate: () -> Unit,
 ) {
     val viewModel: MovementsViewModel = viewModel(factory = MovementsViewModel.factory(dependencies))
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -35,6 +37,8 @@ internal fun MovementsRoute(
             onRetry = viewModel::onRetry,
             onToastHidden = viewModel::onToastHidden,
             onNewMovement = onNewMovement,
+            onNewLoan = onNewLoan,
+            onDictate = onDictate,
         )
     }
     MovementsScreen(state = state, actions = actions)
@@ -51,9 +55,10 @@ internal fun NewMovementRoute(
     dependencies: MovementsDependencies,
     kind: MovementKind,
     onClose: () -> Unit,
+    prefill: MovementPrefill = MovementPrefill.NONE,
 ) {
     val viewModel: NewMovementViewModel = viewModel(
-        factory = NewMovementViewModel.factory(dependencies, kind),
+        factory = NewMovementViewModel.factory(dependencies, kind, prefill),
     )
     val state by viewModel.state.collectAsStateWithLifecycle()
     LaunchedEffect(state.saved) {

@@ -6,7 +6,6 @@
     <string name="loans_owed_to_me">Owed to you</string>
     <string name="loans_i_owe">You owe</string>
     <string name="loans_empty">You have no loans in this list.</string>
-    <string name="loans_fab">Loan</string>
 
     <string name="loan_owes_me">Owes me</string>
     <string name="loan_i_owe">I owe</string>

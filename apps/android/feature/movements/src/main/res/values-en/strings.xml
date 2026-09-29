@@ -5,7 +5,6 @@
     <string name="movements_income">Income</string>
     <string name="movements_expense">Expenses</string>
     <string name="movements_net">Net</string>
-    <string name="movements_new">New</string>
     <string name="movements_empty">No movements in this period.</string>
     <string name="movements_error_conflict">That movement had already been saved.</string>
     <string name="movements_toast_income_saved">Income saved</string>

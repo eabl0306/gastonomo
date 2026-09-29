@@ -13,11 +13,14 @@ import androidx.navigation.NavController
  * composable<GastonomoRoute.Loans> {
  *     LoansRoute(
  *         onLoanClick = { actions.navigateTo(GastonomoRoute.LoanDetail(it.value)) },
- *         onNewLoan = { actions.navigateTo(GastonomoRoute.NewLoan) },
+ *         onNewLoan = { actions.navigateTo(GastonomoRoute.NewLoan()) },
  *     )
  * }
  * ```
  */
+// Un parametro por verbo de navegacion. Agruparlos en otro objeto solo moveria la lista de sitio:
+// lo que hace legible esta clase es justo que la firma diga las cinco cosas que se pueden pedir.
+@Suppress("LongParameterList")
 @Immutable
 class GastonomoNavActions(
     /** Apila una pantalla secundaria. */
@@ -28,6 +31,14 @@ class GastonomoNavActions(
     val back: () -> Unit,
     /** Sustituye toda la pila. Se usa al entrar y al cerrar sesion. */
     val replaceWith: (GastonomoRoute) -> Unit,
+
+    /**
+     * Cambia la pantalla actual por otra, sin dejarla en la pila.
+     *
+     * Lo usa el dictado al pasar al formulario para corregir: volver atras desde el formulario
+     * tiene que llevar a la pantalla desde la que se dicto, no a un borrador que ya no vale.
+     */
+    val replaceCurrent: (GastonomoRoute) -> Unit,
 ) {
     companion object {
         /** Las acciones de un [NavController] de verdad. */
@@ -36,6 +47,7 @@ class GastonomoNavActions(
             switchTab = { navController.switchTab(it) },
             back = { navController.popBackStack() },
             replaceWith = { navController.replaceWith(it) },
+            replaceCurrent = { navController.replaceCurrent(it) },
         )
     }
 }

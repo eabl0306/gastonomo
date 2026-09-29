@@ -4,6 +4,7 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -94,16 +95,27 @@ class MovementsScreenTest {
     }
 
     @Test
-    fun `the fab opens the form`() {
-        var opened = 0
+    fun `the quick add button offers the three ways of registering`() {
+        var movements = 0
+        var loans = 0
+        var dictations = 0
         compose.captureGastonomoScreen("movements-fab") {
             MovementsScreen(
                 state = MovementsSamples.list,
-                actions = MovementsActions.NONE.copy(onNewMovement = { opened++ }),
+                actions = MovementsActions.NONE.copy(
+                    onNewMovement = { movements++ },
+                    onNewLoan = { loans++ },
+                    onDictate = { dictations++ },
+                ),
             )
         }
-        compose.onNodeWithText("Nuevo").performClick()
-        assertEquals(1, opened)
+        compose.onNodeWithContentDescription("Nuevo registro").performClick()
+        compose.onNodeWithContentDescription("Nuevo movimiento").performClick()
+        compose.onNodeWithContentDescription("Nuevo registro").performClick()
+        compose.onNodeWithContentDescription("Dictar").performClick()
+        assertEquals(1, movements)
+        assertEquals(0, loans)
+        assertEquals(1, dictations)
     }
 
     @Test

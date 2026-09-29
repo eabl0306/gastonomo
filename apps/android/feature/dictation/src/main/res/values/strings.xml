@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Los textos del dictado. Este es el idioma por defecto (es-CO); la traduccion esta en
+  values-en.
+
+  Lo que comparten varias features no esta aqui: se lee por GastonomoStrings.
+-->
+<resources xmlns:tools="http://schemas.android.com/tools" tools:locale="es">
+
+    <string name="dictation_title">Dictar registro</string>
+    <string name="dictation_review_title">Revisa el registro</string>
+
+    <!-- Escuchando -->
+    <string name="dictation_stop">Terminar de dictar</string>
+    <string name="dictation_start">Dictar</string>
+    <string name="dictation_hearing">Te escucho…</string>
+    <string name="dictation_tap_to_finish">Toca para terminar o mantén presionado mientras hablas</string>
+    <string name="dictation_prefer_typing">Prefiero escribirlo</string>
+
+    <!-- Escrito -->
+    <string name="dictation_text_hint">Ej.: Gasté 45 mil en almuerzo</string>
+    <string name="dictation_interpret">Interpretar</string>
+    <string name="dictation_examples">Prueba con</string>
+    <string name="dictation_example_lunch">Gasté 45 mil en almuerzo</string>
+    <string name="dictation_example_taxi">Pagué 12 mil de taxi ayer</string>
+    <string name="dictation_example_salary">Me entraron 3 millones de sueldo</string>
+    <string name="dictation_example_loan">Le presté 200 mil a Rosa</string>
+
+    <!-- Interpretando -->
+    <string name="dictation_processing">Interpretando…</string>
+
+    <!-- Revisar -->
+    <string name="dictation_expense">Gasto</string>
+    <string name="dictation_income">Ingreso</string>
+    <string name="dictation_loan_lent">Préstamo: te deben</string>
+    <string name="dictation_loan_borrowed">Préstamo: debes</string>
+    <string name="dictation_row_date">Fecha</string>
+    <string name="dictation_row_category">Categoría</string>
+    <string name="dictation_row_person">Persona</string>
+    <string name="dictation_no_amount">Sin importe</string>
+    <string name="dictation_edit">Editar</string>
+    <string name="dictation_save">Guardar</string>
+    <string name="dictation_redo">Dictar de nuevo</string>
+    <string name="dictation_missing_amount">No entendimos el importe. Dicta de nuevo diciéndolo completo.</string>
+    <string name="dictation_missing_person">No entendimos con quién es el préstamo. Dicta de nuevo diciendo el nombre.</string>
+    <string name="dictation_no_rate">No tenemos la equivalencia de esta moneda ahora mismo. Dicta el importe en tu moneda principal.</string>
+
+    <!-- Fallos del microfono. Todos llevan al modo escrito, nunca dejan sin salida. -->
+    <string name="dictation_mic_unavailable">Este dispositivo no permite dictado por voz. Escribe el registro y lo interpretamos igual.</string>
+    <string name="dictation_mic_denied">Necesitamos el micrófono para dictar. Puedes darnos permiso o escribir el registro.</string>
+    <string name="dictation_mic_offline">El dictado por voz necesita conexión. Escribe el registro y lo interpretamos igual.</string>
+    <string name="dictation_mic_no_match">No te escuchamos. Intenta de nuevo o escribe el registro.</string>
+    <string name="dictation_mic_failed">No se pudo activar el micrófono. Escribe el registro.</string>
+
+    <!-- Fallos de la interpretacion -->
+    <string name="dictation_error_unavailable">El dictado no está disponible en tu cuenta.</string>
+    <string name="dictation_error_network">Sin conexión. El dictado necesita internet para interpretar lo que dijiste.</string>
+    <string name="dictation_error_service">El intérprete no está disponible ahora mismo. Vuelve a intentarlo en un momento.</string>
+    <string name="dictation_error_too_many">Has dictado muchas veces seguidas. Espera un momento y vuelve a intentarlo.</string>
+    <string name="dictation_error_unclear">No entendimos el registro. Prueba diciendo el importe y en qué fue.</string>
+    <string name="dictation_error_unexpected">No pudimos interpretar el dictado. Vuelve a intentarlo.</string>
+
+</resources>

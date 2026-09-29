@@ -13,9 +13,12 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
+import androidx.navigation.NavDestination
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.bahoque.gastonomo.core.designsystem.component.GastonomoTabBar
@@ -27,6 +30,7 @@ import com.bahoque.gastonomo.core.navigation.GastonomoRoute
 import com.bahoque.gastonomo.core.navigation.TopLevelDestination
 import com.bahoque.gastonomo.core.navigation.switchTab
 import com.bahoque.gastonomo.navigation.GastonomoNavHost
+import com.bahoque.gastonomo.navigation.isModal
 import com.bahoque.gastonomo.navigation.selectedTabIndex
 import com.bahoque.gastonomo.navigation.tabItems
 
@@ -41,7 +45,7 @@ import com.bahoque.gastonomo.navigation.tabItems
 fun GastonomoApp(container: AppContainer, startDestination: GastonomoRoute) {
     val navController = rememberNavController()
     val backStackEntry by navController.currentBackStackEntryAsState()
-    val selectedTab = selectedTabIndex(backStackEntry?.destination)
+    val selectedTab = tabBehindModals(backStackEntry?.destination)
     // Las hojas viven dentro de una pantalla y la tab bar se pinta fuera y por encima, asi
     // que una hoja no puede taparla. Contarlas aqui es lo que permite velarla y dejarla sin
     // pulsar mientras hay una abierta: con la barra encendida, tocar un tab navegaba con la
@@ -79,6 +83,21 @@ fun GastonomoApp(container: AppContainer, startDestination: GastonomoRoute) {
 }
 
 /**
+ * El tab que hay que ensenar marcado, contando con que un modal se abre encima.
+ *
+ * El dictado es una ruta y no lleva tab bar, pero se pinta encima de una de las cuatro pantallas
+ * que si la llevan. Sin recordar cual era, la barra desaparecia al abrir el dictado y volvia al
+ * cerrarlo, que es exactamente lo que un modal no debe hacer.
+ */
+@Composable
+private fun tabBehindModals(destination: NavDestination?): Int {
+    val current = selectedTabIndex(destination)
+    var last by remember { mutableIntStateOf(0) }
+    if (current >= 0) last = current
+    return if (current >= 0 || isModal(destination)) last else NO_TAB
+}
+
+/**
  * El velo de la tab bar mientras hay una hoja abierta.
  *
  * Se funde con las mismas duraciones que la hoja, asi que las dos mitades del velo entran y
@@ -102,3 +121,6 @@ private fun BoxScope.TabBarScrim(visible: Boolean) {
         )
     }
 }
+
+/** Lo que devuelve [tabBehindModals] cuando la pantalla no lleva tab bar. */
+private const val NO_TAB = -1
