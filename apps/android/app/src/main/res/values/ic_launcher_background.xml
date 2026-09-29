@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    El fondo del icono de la aplicacion. Es el mismo crema que el fondo de las pantallas
+    (`bgApp`), asi que el icono y la aplicacion se leen como la misma cosa. El escudo va
+    encima, en la capa de delante.
+-->
+<resources>
+    <color name="ic_launcher_background">#F5F2EC</color>
+</resources>

@@ -32,11 +32,25 @@
                 tools:node="remove" />
         </provider>
 
+        <!--
+            Solo vertical. Las 14 pantallas estan disenadas para un telefono de pie: en apaisado
+            las tarjetas se estiran, el teclado tapa los formularios y la tab bar se come media
+            pantalla. Es una decision de diseno, no una limitacion tecnica.
+
+            Lint protesta por dos cosas y las dos se aceptan a sabiendas. `LockedOrientationActivity`
+            pide no fijar la orientacion para que la aplicacion sirva en Chrome OS, que no es un
+            destino de esta aplicacion. `DiscouragedApi` avisa de que a partir de Android 16 el
+            sistema ignora la orientacion fija en pantallas grandes: correcto, y no cambia nada
+            aqui, porque en un telefono si se respeta y un telefono es lo unico que hay disenado.
+            Si algun dia hay version para tablet, esto se cae solo y habra que disenar el apaisado.
+        -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
+            android:screenOrientation="portrait"
             android:theme="@style/Theme.Gastonomo"
-            android:windowSoftInputMode="adjustResize">
+            android:windowSoftInputMode="adjustResize"
+            tools:ignore="DiscouragedApi,LockedOrientationActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
