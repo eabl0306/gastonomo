@@ -8,23 +8,33 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.composed
-import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.graphicsLayer
 
 /**
  * La respuesta al toque del diseno: `transform: scale(.98)` mientras el dedo esta abajo.
  * No hay borroso circular de Material en ninguna pantalla.
+ *
+ * **La escala se lee en la fase de dibujo, dentro del `graphicsLayer`, y no al componer.**
+ * Leerla al componer (`scale(escala)`) hace que el control entero se vuelva a componer en
+ * cada fotograma de la animacion, y eso no era solo caro: si el control cambiaba de aspecto
+ * en ese mismo rato, se quedaba a medias. El chip de filtro seleccionado con el dedo apoyado
+ * perdia el fondo y quedaba con el texto blanco sobre el fondo de la pantalla, ilegible.
+ * Con un toque instantaneo no pasaba, porque no llegaba a haber animacion.
  */
+@Composable
 fun Modifier.pressScale(
     interactionSource: MutableInteractionSource,
     pressedScale: Float = PRESSED_SCALE,
-): Modifier = composed {
+): Modifier {
     val pressed by interactionSource.collectIsPressedAsState()
-    val scale by animateFloatAsState(
+    val scale = animateFloatAsState(
         targetValue = if (pressed) pressedScale else 1f,
         label = "pressScale",
     )
-    scale(scale)
+    return this.graphicsLayer {
+        scaleX = scale.value
+        scaleY = scale.value
+    }
 }
 
 /**
