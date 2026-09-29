@@ -14,6 +14,7 @@ mod postgres_user_repository;
 
 mod postgres_category_repository;
 mod postgres_change_feed;
+mod postgres_dictation_access;
 mod postgres_exchange_rate_repository;
 mod postgres_loan_repository;
 mod postgres_movement_repository;
@@ -26,6 +27,7 @@ pub use mapping::{database_error, is_unique_violation};
 pub use pool::{PersistenceError, connect_pool, run_migrations};
 pub use postgres_category_repository::PostgresCategoryRepository;
 pub use postgres_change_feed::PostgresChangeFeed;
+pub use postgres_dictation_access::PostgresDictationAccess;
 pub use postgres_exchange_rate_repository::PostgresExchangeRateRepository;
 pub use postgres_health_probe::PostgresHealthProbe;
 pub use postgres_idempotency_store::PostgresIdempotencyStore;
