@@ -4,6 +4,7 @@ import type { HomeContent, HomePorts } from '../../application/use-cases/load-ho
 import type { CurrencyCode } from '../../domain/money/currency';
 import type { ExchangeRates } from '../../domain/money/exchange-rates';
 import { useAccount } from '../account/account-context';
+import { useToday } from '../clock/today-context';
 import { LoadingBlock, NoteLine, RetryBlock, messageOf } from '../common/blocks';
 import { usePeriod } from '../period/period-context';
 import { PeriodPicker } from '../period/period-picker';
@@ -40,7 +41,7 @@ export function HomeScreen({
   ports: HomePorts;
   actions: HomeActions;
 }): ReactElement {
-  const { today } = usePeriod();
+  const today = useToday();
   const { settings, rates, ratesUnavailable } = useAccount();
   const { data, loading, everLoaded, reload } = useHome(ports);
   const { hidden, toggle } = useHideAmounts();

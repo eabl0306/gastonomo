@@ -5,11 +5,11 @@ import type { MovementKind } from '../../domain/ledger/category';
 import type { ExchangeRates } from '../../domain/money/exchange-rates';
 import { useAccount } from '../account/account-context';
 import { Notice } from '../auth/auth-chrome';
+import { useToday } from '../clock/today-context';
 import { messageOf } from '../common/blocks';
 import { AmountField } from '../forms/amount-field';
 import { CategoryGrid } from '../forms/category-grid';
 import { FormField, FormLayout, SaveButton, SegmentedTabs } from '../forms/form-chrome';
-import { usePeriod } from '../period/period-context';
 
 import { useNewMovement, type NewMovementPorts, type NewMovementState } from './use-new-movement';
 
@@ -33,7 +33,7 @@ export function NewMovementScreen({
   onClose: () => void;
   onSaved: (kind: MovementKind) => void;
 }): ReactElement {
-  const { today } = usePeriod();
+  const today = useToday();
   const { settings, catalog, rates } = useAccount();
   const form = useNewMovement({
     ports,

@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 
 import { fixedClock } from '../../infrastructure/memory/in-memory-ledger';
+import { TodayProvider } from '../clock/today-context';
 
 import { PeriodProvider } from './period-context';
 import { PeriodPicker } from './period-picker';
@@ -10,10 +11,12 @@ import { RangeSheet } from './range-sheet';
 
 function renderFilter(): void {
   render(
-    <PeriodProvider clock={fixedClock('2026-09-22')}>
-      <PeriodPicker />
-      <RangeSheet />
-    </PeriodProvider>,
+    <TodayProvider clock={fixedClock('2026-09-22')}>
+      <PeriodProvider>
+        <PeriodPicker />
+        <RangeSheet />
+      </PeriodProvider>
+    </TodayProvider>,
   );
 }
 

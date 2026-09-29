@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { decimalToString } from '../../domain/money/decimal';
 
-import { readLoanList, readMovement, readMovementPage } from './ledger-dto';
+import { readLoan, readLoanList, readMovement, readMovementPage } from './ledger-dto';
 import { readMoney, writeMoney } from './money-dto';
 
 const CATEGORY = {
@@ -137,5 +137,17 @@ describe('leer prestamos', () => {
 
   it('un cuerpo sin items no es una lista', () => {
     expect(readLoanList({ loans: [] })).toBeNull();
+  });
+
+  /**
+   * `POST /v1/loans/{id}/payments` responde con el **prestamo entero**, no con el abono: el
+   * cliente necesita el saldo nuevo para repintar la tarjeta.
+   */
+  it('la respuesta de un abono es el prestamo con el abono dentro', () => {
+    const loan = readLoan(LOAN);
+    expect(loan?.payments).toHaveLength(1);
+    expect(decimalToString(loan?.payments[0]?.money.amount ?? { units: 0n, scale: 0 })).toBe(
+      '150000.0000',
+    );
   });
 });

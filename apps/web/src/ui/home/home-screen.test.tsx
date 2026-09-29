@@ -15,6 +15,7 @@ import {
 } from '../../infrastructure/memory/in-memory-ledger';
 import { SAMPLE_TODAY } from '../../infrastructure/memory/sample-ledger';
 import { AccountProvider } from '../account/account-context';
+import { TodayProvider } from '../clock/today-context';
 import { PeriodProvider } from '../period/period-context';
 
 import { HomeScreen } from './home-screen';
@@ -40,9 +41,11 @@ function renderHome(
   };
   const tree = (
     <AccountProvider currencies={currencies} settings={createMemorySettingsGateway()}>
-      <PeriodProvider clock={fixedClock(SAMPLE_TODAY)}>
-        <HomeScreen actions={actions} ports={ports} />
-      </PeriodProvider>
+      <TodayProvider clock={fixedClock(SAMPLE_TODAY)}>
+        <PeriodProvider>
+          <HomeScreen actions={actions} ports={ports} />
+        </PeriodProvider>
+      </TodayProvider>
     </AccountProvider>
   );
   render(tree);

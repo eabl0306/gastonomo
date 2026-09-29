@@ -3,6 +3,7 @@ import { BrowserRouter, Route, Routes } from 'react-router';
 
 import type { HealthGateway } from '../application/ports/health-gateway';
 import { AccountProvider } from '../ui/account/account-context';
+import { TodayProvider } from '../ui/clock/today-context';
 import { HealthGatewayProvider } from '../ui/health/health-gateway-provider';
 import { HealthPanel } from '../ui/health/health-panel';
 import { PeriodProvider } from '../ui/period/period-context';
@@ -13,6 +14,7 @@ import {
   LoanDetailRoute,
   LoansRoute,
   MovementsRoute,
+  NewLoanRoute,
   NewMovementRoute,
   ResetPasswordRoute,
   SettingsRoute,
@@ -42,11 +44,13 @@ export function App({ container }: { container: Container }): ReactElement {
           <Route
             element={
               <RequireSession>
-                <AccountProvider currencies={container.currencies} settings={container.settings}>
-                  <PeriodProvider clock={container.clock}>
-                    <ShellWithQuickAdd />
-                  </PeriodProvider>
-                </AccountProvider>
+                <TodayProvider clock={container.clock}>
+                  <AccountProvider currencies={container.currencies} settings={container.settings}>
+                    <PeriodProvider>
+                      <ShellWithQuickAdd />
+                    </PeriodProvider>
+                  </AccountProvider>
+                </TodayProvider>
               </RequireSession>
             }
           >
@@ -54,6 +58,7 @@ export function App({ container }: { container: Container }): ReactElement {
             <Route element={<MovementsRoute container={container} />} path={ROUTES.movements} />
             <Route element={<NewMovementRoute container={container} />} path={ROUTES.newMovement} />
             <Route element={<LoansRoute container={container} />} path={ROUTES.loans} />
+            <Route element={<NewLoanRoute container={container} />} path={ROUTES.newLoan} />
             <Route element={<LoanDetailRoute container={container} />} path={ROUTES.loanDetail} />
             <Route element={<SettingsRoute />} path={ROUTES.settings} />
           </Route>

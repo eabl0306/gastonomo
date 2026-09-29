@@ -12,6 +12,7 @@ import {
 } from '../../infrastructure/memory/in-memory-ledger';
 import { SAMPLE_MOVEMENTS, SAMPLE_TODAY } from '../../infrastructure/memory/sample-ledger';
 import { AccountProvider } from '../account/account-context';
+import { TodayProvider } from '../clock/today-context';
 import { PeriodProvider } from '../period/period-context';
 
 import { NewMovementScreen } from './new-movement-screen';
@@ -37,9 +38,11 @@ function renderForm(sent: Sent[] = [], onSaved = vi.fn()): void {
   };
   render(
     <AccountProvider currencies={currencies} settings={createMemorySettingsGateway()}>
-      <PeriodProvider clock={fixedClock(SAMPLE_TODAY)}>
-        <NewMovementScreen onClose={vi.fn()} onSaved={onSaved} ports={ports} />
-      </PeriodProvider>
+      <TodayProvider clock={fixedClock(SAMPLE_TODAY)}>
+        <PeriodProvider>
+          <NewMovementScreen onClose={vi.fn()} onSaved={onSaved} ports={ports} />
+        </PeriodProvider>
+      </TodayProvider>
     </AccountProvider>,
   );
 }

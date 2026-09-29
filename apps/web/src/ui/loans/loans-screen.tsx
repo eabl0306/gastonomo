@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactElement } from 'react';
+import { useMemo, useState, type ReactElement, type ReactNode } from 'react';
 
 import type { LoanPorts } from '../../application/use-cases/load-loan-list';
 import type { LoanRow, LoanTotals } from '../../domain/ledger/loan-summary';
@@ -13,12 +13,12 @@ import { useFormats } from '../format/formats-context';
 
 import { LoanCard } from './loan-card';
 import { LOAN_FILTERS, LOAN_FILTER_LABELS, filterLoans, type LoanFilter } from './loan-view';
+import { PaymentSheet } from './payment-sheet';
 import { useLoans } from './use-loans';
 
-/** Lo que Prestamos no decide: a donde llevan sus botones. */
+/** Lo que Prestamos no decide: a donde lleva abrir un prestamo. */
 export interface LoansActions {
   readonly onOpenLoan: (id: string) => void;
-  readonly onRegisterPayment: (id: string) => void;
 }
 
 /**
@@ -37,21 +37,15 @@ export function LoansScreen({
   const { settings } = useAccount();
   const { data, loading, everLoaded, reload } = useLoans(ports);
   const [filter, setFilter] = useState<LoanFilter>('all');
+  const [paying, setPaying] = useState<string | null>(null);
   const display = settings.displayCurrency;
-  if (data === null) {
-    // Las dos tarjetas de arriba no se pintan a cero mientras carga: un "Nada pendiente"
-    // que luego cambia se lee como un dato, no como que todavia no ha llegado.
-    return (
-      <div className="g-loans">
-        <h1 className="g-screen__title">Préstamos</h1>
-        <LoadingBlock />
-      </div>
-    );
-  }
+  // Las dos tarjetas de arriba no se pintan a cero mientras carga: un "Nada pendiente" que
+  // luego cambia se lee como un dato, no como que todavia no ha llegado.
+  if (data === null) return <Screen>{<LoadingBlock />}</Screen>;
   const rows = data.rows;
+  const paid = rows.find((row) => row.loan.id === paying) ?? null;
   return (
-    <div className="g-loans">
-      <h1 className="g-screen__title">Préstamos</h1>
+    <Screen>
       <Totals display={display} rows={rows} />
       <FilterPills
         label="Dirección del préstamo"
@@ -66,11 +60,48 @@ export function LoansScreen({
         everLoaded={everLoaded}
         filter={filter}
         loading={loading}
+        onRegisterPayment={setPaying}
         onRetry={reload}
         rows={rows}
       />
+      <Payment
+        gateway={ports.loans}
+        onDone={() => {
+          setPaying(null);
+          reload();
+        }}
+        row={paid}
+      />
+    </Screen>
+  );
+}
+
+function Screen({ children }: { children: ReactNode }): ReactElement {
+  return (
+    <div className="g-loans">
+      <h1 className="g-screen__title">Préstamos</h1>
+      {children}
     </div>
   );
+}
+
+/**
+ * El sheet de abono, si hay un prestamo elegido.
+ *
+ * Al guardar se recarga la lista: el saldo y el estado de la tarjeta cambian, y dejarlos como
+ * estaban haria pensar que el abono no se guardo.
+ */
+function Payment({
+  row,
+  gateway,
+  onDone,
+}: {
+  row: LoanRow | null;
+  gateway: LoanPorts['loans'];
+  onDone: () => void;
+}): ReactElement | null {
+  if (row === null) return null;
+  return <PaymentSheet gateway={gateway} onClose={onDone} onSaved={onDone} row={row} />;
 }
 
 function Totals({
@@ -122,6 +153,7 @@ interface BodyProps {
   readonly loading: boolean;
   readonly everLoaded: boolean;
   readonly onRetry: () => void;
+  readonly onRegisterPayment: (id: string) => void;
   readonly actions: LoansActions;
 }
 
@@ -146,7 +178,7 @@ function Body(props: BodyProps): ReactElement {
             props.actions.onOpenLoan(row.loan.id);
           }}
           onRegisterPayment={() => {
-            props.actions.onRegisterPayment(row.loan.id);
+            props.onRegisterPayment(row.loan.id);
           }}
           row={row}
         />

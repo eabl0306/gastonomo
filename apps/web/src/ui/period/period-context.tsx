@@ -8,7 +8,6 @@ import {
   type ReactNode,
 } from 'react';
 
-import type { Clock } from '../../application/ports/clock';
 import {
   applyRange,
   closeRangeSheet,
@@ -23,6 +22,7 @@ import {
 } from '../../application/state/period-filter';
 import type { Day } from '../../domain/calendar/day';
 import type { PeriodPreset } from '../../domain/calendar/period';
+import { useToday } from '../clock/today-context';
 
 /** Lo que se le pide al filtro. Una accion por control del selector y del sheet. */
 type FilterAction =
@@ -72,16 +72,8 @@ const PeriodContext = createContext<PeriodContextValue | null>(null);
  * Es el mismo objeto para las dos pantallas porque el diseno dice que el periodo elegido se
  * ve en las dos. Si viviera dentro de una, cambiar de pestana lo perderia.
  */
-export function PeriodProvider({
-  clock,
-  children,
-}: {
-  clock: Clock;
-  children: ReactNode;
-}): ReactElement {
-  // El dia de hoy se fija al montar: recalcularlo en cada render movería el tope del
-  // selector y los cinco presets a media interaccion.
-  const today = useMemo(() => clock.today(), [clock]);
+export function PeriodProvider({ children }: { children: ReactNode }): ReactElement {
+  const today = useToday();
   const [state, dispatch] = useReducer(reduce(today), today, initialFilter);
   const value = useMemo(() => ({ state, today, dispatch }), [state, today]);
   return <PeriodContext.Provider value={value}>{children}</PeriodContext.Provider>;

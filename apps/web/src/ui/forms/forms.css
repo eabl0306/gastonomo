@@ -166,9 +166,25 @@
   color: var(--g-red);
 }
 
+.g-amount[data-tone='lent'] .g-amount__symbol,
+.g-amount[data-tone='lent'] .g-amount__input {
+  color: var(--g-blue);
+}
+
+.g-amount[data-tone='borrowed'] .g-amount__symbol,
+.g-amount[data-tone='borrowed'] .g-amount__input {
+  color: var(--g-amber);
+}
+
 .g-amount[data-tone='neutral'] .g-amount__symbol,
 .g-amount[data-tone='neutral'] .g-amount__input {
   color: var(--g-ink);
+}
+
+.g-amount__caption {
+  margin: 0;
+  color: var(--g-muted);
+  font-size: 12px;
 }
 
 .g-amount__chip {
@@ -444,4 +460,52 @@
 .g-currency__symbol {
   color: var(--g-muted);
   font-size: 13px;
+}
+
+/* El aviso del formulario de prestamo: lo que pasa en el historico al crearlo. */
+.g-hint {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  margin: 18px 0 0;
+  padding: 12px 14px;
+  border-radius: var(--g-radius-nav-item);
+  background: var(--g-soft);
+  color: var(--g-note);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.g-hint .g-icon {
+  font-size: 18px;
+}
+
+.g-hint span {
+  flex-shrink: 1;
+  min-width: 0;
+}
+
+/* Los dos chips de "Todo el saldo" y "La mitad" */
+.g-payment__chips {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  margin-bottom: 18px;
+}
+
+.g-chip {
+  height: 34px;
+  padding: 0 14px;
+  border: 1px solid var(--g-field-line);
+  border-radius: 17px;
+  background: var(--g-surface);
+  color: var(--g-ink);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* Dentro del sheet el importe respira menos: la hoja ya tiene su propio margen. */
+.g-sheet__panel .g-amount {
+  padding: 24px 0 6px;
 }

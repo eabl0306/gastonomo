@@ -16,8 +16,8 @@ const FAB_ROUTES: ReadonlySet<string> = new Set([ROUTES.home, ROUTES.movements, 
 /** A donde lleva cada opcion del menu radial. */
 const ROUTE_OF_OPTION: Readonly<Record<string, string>> = {
   movement: ROUTES.newMovement,
-  // Todavia no existen: de momento llevan a su lista.
-  loan: ROUTES.loans,
+  loan: ROUTES.newLoan,
+  // El dictado todavia no esta: de momento lleva a la lista.
   dictate: ROUTES.movements,
 };
 

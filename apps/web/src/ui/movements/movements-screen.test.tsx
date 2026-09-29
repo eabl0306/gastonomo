@@ -11,6 +11,7 @@ import {
 } from '../../infrastructure/memory/in-memory-ledger';
 import { SAMPLE_TODAY } from '../../infrastructure/memory/sample-ledger';
 import { AccountProvider } from '../account/account-context';
+import { TodayProvider } from '../clock/today-context';
 import { PeriodProvider } from '../period/period-context';
 
 import { MovementsScreen } from './movements-screen';
@@ -20,9 +21,11 @@ function renderMovements(overrides: Partial<MovementsPorts> = {}): void {
   const ports: MovementsPorts = { movements: createMemoryMovementGateway(), ...overrides };
   render(
     <AccountProvider currencies={currencies} settings={createMemorySettingsGateway()}>
-      <PeriodProvider clock={fixedClock(SAMPLE_TODAY)}>
-        <MovementsScreen ports={ports} />
-      </PeriodProvider>
+      <TodayProvider clock={fixedClock(SAMPLE_TODAY)}>
+        <PeriodProvider>
+          <MovementsScreen ports={ports} />
+        </PeriodProvider>
+      </TodayProvider>
     </AccountProvider>,
   );
 }

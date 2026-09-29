@@ -7,23 +7,25 @@ import {
   createMemoryCurrencyGateway,
   createMemoryLoanGateway,
   createMemorySettingsGateway,
+  fixedClock,
 } from '../../infrastructure/memory/in-memory-ledger';
+import { SAMPLE_TODAY } from '../../infrastructure/memory/sample-ledger';
 import { AccountProvider } from '../account/account-context';
+import { TodayProvider } from '../clock/today-context';
 
 import { LoansScreen, type LoansActions } from './loans-screen';
 
-const NOOP: LoansActions = {
-  onOpenLoan: () => undefined,
-  onRegisterPayment: () => undefined,
-};
+const NOOP: LoansActions = { onOpenLoan: () => undefined };
 
 function renderLoans(overrides: Partial<LoanPorts> = {}, actions: LoansActions = NOOP): void {
   const currencies = createMemoryCurrencyGateway();
   const ports: LoanPorts = { loans: createMemoryLoanGateway(), ...overrides };
   render(
-    <AccountProvider currencies={currencies} settings={createMemorySettingsGateway()}>
-      <LoansScreen actions={actions} ports={ports} />
-    </AccountProvider>,
+    <TodayProvider clock={fixedClock(SAMPLE_TODAY)}>
+      <AccountProvider currencies={currencies} settings={createMemorySettingsGateway()}>
+        <LoansScreen actions={actions} ports={ports} />
+      </AccountProvider>
+    </TodayProvider>,
   );
 }
 
@@ -101,17 +103,24 @@ describe('Préstamos', () => {
     expect(await screen.findByText('No tienes préstamos en esta lista.')).toBeInTheDocument();
   });
 
-  it('la tarjeta abre el detalle y el boton de abonar no lo abre a la vez', async () => {
-    const actions = { onOpenLoan: vi.fn(), onRegisterPayment: vi.fn() };
+  /** La tarjeta entera abre el detalle, asi que el boton de abonar tiene que parar el clic. */
+  it('el boton de abonar abre el sheet y no el detalle', async () => {
+    const actions = { onOpenLoan: vi.fn() };
+    renderLoans({}, actions);
+    await screen.findByText('Ana');
+
+    await userEvent.click(within(cardOf('Ana')).getByRole('button', { name: /Registrar abono/u }));
+    expect(screen.getByRole('dialog', { name: 'Registrar abono' })).toBeInTheDocument();
+    expect(actions.onOpenLoan).not.toHaveBeenCalled();
+  });
+
+  it('la tarjeta abre el detalle', async () => {
+    const actions = { onOpenLoan: vi.fn() };
     renderLoans({}, actions);
     await screen.findByText('Ana');
 
     await userEvent.click(screen.getByRole('button', { name: 'Ver el préstamo de Ana' }));
     expect(actions.onOpenLoan).toHaveBeenCalledWith('l1');
-
-    await userEvent.click(within(cardOf('Ana')).getByRole('button', { name: /Registrar abono/u }));
-    expect(actions.onRegisterPayment).toHaveBeenCalledWith('l1');
-    expect(actions.onOpenLoan).toHaveBeenCalledTimes(1);
   });
 
   it('un fallo deja la pantalla con su reintento', async () => {

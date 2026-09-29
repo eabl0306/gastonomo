@@ -1,9 +1,9 @@
 import { success, type Outcome } from '../../application/ports/api-error';
 import type { LoanDraft, LoanGateway, PaymentDraft } from '../../application/ports/loan-gateway';
-import type { Loan, LoanDirection, LoanPayment } from '../../domain/ledger/loan';
+import type { Loan, LoanDirection } from '../../domain/ledger/loan';
 
 import type { ApiClient } from './api-client';
-import { readLoan, readLoanList, readPayment } from './ledger-dto';
+import { readLoan, readLoanList } from './ledger-dto';
 import { malformed } from './malformed';
 import { writeMoney } from './money-dto';
 
@@ -52,9 +52,7 @@ export function createHttpLoanGateway(client: ApiClient): LoanGateway {
           ...writeMoney(draft.money),
         },
       });
-      if (!outcome.ok) return outcome;
-      const payment = readPayment(outcome.value.body);
-      return payment === null ? malformed<LoanPayment>() : success(payment);
+      return outcome.ok ? loanFrom(outcome.value.body) : outcome;
     },
   };
 }

@@ -7,23 +7,25 @@ import {
   createMemoryCurrencyGateway,
   createMemoryLoanGateway,
   createMemorySettingsGateway,
+  fixedClock,
 } from '../../infrastructure/memory/in-memory-ledger';
+import { SAMPLE_TODAY } from '../../infrastructure/memory/sample-ledger';
 import { AccountProvider } from '../account/account-context';
+import { TodayProvider } from '../clock/today-context';
 
 import { LoanDetailScreen, type LoanDetailActions } from './loan-detail-screen';
 
-const NOOP: LoanDetailActions = {
-  onBack: () => undefined,
-  onRegisterPayment: () => undefined,
-};
+const NOOP: LoanDetailActions = { onBack: () => undefined };
 
 function renderDetail(loanId: string, actions: LoanDetailActions = NOOP): void {
   const currencies = createMemoryCurrencyGateway();
   const ports: LoanPorts = { loans: createMemoryLoanGateway() };
   render(
-    <AccountProvider currencies={currencies} settings={createMemorySettingsGateway()}>
-      <LoanDetailScreen actions={actions} loanId={loanId} ports={ports} />
-    </AccountProvider>,
+    <TodayProvider clock={fixedClock(SAMPLE_TODAY)}>
+      <AccountProvider currencies={currencies} settings={createMemorySettingsGateway()}>
+        <LoanDetailScreen actions={actions} loanId={loanId} ports={ports} />
+      </AccountProvider>
+    </TodayProvider>,
   );
 }
 
@@ -71,7 +73,7 @@ describe('Detalle del préstamo', () => {
   });
 
   it('el boton de volver avisa', async () => {
-    const actions = { onBack: vi.fn(), onRegisterPayment: vi.fn() };
+    const actions = { onBack: vi.fn() };
     renderDetail('l1', actions);
     await screen.findByText('Ana');
 

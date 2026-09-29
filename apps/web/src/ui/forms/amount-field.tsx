@@ -16,7 +16,9 @@ import { CurrencySheet } from './currency-sheet';
 export interface AmountFieldProps {
   readonly state: MoneyFieldState;
   readonly view: MoneyFieldView;
-  readonly tone: 'income' | 'expense' | 'neutral';
+  readonly tone: 'income' | 'expense' | 'lent' | 'borrowed' | 'neutral';
+  /** La linea de debajo del importe, como "Monto total". */
+  readonly caption?: string;
   readonly catalog: readonly CurrencyInfo[];
   readonly rates: ExchangeRates;
   readonly onAmount: (raw: string) => void;
@@ -35,6 +37,9 @@ export function AmountField(props: AmountFieldProps): ReactElement {
   const formats = useFormats();
   const input = formats.amountInput;
   const [picking, setPicking] = useState(false);
+  const close = (): void => {
+    setPicking(false);
+  };
   return (
     <div className="g-amount" data-tone={props.tone}>
       <div className="g-amount__row">
@@ -49,26 +54,22 @@ export function AmountField(props: AmountFieldProps): ReactElement {
           raw={props.state.amount}
         />
       </div>
-      <button
-        className="g-amount__chip"
+      {props.caption === undefined ? null : <p className="g-amount__caption">{props.caption}</p>}
+      <CurrencyChip
+        code={props.state.currency}
+        language={formats.language}
         onClick={() => {
           setPicking(true);
         }}
-        type="button"
-      >
-        {`${props.state.currency} · ${currencyName(props.state.currency, formats.language)}`}
-        <Icon name="expand_more" />
-      </button>
+      />
       {props.view.foreign ? <ConversionBox {...props} /> : null}
       {picking ? (
         <CurrencySheet
           catalog={props.catalog}
-          onClose={() => {
-            setPicking(false);
-          }}
+          onClose={close}
           onPick={(code) => {
             props.onCurrency(code);
-            setPicking(false);
+            close();
           }}
           rates={props.rates}
           selected={props.state.currency}
@@ -77,6 +78,23 @@ export function AmountField(props: AmountFieldProps): ReactElement {
         />
       ) : null}
     </div>
+  );
+}
+
+function CurrencyChip({
+  code,
+  language,
+  onClick,
+}: {
+  code: CurrencyCode;
+  language: string;
+  onClick: () => void;
+}): ReactElement {
+  return (
+    <button className="g-amount__chip" onClick={onClick} type="button">
+      {`${code} · ${currencyName(code, language)}`}
+      <Icon name="expand_more" />
+    </button>
   );
 }
 

@@ -6,6 +6,7 @@ import { ResetPasswordScreen } from '../ui/auth/reset-password-screen';
 import { HomeScreen } from '../ui/home/home-screen';
 import { LoanDetailScreen } from '../ui/loans/loan-detail-screen';
 import { LoansScreen } from '../ui/loans/loans-screen';
+import { NewLoanScreen } from '../ui/loans/new-loan-screen';
 import { MovementsScreen } from '../ui/movements/movements-screen';
 import { NewMovementScreen } from '../ui/movements/new-movement-screen';
 import { SettingsScreen } from '../ui/shell/settings-screen';
@@ -86,15 +87,18 @@ export function LoansRoute({ container }: { container: Container }): ReactElemen
         onOpenLoan: (id) => {
           void navigate(loanDetailPath(id));
         },
-        // El sheet de abono todavia no existe: de momento se abre el detalle, que es donde
-        // esta el mismo boton.
-        onRegisterPayment: (id) => {
-          void navigate(loanDetailPath(id));
-        },
       }}
       ports={container}
     />
   );
+}
+
+export function NewLoanRoute({ container }: { container: Container }): ReactElement {
+  const navigate = useNavigate();
+  const leave = (): void => {
+    void navigate(ROUTES.loans, { replace: true });
+  };
+  return <NewLoanScreen gateway={container.loans} onClose={leave} onSaved={leave} />;
 }
 
 export function LoanDetailRoute({ container }: { container: Container }): ReactElement {
@@ -106,7 +110,6 @@ export function LoanDetailRoute({ container }: { container: Container }): ReactE
         onBack: () => {
           void navigate(ROUTES.loans);
         },
-        onRegisterPayment: () => undefined,
       }}
       loanId={loanId ?? ''}
       ports={container}

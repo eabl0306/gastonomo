@@ -1,4 +1,4 @@
-import type { Loan, LoanDirection, LoanPayment } from '../../domain/ledger/loan';
+import type { Loan, LoanDirection } from '../../domain/ledger/loan';
 import type { MonetaryAmount } from '../../domain/money/monetary-amount';
 
 import type { Outcome } from './api-error';
@@ -26,9 +26,15 @@ export interface LoanGateway {
   /** Un prestamo de otra cuenta responde 404, no 403. */
   byId: (id: string) => Promise<Outcome<Loan>>;
   create: (draft: LoanDraft, idempotencyKey: string) => Promise<Outcome<Loan>>;
+  /**
+   * Registra un abono y devuelve el **prestamo entero**, ya con el abono dentro.
+   *
+   * Es lo que responde la API, y tiene sentido: quien abona necesita el saldo nuevo para
+   * repintar la tarjeta, y el abono suelto no lo dice.
+   */
   addPayment: (
     loanId: string,
     draft: PaymentDraft,
     idempotencyKey: string,
-  ) => Promise<Outcome<LoanPayment>>;
+  ) => Promise<Outcome<Loan>>;
 }

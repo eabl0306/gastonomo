@@ -63,12 +63,7 @@ export function createMemoryLoanGateway(loans: readonly Loan[] = SAMPLE_LOANS): 
       ),
     byId: (id) => Promise.resolve(find(id)),
     create: () => Promise.resolve(find(loans[0]?.id ?? '')),
-    addPayment: (loanId) => {
-      const payment = loans.find((loan) => loan.id === loanId)?.payments[0];
-      return Promise.resolve(
-        payment === undefined ? { ok: false, error: { kind: 'not-found' } } : success(payment),
-      );
-    },
+    addPayment: (loanId) => Promise.resolve(find(loanId)),
   };
 }
 

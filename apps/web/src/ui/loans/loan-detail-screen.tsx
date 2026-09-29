@@ -1,4 +1,4 @@
-import type { ReactElement } from 'react';
+import { useState, type ReactElement } from 'react';
 
 import type { LoanPorts } from '../../application/use-cases/load-loan-list';
 import type { LoanPayment } from '../../domain/ledger/loan';
@@ -14,11 +14,11 @@ import { DOT_SEPARATOR, type GastonomoFormats } from '../format/formats';
 import { useFormats } from '../format/formats-context';
 
 import { STATUS_LABELS, directionLabel, headlineOf, initialOf } from './loan-view';
+import { PaymentSheet } from './payment-sheet';
 import { useLoans } from './use-loans';
 
 export interface LoanDetailActions {
   readonly onBack: () => void;
-  readonly onRegisterPayment: () => void;
 }
 
 /**
@@ -38,7 +38,12 @@ export function LoanDetailScreen({
 }): ReactElement {
   const { rates } = useAccount();
   const { data, loading, reload } = useLoans(ports);
+  const [paying, setPaying] = useState(false);
   const row = data?.rows.find((candidate) => candidate.loan.id === loanId) ?? null;
+  const done = (): void => {
+    setPaying(false);
+    reload();
+  };
   return (
     <div className="g-detail">
       <header className="g-detail__bar">
@@ -55,11 +60,16 @@ export function LoanDetailScreen({
       <Body
         error={data?.error ?? null}
         loading={loading}
-        onRegisterPayment={actions.onRegisterPayment}
+        onRegisterPayment={() => {
+          setPaying(true);
+        }}
         onRetry={reload}
         rates={rates}
         row={row}
       />
+      {paying && row !== null ? (
+        <PaymentSheet gateway={ports.loans} onClose={done} onSaved={done} row={row} />
+      ) : null}
     </div>
   );
 }

@@ -7,10 +7,10 @@ import type { Day } from '../../domain/calendar/day';
 import type { CurrencyCode } from '../../domain/money/currency';
 import type { ExchangeRates } from '../../domain/money/exchange-rates';
 import { useAccount } from '../account/account-context';
+import { useToday } from '../clock/today-context';
 import { LoadingBlock, NoteLine, RetryBlock, messageOf } from '../common/blocks';
 import { EmptyState } from '../common/empty-state';
 import { FilterPills } from '../common/filter-pills';
-import { usePeriod } from '../period/period-context';
 import { PeriodPicker } from '../period/period-picker';
 
 import { DayGroupCard } from './day-group-card';
@@ -31,7 +31,7 @@ import { useMovements } from './use-movements';
  * cambiar de pill no mueve las tres cifras de arriba.
  */
 export function MovementsScreen({ ports }: { ports: MovementsPorts }): ReactElement {
-  const { today } = usePeriod();
+  const today = useToday();
   const { settings, rates, ratesUnavailable } = useAccount();
   const { data, loading, everLoaded, reload } = useMovements(ports);
   const [filter, setFilter] = useState<MovementFilter>('all');

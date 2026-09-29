@@ -100,8 +100,8 @@ export function readMovementPage(body: unknown): MovementPage | null {
   };
 }
 
-/** Un abono. Trae su `loanId` dentro, tanto en la lista como en la respuesta del alta. */
-export function readPayment(raw: unknown): LoanPayment | null {
+/** Un abono, tal como viaja dentro de su prestamo. Trae su `loanId` repetido. */
+function readPayment(raw: unknown): LoanPayment | null {
   const parsed = paymentSchema.safeParse(raw);
   if (!parsed.success) return null;
   const money = readMoney(parsed.data);
