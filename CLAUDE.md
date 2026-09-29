@@ -72,6 +72,13 @@ framework, ni HTTP, ni SQL, ni React, ni Android. Los detalles estan en
   anades algo que necesite la actividad de verdad (abrir la hoja de compartir, pedir un permiso,
   el dialogo de la huella), sale de ahi y no de `LocalContext`.
 
+  **Un valor animado que solo afecta al dibujo se lee al dibujar, no al componer.** Leerlo al
+  componer vuelve a componer el control en cada fotograma, y si el control cambia de aspecto
+  durante la animacion se queda a medias: el chip de filtro seleccionado con el dedo apoyado
+  perdia el fondo y quedaba con el texto blanco sobre blanco. Va dentro del `graphicsLayer`,
+  como en `pressScale`. Ojo: esto **no** se reproduce con Robolectric ni con `performClick`,
+  solo en un dispositivo y solo con la pulsacion sostenida.
+
   **Un bottom sheet va dentro de un `GastonomoSheetHost`**, nunca detras de un `if` a pelo. Un
   sheet que se quita con un `if` no puede animar su salida, porque en cuanto la condicion es falsa
   ya no esta compuesto. El host se queda compuesto mientras baja y retiene el ultimo valor no nulo,
