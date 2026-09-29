@@ -13,6 +13,8 @@ use gastonomo_infrastructure::{
     RandomOpaqueTokenFactory, build_mailer,
 };
 
+use gastonomo_infrastructure::persistence::PostgresUserSettingsRepository;
+
 use super::wiring::Wiring;
 use crate::error::StartupError;
 
@@ -76,6 +78,7 @@ fn password_ports(wiring: &Wiring, session: &SessionPorts) -> Result<PasswordPor
         opaque_tokens: session.opaque_tokens.clone(),
         clock: wiring.clock.clone(),
         mailer: build_mailer(&wiring.config.mail)?,
+        settings: Arc::new(PostgresUserSettingsRepository::new(wiring.pool.clone())),
         reset_link_template: wiring.config.auth.reset_link_template.clone(),
     })
 }

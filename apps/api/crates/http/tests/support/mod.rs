@@ -267,6 +267,7 @@ impl Parts {
             opaque_tokens,
             clock: clock.clone(),
             mailer: mailer.clone(),
+            settings: Arc::new(InMemoryUserSettingsRepository::new()),
             reset_link_template: "https://gastonomo.test/reset?token={token}".to_owned(),
         };
         Self {

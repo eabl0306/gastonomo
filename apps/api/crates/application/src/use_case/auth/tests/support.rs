@@ -14,7 +14,7 @@ use chrono::{DateTime, Utc};
 use crate::testing::{
     FakeOpaqueTokenFactory, FakePasswordHasher, FakeTokenIssuer, FixedClock,
     InMemoryPasswordResetTokenRepository, InMemoryRefreshTokenRepository, InMemoryUserRepository,
-    RecordingMailer, RecordingUserProvisioning,
+    InMemoryUserSettingsRepository, RecordingMailer, RecordingUserProvisioning,
 };
 use crate::use_case::auth::{
     LoginUser, LoginUserCommand, LogoutSession, PasswordPorts, RefreshSession, RegisterUser,
@@ -26,6 +26,8 @@ pub const REFRESH_TTL_DAYS: i64 = 30;
 
 /// Todo lo que un test necesita tocar, ya cableado.
 pub struct Harness {
+    /// Ajustes de la cuenta: de aqui sale el idioma del correo de recuperacion.
+    pub settings: Arc<InMemoryUserSettingsRepository>,
     pub users: Arc<InMemoryUserRepository>,
     pub refresh_tokens: Arc<InMemoryRefreshTokenRepository>,
     pub reset_tokens: Arc<InMemoryPasswordResetTokenRepository>,
@@ -50,6 +52,7 @@ impl Harness {
         let opaque_tokens = Arc::new(FakeOpaqueTokenFactory::new());
         let password_hasher = Arc::new(FakePasswordHasher::new());
         let access_tokens = Arc::new(FakeTokenIssuer::new());
+        let settings = Arc::new(InMemoryUserSettingsRepository::new());
 
         let session_ports = SessionPorts {
             users: users.clone(),
@@ -68,10 +71,12 @@ impl Harness {
             opaque_tokens: opaque_tokens.clone(),
             clock: clock.clone(),
             mailer: mailer.clone(),
+            settings: settings.clone(),
             reset_link_template: "https://gastonomo.test/reset?token={token}".to_owned(),
         };
 
         Self {
+            settings,
             users,
             refresh_tokens,
             reset_tokens,

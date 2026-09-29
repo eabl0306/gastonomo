@@ -3,6 +3,7 @@
 use std::fmt;
 use std::sync::Arc;
 
+use crate::port::settings::UserSettingsRepository;
 use crate::port::{
     Clock, Mailer, OpaqueTokenFactory, PasswordHasher, PasswordResetTokenRepository,
     RefreshTokenRepository, UserRepository,
@@ -28,6 +29,8 @@ pub struct PasswordPorts {
     pub clock: Arc<dyn Clock>,
     /// Envio de correo.
     pub mailer: Arc<dyn Mailer>,
+    /// Ajustes de la cuenta, de donde sale el idioma del correo.
+    pub settings: Arc<dyn UserSettingsRepository>,
     /// Plantilla del enlace del correo, con [`RESET_LINK_TOKEN_PLACEHOLDER`].
     pub reset_link_template: String,
 }
