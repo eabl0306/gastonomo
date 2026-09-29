@@ -2,7 +2,6 @@ package com.bahoque.gastonomo.core.designsystem.component
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
@@ -46,13 +45,26 @@ class RadialFabPlacementTest {
         RadialOption(GastonomoIcons.MIC, "Dictar") {},
     )
 
-    /** El mismo reparto que `GastonomoApp`: contenido con peso y la tab bar debajo. */
+    /**
+     * El armazon de verdad, el mismo que monta la aplicacion.
+     *
+     * La region de contenido va etiquetada porque es lo que hay que medir: su borde inferior es
+     * exactamente donde empieza la tab bar. Medir la barra por uno de sus iconos daria otra cosa,
+     * porque los coloca con relleno propio.
+     */
     private fun renderShell(name: String) {
         compose.captureGastonomoScreen(name) {
-            Column(modifier = Modifier.fillMaxSize()) {
+            GastonomoShell(
+                tabs = listOf(
+                    TabItem(GastonomoIcons.SWAP_VERT, "Inicio"),
+                    TabItem(GastonomoIcons.HANDSHAKE, "Préstamos"),
+                ),
+                selectedTab = 0,
+                onSelectTab = {},
+            ) {
                 Box(
                     modifier = Modifier
-                        .weight(1f)
+                        .testTag(CONTENT)
                         .fillMaxSize()
                         .background(GastonomoTheme.colors.bgApp),
                 ) {
@@ -62,15 +74,6 @@ class RadialFabPlacementTest {
                         openLabel = "Nuevo registro",
                     )
                 }
-                GastonomoTabBar(
-                    items = listOf(
-                        TabItem(GastonomoIcons.SWAP_VERT, "Inicio"),
-                        TabItem(GastonomoIcons.HANDSHAKE, "Préstamos"),
-                    ),
-                    selectedIndex = 0,
-                    onSelect = {},
-                    modifier = Modifier.testTag(TAB_BAR),
-                )
             }
         }
     }
@@ -87,11 +90,11 @@ class RadialFabPlacementTest {
         renderShell("radial-fab-armazon")
 
         val fab = compose.onNodeWithContentDescription("Nuevo registro").getUnclippedBoundsInRoot()
-        // La barra entera, no uno de sus iconos: coloca los iconos con relleno propio.
-        val tabBar = compose.onNodeWithTag(TAB_BAR).getUnclippedBoundsInRoot()
+        val content = compose.onNodeWithTag(CONTENT).getUnclippedBoundsInRoot()
 
         val toSide = SCREEN_WIDTH.dp - fab.right
-        val toTabBar = tabBar.top - fab.bottom
+        // El borde inferior del contenido es donde empieza la tab bar.
+        val toTabBar = content.bottom - fab.bottom
 
         assertTrue(
             abs((toTabBar - toSide).value) < TOLERANCE,
@@ -100,7 +103,7 @@ class RadialFabPlacementTest {
     }
 }
 
-private const val TAB_BAR = "tab-bar"
+private const val CONTENT = "contenido"
 
 /** Medio dp de margen, para el redondeo a pixel de la densidad 3x. */
 private const val TOLERANCE = 0.5f

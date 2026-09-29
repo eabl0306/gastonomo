@@ -2,7 +2,9 @@ package com.bahoque.gastonomo.feature.loans
 
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.bahoque.gastonomo.core.navigation.TopLevelDestination
 import com.bahoque.gastonomo.core.screenshot.captureGastonomoScreen
+import com.bahoque.gastonomo.core.screenshot.captureGastonomoTabScreen
 import com.bahoque.gastonomo.feature.loans.detail.LoanDetailActions
 import com.bahoque.gastonomo.feature.loans.detail.LoanDetailScreen
 import com.bahoque.gastonomo.feature.loans.form.NewLoanActions
@@ -29,14 +31,14 @@ class LoansScreenshotTest {
 
     @Test
     fun `08 loans`() {
-        compose.captureGastonomoScreen("08-loans") {
+        compose.captureGastonomoTabScreen("08-loans", TopLevelDestination.LOANS) {
             LoansScreen(state = LoansSamples.loans, actions = noopLoansActions())
         }
     }
 
     @Test
     fun `08 loans empty`() {
-        compose.captureGastonomoScreen("08-loans-empty") {
+        compose.captureGastonomoTabScreen("08-loans-empty", TopLevelDestination.LOANS) {
             LoansScreen(state = LoansSamples.emptyLoans, actions = noopLoansActions())
         }
     }

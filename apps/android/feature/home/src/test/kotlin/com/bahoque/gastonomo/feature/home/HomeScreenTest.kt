@@ -10,8 +10,9 @@ import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.bahoque.gastonomo.core.application.state.TransientMessages
 import com.bahoque.gastonomo.core.domain.movement.MovementKind
+import com.bahoque.gastonomo.core.navigation.TopLevelDestination
 import com.bahoque.gastonomo.core.screenshot.GASTONOMO_QUALIFIERS_ES
-import com.bahoque.gastonomo.core.screenshot.captureGastonomoScreen
+import com.bahoque.gastonomo.core.screenshot.captureGastonomoTabScreen
 import com.bahoque.gastonomo.core.screenshot.screenshotFile
 import org.junit.Rule
 import org.junit.Test
@@ -30,7 +31,9 @@ class HomeScreenTest {
 
     @Test
     fun `it renders the whole screen to a png`() {
-        compose.captureGastonomoScreen(SCREENSHOT) { HomeScreen(HomeSamples.loaded, HomeActions.NONE) }
+        compose.captureGastonomoTabScreen(SCREENSHOT, TopLevelDestination.HOME) {
+            HomeScreen(HomeSamples.loaded, HomeActions.NONE)
+        }
         val file = screenshotFile(SCREENSHOT)
         assertTrue(file.exists(), "Roborazzi did not write ${file.absolutePath}")
         compose.onNodeWithText("Hola, Camilo").assertIsDisplayed()
@@ -42,7 +45,7 @@ class HomeScreenTest {
     @Test
     fun `the eye masks every amount`() {
         var toggled = 0
-        compose.captureGastonomoScreen("home-hidden") {
+        compose.captureGastonomoTabScreen("home-hidden", TopLevelDestination.HOME) {
             HomeScreen(
                 state = HomeSamples.loaded.copy(hideAmounts = true),
                 actions = HomeActions.NONE.copy(onToggleHiddenAmounts = { toggled++ }),
@@ -55,7 +58,7 @@ class HomeScreenTest {
 
     @Test
     fun `an empty period shows every empty state`() {
-        compose.captureGastonomoScreen("home-empty") {
+        compose.captureGastonomoTabScreen("home-empty", TopLevelDestination.HOME) {
             HomeScreen(HomeSamples.empty, HomeActions.NONE)
         }
         compose.onNodeWithText("Sin gastos en este periodo.").assertIsDisplayed()
@@ -66,7 +69,7 @@ class HomeScreenTest {
     @Test
     fun `a quick action opens the form with its kind`() {
         val opened = mutableListOf<MovementKind>()
-        compose.captureGastonomoScreen("home-quick-actions") {
+        compose.captureGastonomoTabScreen("home-quick-actions", TopLevelDestination.HOME) {
             HomeScreen(
                 state = HomeSamples.loaded,
                 actions = HomeActions.NONE.copy(onNewMovement = { opened += it }),
@@ -80,7 +83,7 @@ class HomeScreenTest {
     @Test
     fun `an error offers to try again`() {
         var retried = 0
-        compose.captureGastonomoScreen("home-error") {
+        compose.captureGastonomoTabScreen("home-error", TopLevelDestination.HOME) {
             HomeScreen(
                 state = HomeSamples.empty.copy(error = HomeError.NETWORK),
                 actions = HomeActions.NONE.copy(onRetry = { retried++ }),
@@ -93,7 +96,7 @@ class HomeScreenTest {
 
     @Test
     fun `the toast of a saved movement is shown over the screen`() {
-        compose.captureGastonomoScreen("home-toast") {
+        compose.captureGastonomoTabScreen("home-toast", TopLevelDestination.HOME) {
             HomeScreen(
                 state = HomeSamples.loaded.copy(toast = TransientMessages.MOVEMENT_SAVED_EXPENSE),
                 actions = HomeActions.NONE,
@@ -104,7 +107,7 @@ class HomeScreenTest {
 
     @Test
     fun `the range sheet opens over the screen`() {
-        compose.captureGastonomoScreen("home-range-sheet") {
+        compose.captureGastonomoTabScreen("home-range-sheet", TopLevelDestination.HOME) {
             HomeScreen(
                 state = HomeSamples.loaded.copy(
                     rangeDraft = com.bahoque.gastonomo.core.application.state.RangeDraft(
