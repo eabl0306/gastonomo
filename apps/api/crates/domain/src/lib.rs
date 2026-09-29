@@ -12,6 +12,7 @@
 pub mod auth;
 pub mod category;
 pub mod currency;
+pub mod dictation;
 pub mod health;
 pub mod loan;
 pub mod movement;
