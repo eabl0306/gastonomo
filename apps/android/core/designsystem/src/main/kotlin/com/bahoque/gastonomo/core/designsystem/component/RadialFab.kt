@@ -235,6 +235,14 @@ private const val CLOSED_SCALE = 0.3f
 private val FAB_ICON = 30.dp
 private val OPTION_ICON = 26.dp
 
-/** Donde lo coloca el diseno, por encima de la tab bar. */
+/**
+ * Donde lo coloca el diseno: el mismo hueco por abajo que por el lado.
+ *
+ * El de abajo se mide desde el borde de ESTA caja, que en la aplicacion termina donde empieza
+ * la tab bar: `GastonomoApp` es una `Column` con el NavHost en `weight(1f)` y la barra como
+ * hermano siguiente. Valia 92, que es el alto de la tab bar mas 14, y eso solo tiene sentido en
+ * una caja que cubra tambien la barra, como la del catalogo de componentes. Aqui se sumaba al
+ * alto de la barra y el boton quedaba flotando a 92 dp de ella.
+ */
 private val FAB_END = 20.dp
-private val FAB_BOTTOM = 92.dp
+private val FAB_BOTTOM = 20.dp
