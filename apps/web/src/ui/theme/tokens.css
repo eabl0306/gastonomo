@@ -12,6 +12,7 @@
   --g-surface: #fff;
   --g-sheet: #fbf9f5;
   --g-soft: #ece8df;
+  --g-soft-panel: #f7f5f0;
   --g-ink: #1b1a17;
   --g-muted: #736d62;
   --g-placeholder: #a9a397;
@@ -23,6 +24,7 @@
   --g-line: #e8e3d9;
   --g-field-line: #e3ded4;
   --g-row-line: #f0ece4;
+  --g-bar-track: #efebe3;
 
   /* Sobre ink */
   --g-on-ink: #fff;
@@ -47,6 +49,7 @@
   --g-red-bg: #fbeae7;
   --g-blue-bg: #e3edf7;
   --g-amber-bg: #f6ecda;
+  --g-neutral-bg: #efece6;
 
   /* Las dos flechas de la tarjeta oscura, que son mas claras que el verde y el rojo. */
   --g-income-arrow: #8fd49f;

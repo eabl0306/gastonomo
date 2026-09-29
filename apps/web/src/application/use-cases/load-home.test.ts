@@ -9,11 +9,7 @@ import {
   createMemoryLoanGateway,
   createMemoryMovementGateway,
 } from '../../infrastructure/memory/in-memory-ledger';
-import {
-  SAMPLE_LOANS,
-  SAMPLE_MOVEMENTS,
-  SAMPLE_TODAY,
-} from '../../infrastructure/memory/sample-ledger';
+import { SAMPLE_MOVEMENTS, SAMPLE_TODAY } from '../../infrastructure/memory/sample-ledger';
 import type { ApiError } from '../ports/api-error';
 import type { CurrencyGateway } from '../ports/currency-gateway';
 import type { LoanGateway } from '../ports/loan-gateway';
@@ -101,7 +97,8 @@ describe('cargar Inicio', () => {
       display: DEFAULT_SETTINGS.displayCurrency,
     });
 
+    // Uno de los tres esta pagado, asi que no cuenta: la tarjeta solo suma los abiertos.
     expect(outside.content?.recent).toHaveLength(0);
-    expect(outside.content?.owedToMe.openCount).toBe(SAMPLE_LOANS.length - 1);
+    expect(outside.content?.owedToMe.openCount).toBe(1);
   });
 });

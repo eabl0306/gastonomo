@@ -11,6 +11,7 @@ import { AppShell } from '../ui/shell/app-shell';
 
 import {
   HomeRoute,
+  LoanDetailRoute,
   LoansRoute,
   MovementsRoute,
   ResetPasswordRoute,
@@ -50,7 +51,8 @@ export function App({ container }: { container: Container }): ReactElement {
           >
             <Route element={<HomeRoute container={container} />} index />
             <Route element={<MovementsRoute container={container} />} path={ROUTES.movements} />
-            <Route element={<LoansRoute />} path={ROUTES.loans} />
+            <Route element={<LoansRoute container={container} />} path={ROUTES.loans} />
+            <Route element={<LoanDetailRoute container={container} />} path={ROUTES.loanDetail} />
             <Route element={<SettingsRoute />} path={ROUTES.settings} />
           </Route>
           <Route element={<LoginRoute />} path={ROUTES.login} />

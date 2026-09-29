@@ -12,6 +12,7 @@ export const ROUTES = {
   home: '/',
   movements: '/movements',
   loans: '/loans',
+  loanDetail: '/loans/:loanId',
   settings: '/settings',
   login: '/login',
   register: '/register',
@@ -26,6 +27,11 @@ export const ROUTES = {
  * `/health` es de la API: el proxy de desarrollo y el Caddy de produccion mandan ese prefijo
  * al servicio, asi que el navegador nunca veria la SPA. Se descubrio con los e2e en rojo.
  */
+/** La direccion del detalle de un prestamo concreto. */
+export function loanDetailPath(loanId: string): string {
+  return `/loans/${encodeURIComponent(loanId)}`;
+}
+
 /** El parametro que la API pone en el enlace del correo. */
 export const RESET_TOKEN_PARAM = 'token';
 

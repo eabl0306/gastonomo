@@ -231,37 +231,6 @@
   letter-spacing: -0.02em;
 }
 
-/* Una pantalla que todavia no esta. Dice lo que va a haber. */
-.g-pending {
-  display: flex;
-  gap: 12px;
-  align-items: flex-start;
-  max-width: 520px;
-  padding: 20px;
-  border: 1px solid var(--g-line);
-  border-radius: var(--g-radius-large-tile);
-  background: var(--g-surface);
-  color: var(--g-muted);
-}
-
-.g-pending .g-icon {
-  color: var(--g-placeholder);
-  font-size: 24px;
-}
-
-.g-pending__text {
-  /*
-   * El reset pone `flex-shrink: 0` a los parrafos para que los campos de 54px no se
-   * compriman en los formularios. Aqui hay que deshacerlo, o el texto se sale de la
-   * tarjeta en cuanto la pantalla es estrecha.
-   */
-  flex-shrink: 1;
-  min-width: 0;
-  margin: 0;
-  font-size: 14px;
-  line-height: 1.45;
-}
-
 /* Tarjeta de perfil de Ajustes */
 .g-profile {
   display: flex;

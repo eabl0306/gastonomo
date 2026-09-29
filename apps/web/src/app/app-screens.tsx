@@ -1,16 +1,17 @@
 import type { ReactElement } from 'react';
-import { useNavigate } from 'react-router';
+import { useNavigate, useParams } from 'react-router';
 
 import type { PasswordResetGateway } from '../application/ports/password-reset-gateway';
 import { ResetPasswordScreen } from '../ui/auth/reset-password-screen';
 import { HomeScreen } from '../ui/home/home-screen';
+import { LoanDetailScreen } from '../ui/loans/loan-detail-screen';
+import { LoansScreen } from '../ui/loans/loans-screen';
 import { MovementsScreen } from '../ui/movements/movements-screen';
-import { PendingScreen } from '../ui/shell/pending-screen';
 import { SettingsScreen } from '../ui/shell/settings-screen';
 
 import { useResetToken } from './auth-screens';
 import type { Container } from './composition-root';
-import { ROUTES } from './routes';
+import { ROUTES, loanDetailPath } from './routes';
 
 export function ResetPasswordRoute({ gateway }: { gateway: PasswordResetGateway }): ReactElement {
   const navigate = useNavigate();
@@ -62,16 +63,38 @@ export function MovementsRoute({ container }: { container: Container }): ReactEl
   return <MovementsScreen ports={container} />;
 }
 
-/**
- * La pantalla que todavia no esta. Se queda declarada aqui para que quitarla cuando llegue la
- * de verdad sea borrar una linea.
- */
-export function LoansRoute(): ReactElement {
+export function LoansRoute({ container }: { container: Container }): ReactElement {
+  const navigate = useNavigate();
   return (
-    <PendingScreen
-      icon="handshake"
-      title="Préstamos"
-      what="Aquí irán lo que te deben y lo que debes, con el saldo de cada préstamo y sus abonos."
+    <LoansScreen
+      actions={{
+        onOpenLoan: (id) => {
+          void navigate(loanDetailPath(id));
+        },
+        // El sheet de abono todavia no existe: de momento se abre el detalle, que es donde
+        // esta el mismo boton.
+        onRegisterPayment: (id) => {
+          void navigate(loanDetailPath(id));
+        },
+      }}
+      ports={container}
+    />
+  );
+}
+
+export function LoanDetailRoute({ container }: { container: Container }): ReactElement {
+  const navigate = useNavigate();
+  const { loanId } = useParams();
+  return (
+    <LoanDetailScreen
+      actions={{
+        onBack: () => {
+          void navigate(ROUTES.loans);
+        },
+        onRegisterPayment: () => undefined,
+      }}
+      loanId={loanId ?? ''}
+      ports={container}
     />
   );
 }

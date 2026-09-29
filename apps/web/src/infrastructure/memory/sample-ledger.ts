@@ -142,6 +142,24 @@ export const SAMPLE_LOANS: readonly Loan[] = [
     money: singleAmount(decimalOf('220000.0000'), COP),
     payments: [],
   },
+  // Uno ya pagado, que es el que ensena "Pagado completo" y se va al final de la lista.
+  {
+    id: 'l3',
+    person: 'Marta',
+    note: 'Entradas',
+    direction: 'lent',
+    openedOn: '2026-06-01',
+    money: singleAmount(decimalOf('90000.0000'), COP),
+    payments: [
+      {
+        id: 'p2',
+        loanId: 'l3',
+        paidOn: '2026-06-20',
+        label: 'Todo de una',
+        money: singleAmount(decimalOf('90000.0000'), COP),
+      },
+    ],
+  },
 ];
 
 export const SAMPLE_CURRENCIES: readonly CurrencyInfo[] = [

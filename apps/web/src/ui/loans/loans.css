@@ -1,0 +1,444 @@
+/*
+ * Prestamos y su detalle.
+ *
+ * Nada de esta pantalla depende del periodo: son saldos de hoy, y por eso no lleva el
+ * selector de mes que si llevan Inicio y Movimientos.
+ */
+
+.g-loan-heads {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 14px;
+  grid-template-columns: 1fr 1fr;
+}
+
+.g-loan-head {
+  padding: 16px;
+  border: 1px solid var(--g-line);
+  border-radius: var(--g-radius-day-card);
+  background: var(--g-surface);
+}
+
+/* "Te deben" es la unica tarjeta oscura de la pantalla. */
+.g-loan-head[data-tone='lent'] {
+  border-color: var(--g-ink);
+  background: var(--g-ink);
+  color: var(--g-on-ink);
+}
+
+.g-loan-head__label {
+  margin: 0;
+  color: var(--g-muted);
+  font-size: 12px;
+}
+
+.g-loan-head[data-tone='lent'] .g-loan-head__label {
+  color: var(--g-on-ink-muted);
+}
+
+.g-loan-head__amount {
+  display: block;
+  margin-top: 4px;
+  font-size: 19px;
+  font-weight: 700;
+}
+
+.g-loan-head[data-tone='borrowed'] .g-loan-head__amount {
+  color: var(--g-amber);
+}
+
+.g-loan-head__count {
+  margin: 2px 0 0;
+  color: var(--g-muted);
+  font-size: 12px;
+}
+
+.g-loan-head[data-tone='lent'] .g-loan-head__count {
+  color: var(--g-on-ink-faint);
+}
+
+.g-loan-grid {
+  display: grid;
+  gap: 14px;
+  align-items: start;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
+}
+
+.g-loan {
+  padding: 16px;
+  border: 1px solid var(--g-line);
+  border-radius: var(--g-radius-card);
+  background: var(--g-surface);
+}
+
+/*
+ * La tarjeta entera abre el detalle, asi que lo que se pulsa es un boton y no la caja: un
+ * `onClick` en el contenedor no llega con el teclado.
+ */
+.g-loan__open {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--g-ink);
+  text-align: left;
+  cursor: pointer;
+}
+
+.g-loan__head {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.g-loan__avatar {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.g-loan[data-direction='lent'] .g-loan__avatar {
+  background: var(--g-blue-bg);
+  color: var(--g-blue);
+}
+
+.g-loan[data-direction='borrowed'] .g-loan__avatar {
+  background: var(--g-amber-bg);
+  color: var(--g-amber);
+}
+
+.g-loan__who {
+  display: block;
+  flex: 1;
+  min-width: 0;
+}
+
+.g-loan__person {
+  display: block;
+  overflow: hidden;
+  font-size: 15px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.g-loan__sub {
+  display: block;
+  margin-top: 1px;
+  overflow: hidden;
+  color: var(--g-muted);
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.g-loan__status,
+.g-detail__direction {
+  flex: none;
+  padding: 4px 9px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.g-loan__status[data-status='paid'] {
+  background: var(--g-green-bg);
+  color: var(--g-green);
+}
+
+.g-loan__status[data-status='partial'] {
+  background: var(--g-neutral-bg);
+  color: var(--g-note);
+}
+
+.g-loan__status[data-status='pending'] {
+  background: var(--g-red-bg);
+  color: var(--g-red);
+}
+
+.g-loan__figures {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-top: 14px;
+}
+
+.g-loan__figure-label,
+.g-detail__figure-label {
+  display: block;
+  margin: 0;
+  color: var(--g-muted);
+  font-size: 11px;
+}
+
+.g-loan__headline {
+  display: block;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.g-loan[data-direction='lent'] .g-loan__headline {
+  color: var(--g-blue);
+}
+
+.g-loan[data-direction='borrowed'] .g-loan__headline {
+  color: var(--g-amber);
+}
+
+.g-loan__of {
+  display: block;
+  text-align: right;
+}
+
+.g-loan__percent {
+  display: block;
+  margin-top: 2px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.g-bar-track {
+  display: block;
+  height: 6px;
+  margin-top: 10px;
+  overflow: hidden;
+  border-radius: 3px;
+  background: var(--g-bar-track);
+}
+
+.g-bar-track--large {
+  height: 8px;
+  margin-top: 14px;
+  border-radius: 4px;
+}
+
+.g-bar-fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--g-ink);
+}
+
+.g-loan__pay {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 42px;
+  margin-top: 14px;
+  border: 1px solid var(--g-ink);
+  border-radius: var(--g-radius-tile-large);
+  background: var(--g-surface);
+  color: var(--g-ink);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.g-loan__pay .g-icon {
+  font-size: 18px;
+}
+
+/* Detalle */
+.g-detail {
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.g-detail__bar {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  height: 60px;
+}
+
+.g-detail__back {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: var(--g-height-touch);
+  height: var(--g-height-touch);
+  border: 0;
+  background: none;
+  color: var(--g-ink);
+  font-size: 24px;
+  cursor: pointer;
+}
+
+.g-detail__title {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.g-detail__panel {
+  padding: 20px;
+  border: 1px solid var(--g-line);
+  border-radius: var(--g-radius-balance);
+  background: var(--g-surface);
+}
+
+.g-detail__head {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.g-detail__avatar {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.g-detail__panel[data-direction='lent'] .g-detail__avatar,
+.g-detail__panel[data-direction='lent'] .g-detail__direction {
+  background: var(--g-blue-bg);
+  color: var(--g-blue);
+}
+
+.g-detail__panel[data-direction='borrowed'] .g-detail__avatar,
+.g-detail__panel[data-direction='borrowed'] .g-detail__direction {
+  background: var(--g-amber-bg);
+  color: var(--g-amber);
+}
+
+.g-detail__direction {
+  padding: 5px 10px;
+  font-size: 12px;
+}
+
+.g-detail__who {
+  display: block;
+  flex: 1;
+  min-width: 0;
+}
+
+.g-detail__person {
+  display: block;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.g-detail__created {
+  display: block;
+  color: var(--g-muted);
+  font-size: 13px;
+}
+
+.g-detail__note {
+  margin: 12px 0 0;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--g-soft-panel);
+  color: var(--g-muted);
+  font-size: 14px;
+}
+
+/*
+ * No vale `:first-of-type`: la nota tambien es un parrafo, asi que cuando el prestamo la
+ * lleva seria ella la primera y esta etiqueta se quedaria pegada.
+ */
+.g-detail__headline-label {
+  margin-top: 22px;
+  font-size: 13px;
+}
+
+.g-detail__headline {
+  display: block;
+  font-size: 34px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+
+.g-detail__panel[data-direction='lent'] .g-detail__headline {
+  color: var(--g-blue);
+}
+
+.g-detail__panel[data-direction='borrowed'] .g-detail__headline {
+  color: var(--g-amber);
+}
+
+.g-detail__columns {
+  display: grid;
+  gap: 8px;
+  margin-top: 16px;
+  grid-template-columns: 1fr 1fr 1fr;
+}
+
+.g-detail__column:last-child {
+  text-align: right;
+}
+
+.g-detail__column-value {
+  display: block;
+  margin-top: 2px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.g-detail__pay {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: var(--g-height-primary);
+  margin-top: 14px;
+  border: 0;
+  border-radius: var(--g-radius-field);
+  background: var(--g-ink);
+  color: var(--g-on-ink);
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.g-detail__pay .g-icon {
+  color: var(--g-lime);
+  font-size: 20px;
+}
+
+.g-detail__section {
+  margin: 26px 0 10px;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.g-detail__payments {
+  padding: 4px 16px;
+  border-radius: var(--g-radius-day-card);
+}
+
+.g-payment__check {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--g-green-bg);
+  color: var(--g-green);
+  font-size: 18px;
+}
+
+.g-payment__check .g-icon {
+  font-size: inherit;
+}
