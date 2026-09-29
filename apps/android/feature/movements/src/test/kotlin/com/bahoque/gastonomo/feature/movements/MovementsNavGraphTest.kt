@@ -2,6 +2,7 @@ package com.bahoque.gastonomo.feature.movements
 
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -32,12 +33,13 @@ class MovementsNavGraphTest {
     }
 
     @Test
-    fun `the fab opens the form as an expense`() {
+    fun `the quick add button opens the form as an expense`() {
         val recorded = mutableListOf<GastonomoRoute>()
         compose.renderNavGraph(GastonomoRoute.Movements, recorded) { actions ->
             movementsNavGraph(TestMovementsDependencies(), actions)
         }
-        compose.onNodeWithText("Nuevo").performClick()
+        compose.onNodeWithContentDescription("Nuevo registro").performClick()
+        compose.onNodeWithContentDescription("Nuevo movimiento").performClick()
         assertEquals(GastonomoRoute.NewMovement("out"), recorded.single())
         compose.onNodeWithText("Nuevo movimiento").assertIsDisplayed()
     }

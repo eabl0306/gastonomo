@@ -1,8 +1,11 @@
 package com.bahoque.gastonomo.core.designsystem.theme
 
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.content.res.Configuration
 import androidx.activity.compose.LocalActivity
+import androidx.activity.compose.LocalActivityResultRegistryOwner
+import androidx.activity.result.ActivityResultRegistryOwner
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
@@ -30,6 +33,10 @@ import java.util.Locale
  * se quedaba sin actividad, y eso no da un error: da una pantalla que no hace nada, o un cierre si
  * lo intenta con el contexto equivocado. Por eso se vuelve a fijar con el valor de fuera, que es
  * donde todavia se resuelve bien.
+ *
+ * Lo mismo pasa con el registro de resultados de actividad, que es lo que usan los permisos del
+ * sistema: tambien se busca subiendo por `LocalContext`, y sin fijarlo pedir el microfono cerraba
+ * la aplicacion en vez de ensenar el dialogo.
  */
 // El reparto por idioma del bundle esta desactivado en app/build.gradle.kts, que es donde se
 // configura. Lint no lo ve desde aqui porque este es un modulo de libreria.
@@ -51,6 +58,23 @@ internal fun ProvideLocalizedResources(language: AppLanguage, content: @Composab
         LocalConfiguration provides configuration,
         LocalResources provides localized.resources,
         LocalActivity provides activity,
-        content = content,
-    )
+    ) {
+        ProvideActivityResultRegistry(activity, content)
+    }
+}
+
+/**
+ * Fija el registro de resultados de actividad, que es por donde pasan los permisos del sistema.
+ *
+ * Sin actividad no hay registro y no se provee nada: es lo que ocurre en las capturas y en los
+ * tests que montan un composable suelto, donde tampoco hay permisos que pedir.
+ */
+@Composable
+private fun ProvideActivityResultRegistry(activity: Activity?, content: @Composable () -> Unit) {
+    val owner = activity as? ActivityResultRegistryOwner
+    if (owner == null) {
+        content()
+        return
+    }
+    CompositionLocalProvider(LocalActivityResultRegistryOwner provides owner, content = content)
 }

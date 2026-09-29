@@ -23,10 +23,14 @@ import java.time.LocalDate
  * [MovementSaver], sale encima de la pantalla de destino, que es donde lo pone el diseno.
  *
  * La clave de idempotencia la lleva [MovementSaver], que es la unica pieza que la conoce.
+ *
+ * [prefill] solo trae algo cuando se llega desde el dictado, que abre el formulario con lo que se
+ * entendio para corregirlo.
  */
 class NewMovementViewModel(
     private val dependencies: MovementsDependencies,
     kind: MovementKind,
+    private val prefill: MovementPrefill = MovementPrefill.NONE,
 ) : ViewModel() {
 
     private val loader = MovementsLoader(dependencies)
@@ -36,7 +40,10 @@ class NewMovementViewModel(
         NewMovementUiState(
             today = dependencies.clock.today(),
             kind = kind,
-            date = dependencies.clock.today(),
+            date = prefill.occurredOn ?: dependencies.clock.today(),
+            amountRaw = prefill.amount,
+            note = prefill.note,
+            selectedCategoryId = prefill.categoryId,
         ),
     )
 
@@ -49,7 +56,8 @@ class NewMovementViewModel(
                 it.copy(
                     loading = false,
                     displayCurrency = form.displayCurrency,
-                    currency = form.displayCurrency,
+                    // La moneda que traiga el relleno manda: lo que se dicto pudo ser en otra.
+                    currency = prefill.currency ?: form.displayCurrency,
                     rates = form.rates,
                     categories = form.categories,
                     currencies = form.currencies,
@@ -124,8 +132,9 @@ class NewMovementViewModel(
         fun factory(
             dependencies: MovementsDependencies,
             kind: MovementKind,
+            prefill: MovementPrefill = MovementPrefill.NONE,
         ): ViewModelProvider.Factory = viewModelFactory {
-            initializer { NewMovementViewModel(dependencies, kind) }
+            initializer { NewMovementViewModel(dependencies, kind, prefill) }
         }
     }
 }

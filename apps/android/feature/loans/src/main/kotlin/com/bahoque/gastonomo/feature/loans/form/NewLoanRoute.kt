@@ -28,9 +28,15 @@ fun NewLoanRoute(
     onCreated: (replay: Boolean) -> Unit,
     onClose: () -> Unit,
     modifier: Modifier = Modifier,
+    prefill: LoanPrefill = LoanPrefill.NONE,
 ) {
     val form: NewLoanViewModel = viewModel {
-        NewLoanViewModel(dependencies.createLoan, dependencies.moneyContextLoader(), dependencies.clock)
+        NewLoanViewModel(
+            createLoan = dependencies.createLoan,
+            contextLoader = dependencies.moneyContextLoader(),
+            clock = dependencies.clock,
+            prefill = prefill,
+        )
     }
     val state by form.state.collectAsStateWithLifecycle()
     Box(modifier = modifier.fillMaxSize()) {

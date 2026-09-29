@@ -11,6 +11,7 @@ import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Rule
 import java.math.BigDecimal
+import java.time.LocalDate
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -31,6 +32,45 @@ class NewMovementViewModelTest {
         assertEquals(CurrencyCode.COP, state.currency)
         assertEquals(state.today, state.date)
         assertFalse(state.loading)
+    }
+
+    @Test
+    fun `coming from the dictation it opens with everything it understood`() = runTest {
+        val viewModel = NewMovementViewModel(
+            dependencies = TestMovementsDependencies(),
+            kind = MovementKind.OUT,
+            prefill = MovementPrefill(
+                amount = "45000",
+                currency = CurrencyCode.USD,
+                categoryId = SampleFinance.food.id,
+                note = "Almuerzo",
+                occurredOn = LocalDate.of(2026, 9, 20),
+            ),
+        )
+        advanceUntilIdle()
+        val state = viewModel.state.value
+        assertEquals("45000", state.amountRaw)
+        // La moneda dictada manda sobre la principal de la cuenta.
+        assertEquals(CurrencyCode.USD, state.currency)
+        assertEquals(SampleFinance.food.id, state.selectedCategoryId)
+        assertEquals("Almuerzo", state.note)
+        assertEquals(LocalDate.of(2026, 9, 20), state.date)
+        assertTrue(state.canSave)
+    }
+
+    @Test
+    fun `an empty prefill opens the form exactly as the quick add button does`() = runTest {
+        val viewModel = NewMovementViewModel(
+            dependencies = TestMovementsDependencies(),
+            kind = MovementKind.OUT,
+            prefill = MovementPrefill.NONE,
+        )
+        advanceUntilIdle()
+        val state = viewModel.state.value
+        assertEquals("", state.amountRaw)
+        assertEquals(CurrencyCode.COP, state.currency)
+        assertNull(state.selectedCategoryId)
+        assertEquals(state.today, state.date)
     }
 
     @Test

@@ -3,6 +3,8 @@ package com.bahoque.gastonomo.navigation
 import android.content.Context
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -17,6 +19,8 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.annotation.Config
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 /**
  * Que cada movimiento signifique una cosa distinta, que es lo unico que no se puede romper: si
@@ -87,11 +91,40 @@ class GastonomoTransitionsTest {
     fun `a form opens and closes with the animations wired`() {
         compose.setContent { GastonomoApp(container(), GastonomoRoute.Movements) }
 
-        compose.onNodeWithText("Nuevo").performClick()
+        // El boton de registro rapido abre su menu radial y la primera opcion es el movimiento.
+        compose.onNodeWithContentDescription("Nuevo registro").performClick()
+        compose.onNodeWithContentDescription("Nuevo movimiento").performClick()
         compose.onNodeWithText("Nuevo movimiento").assertIsDisplayed()
         compose.onNodeWithContentDescription("Cerrar").performClick()
 
-        compose.onNodeWithText("Nuevo").assertIsDisplayed()
+        compose.onNodeWithContentDescription("Nuevo registro").assertIsDisplayed()
+    }
+
+    @Test
+    fun `the dictation is a modal, so it does not move and keeps the tab bar`() {
+        assertEquals(
+            ScreenKind.MODAL,
+            screenKindOf(destinationOf(GastonomoRoute.Dictate::class.qualifiedName)),
+        )
+        assertEquals(NavMotion.NONE, navMotionOf(ScreenKind.TAB, ScreenKind.MODAL))
+        assertEquals(NavMotion.NONE, navMotionOf(ScreenKind.MODAL, ScreenKind.TAB))
+        assertTrue(isModal(destinationOf(GastonomoRoute.Dictate::class.qualifiedName)))
+        assertFalse(isModal(destinationOf(GastonomoRoute.Movements::class.qualifiedName)))
+    }
+
+    @Test
+    fun `dictating from Movements keeps the tab bar and comes back to the list`() {
+        compose.setContent { GastonomoApp(container(), GastonomoRoute.Movements) }
+
+        compose.onNodeWithContentDescription("Nuevo registro").performClick()
+        compose.onNodeWithContentDescription("Dictar").performClick()
+
+        compose.onNodeWithText("Dictar registro").assertIsDisplayed()
+        // La tab bar sigue ahi, velada: un modal se abre encima, no en lugar de la pantalla.
+        compose.onAllNodesWithText("Movimientos").onFirst().assertIsDisplayed()
+
+        compose.onNodeWithContentDescription("Cerrar").performClick()
+        compose.waitUntil { compose.onAllNodesWithText("Dictar registro").fetchSemanticsNodes().isEmpty() }
     }
 
     @Test

@@ -18,6 +18,7 @@ import com.bahoque.gastonomo.core.designsystem.GastonomoStrings
 import com.bahoque.gastonomo.core.designsystem.component.DateRangeSheet
 import com.bahoque.gastonomo.core.designsystem.component.GastonomoLoadingBlock
 import com.bahoque.gastonomo.core.designsystem.component.GastonomoNoteLine
+import com.bahoque.gastonomo.core.designsystem.component.GastonomoQuickAdd
 import com.bahoque.gastonomo.core.designsystem.component.GastonomoRetryBlock
 import com.bahoque.gastonomo.core.designsystem.component.GastonomoScreen
 import com.bahoque.gastonomo.core.designsystem.component.GastonomoSheetHost
@@ -25,6 +26,7 @@ import com.bahoque.gastonomo.core.designsystem.component.GastonomoToast
 import com.bahoque.gastonomo.core.designsystem.component.PeriodPickerRow
 import com.bahoque.gastonomo.core.designsystem.format.periodLabel
 import com.bahoque.gastonomo.core.designsystem.theme.GastonomoTheme
+import com.bahoque.gastonomo.core.domain.movement.MovementKind
 import com.bahoque.gastonomo.feature.home.ui.BalanceCard
 import com.bahoque.gastonomo.feature.home.ui.ExpensesByCategoryCard
 import com.bahoque.gastonomo.feature.home.ui.HomeHeader
@@ -77,6 +79,13 @@ fun HomeScreen(
                 Spacer(Modifier.height(BOTTOM_GAP))
             }
         }
+        // Las cuatro acciones rapidas de la tarjeta se quedan: el FAB es un atajo que esta en las
+        // tres pantallas principales, no su sustituto.
+        GastonomoQuickAdd(
+            onNewMovement = { actions.onNewMovement(MovementKind.OUT) },
+            onNewLoan = actions.onNewLoan,
+            onDictate = actions.onDictate,
+        )
         Overlays(state = state, actions = actions)
     }
 }
@@ -143,4 +152,6 @@ private val HEADER_GAP = 18.dp
 private val PICKER_GAP = 14.dp
 private val BLOCK_GAP = 14.dp
 private val SECTION_GAP = 24.dp
-private val BOTTOM_GAP = 28.dp
+
+/** Deja sitio al boton de registro rapido: sin esto tapaba la ultima fila de movimientos. */
+private val BOTTOM_GAP = 96.dp

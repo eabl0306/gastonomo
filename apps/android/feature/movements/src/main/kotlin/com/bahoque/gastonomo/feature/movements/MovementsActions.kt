@@ -20,6 +20,8 @@ data class MovementsActions(
     val onRetry: () -> Unit,
     val onToastHidden: () -> Unit,
     val onNewMovement: () -> Unit,
+    val onNewLoan: () -> Unit,
+    val onDictate: () -> Unit,
 ) {
     companion object {
         /** Unas acciones que no hacen nada, para tests y capturas. */
@@ -36,6 +38,8 @@ data class MovementsActions(
             onRetry = {},
             onToastHidden = {},
             onNewMovement = {},
+            onNewLoan = {},
+            onDictate = {},
         )
     }
 }

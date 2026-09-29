@@ -4,6 +4,7 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onFirst
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -29,10 +30,13 @@ class LoansNavGraphTest {
 
     private val dependencies = TestLoansDependencies()
 
+    /** El aviso de prestamo creado. Ahora llega de fuera porque tambien lo levanta el dictado. */
+    private val created = LoanCreatedSignal()
+
     @Test
     fun `the loans screen shows the loans of the account`() {
         compose.renderNavGraph(GastonomoRoute.Loans) { actions ->
-            loansNavGraph(dependencies, actions)
+            loansNavGraph(dependencies, actions, created)
         }
 
         compose.onNodeWithText("Préstamos").assertIsDisplayed()
@@ -40,23 +44,28 @@ class LoansNavGraphTest {
     }
 
     @Test
-    fun `the fab navigates to the new loan form`() {
+    fun `the quick add button navigates to the new loan form`() {
         val visited = mutableListOf<GastonomoRoute>()
         compose.renderNavGraph(GastonomoRoute.Loans, visited) { actions ->
-            loansNavGraph(dependencies, actions)
+            loansNavGraph(dependencies, actions, created)
         }
 
-        compose.onNodeWithText("Préstamo").performClick()
+        compose.onNodeWithContentDescription("Nuevo registro").performClick()
+        compose.onNodeWithContentDescription("Nuevo préstamo").performClick()
 
-        assertEquals(listOf<GastonomoRoute>(GastonomoRoute.NewLoan), visited)
+        assertEquals(listOf<GastonomoRoute>(GastonomoRoute.NewLoan()), visited)
         compose.onNodeWithText("Nuevo préstamo").assertIsDisplayed()
     }
+
+    // Dictar tambien sale de este boton, pero su pantalla la monta :app: probarlo aqui navegaria a
+    // una ruta que este grafo no tiene. Esta cubierto en GastonomoTransitionsTest, con el grafo
+    // entero.
 
     @Test
     fun `a card navigates to the detail of its loan`() {
         val visited = mutableListOf<GastonomoRoute>()
         compose.renderNavGraph(GastonomoRoute.Loans, visited) { actions ->
-            loansNavGraph(dependencies, actions)
+            loansNavGraph(dependencies, actions, created)
         }
 
         compose.onNodeWithText("Collar Johana").performClick()
@@ -71,7 +80,7 @@ class LoansNavGraphTest {
     @Test
     fun `the detail screen is reachable on its own`() {
         compose.renderNavGraph(GastonomoRoute.LoanDetail(SampleFinance.paidLoan.id.value)) { actions ->
-            loansNavGraph(dependencies, actions)
+            loansNavGraph(dependencies, actions, created)
         }
 
         compose.onNodeWithText("Detalle del préstamo").assertIsDisplayed()
@@ -80,8 +89,8 @@ class LoansNavGraphTest {
 
     @Test
     fun `the new loan screen is reachable on its own`() {
-        compose.renderNavGraph(GastonomoRoute.NewLoan) { actions ->
-            loansNavGraph(dependencies, actions)
+        compose.renderNavGraph(GastonomoRoute.NewLoan()) { actions ->
+            loansNavGraph(dependencies, actions, created)
         }
 
         compose.onNodeWithText("Nuevo préstamo").assertIsDisplayed()
@@ -92,7 +101,7 @@ class LoansNavGraphTest {
     fun `registering a payment opens the sheet without leaving the list`() {
         val visited = mutableListOf<GastonomoRoute>()
         compose.renderNavGraph(GastonomoRoute.Loans, visited) { actions ->
-            loansNavGraph(dependencies, actions)
+            loansNavGraph(dependencies, actions, created)
         }
 
         compose.onNodeWithText("Collar Johana").assertIsDisplayed()

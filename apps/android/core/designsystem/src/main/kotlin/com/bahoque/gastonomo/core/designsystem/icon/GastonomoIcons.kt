@@ -53,6 +53,8 @@ object GastonomoIcons {
     const val LOGOUT = "logout"
     const val MARK_EMAIL_READ = "mark_email_read"
     const val MEDICAL_SERVICES = "medical_services"
+    const val MIC = "mic"
+    const val MIC_OFF = "mic_off"
     const val MORE_HORIZ = "more_horiz"
     const val MOVIE = "movie"
     const val NORTH_EAST = "north_east"
@@ -86,7 +88,8 @@ object GastonomoIcons {
         DESCRIPTION, DIRECTIONS_BUS, DOWNLOAD, EDIT, EXPAND_MORE, FINGERPRINT, FITNESS_CENTER,
         FLIGHT, HANDSHAKE, HOME, INFO, LANGUAGE, LAPTOP_MAC, LOCAL_BAR, LOCAL_CAFE,
         LOCAL_GAS_STATION,
-        LOCK, LOGOUT, MARK_EMAIL_READ, MEDICAL_SERVICES, MORE_HORIZ, MOVIE, NORTH_EAST,
+        LOCK, LOGOUT, MARK_EMAIL_READ, MEDICAL_SERVICES, MIC, MIC_OFF, MORE_HORIZ, MOVIE,
+        NORTH_EAST,
         PAYMENTS, PETS, RECEIPT_LONG, RESTAURANT, SAVINGS, SCHOOL, SEARCH, SELL, SETTINGS,
         SHOPPING_CART, SOUTH_WEST, SPA, SPORTS_ESPORTS, SUBSCRIPTIONS, SWAP_VERT, TABLE_VIEW,
         UNARCHIVE,

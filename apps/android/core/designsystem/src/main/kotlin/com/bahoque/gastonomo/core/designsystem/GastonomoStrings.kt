@@ -106,6 +106,16 @@ object GastonomoStrings {
 
     @StringRes val biometricUsePin = R.string.gastonomo_biometric_use_pin
 
+    @StringRes val quickAdd = R.string.gastonomo_quick_add
+
+    @StringRes val quickAddClose = R.string.gastonomo_quick_add_close
+
+    @StringRes val quickAddMovement = R.string.gastonomo_quick_add_movement
+
+    @StringRes val quickAddLoan = R.string.gastonomo_quick_add_loan
+
+    @StringRes val quickAddDictate = R.string.gastonomo_quick_add_dictate
+
     /**
      * El nombre de un idioma en su propia lengua. Lo ensenan el sheet de idioma y la fila
      * "Idioma" de Ajustes, y no se traduce: quien busca "English" no sabe leer "Ingles".

@@ -6,6 +6,7 @@ import com.bahoque.gastonomo.core.application.port.DeviceSettingsStore
 import com.bahoque.gastonomo.core.application.port.LocalLock
 import com.bahoque.gastonomo.core.application.port.NetworkMonitor
 import com.bahoque.gastonomo.core.application.port.SessionStore
+import com.bahoque.gastonomo.core.application.port.SpeechToText
 
 /** Los adaptadores que hablan con el dispositivo: almacenamiento, cerrojo y reloj. */
 internal data class DeviceAdapters(
@@ -14,6 +15,9 @@ internal data class DeviceAdapters(
     val deviceSettings: DeviceSettingsStore,
     val biometricLock: BiometricLock,
     val clock: Clock,
+
+    /** El reconocimiento de voz del sistema, que es lo que usa el dictado. */
+    val speechToText: SpeechToText,
 
     /** Si hay por donde salir a internet. No dice si la API responde: eso se sabe intentandolo. */
     val network: NetworkMonitor,

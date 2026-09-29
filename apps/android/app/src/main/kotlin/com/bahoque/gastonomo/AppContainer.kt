@@ -13,6 +13,7 @@ import com.bahoque.gastonomo.data.catalog.createCurrencyGateway
 import com.bahoque.gastonomo.data.catalog.createSettingsGateway
 import com.bahoque.gastonomo.data.database.local.createLocalStore
 import com.bahoque.gastonomo.data.finance.createChangeGateway
+import com.bahoque.gastonomo.data.finance.createDictationGateway
 import com.bahoque.gastonomo.data.finance.createLoanGateway
 import com.bahoque.gastonomo.data.finance.createMovementGateway
 import com.bahoque.gastonomo.data.network.createApiClient
@@ -31,8 +32,10 @@ import com.bahoque.gastonomo.data.session.createDeviceSettingsStore
 import com.bahoque.gastonomo.data.session.createLocalLock
 import com.bahoque.gastonomo.data.session.createNetworkMonitor
 import com.bahoque.gastonomo.data.session.createSessionStore
+import com.bahoque.gastonomo.data.session.createSpeechToText
 import com.bahoque.gastonomo.feature.auth.AuthDependencies
 import com.bahoque.gastonomo.feature.categories.CategoriesDependencies
+import com.bahoque.gastonomo.feature.dictation.DictationDependencies
 import com.bahoque.gastonomo.feature.export.ExportDependencies
 import com.bahoque.gastonomo.feature.home.HomeDependencies
 import com.bahoque.gastonomo.feature.loans.LoansDependencies
@@ -41,6 +44,7 @@ import com.bahoque.gastonomo.feature.settings.SettingsDependencies
 import com.bahoque.gastonomo.sync.PendingUploadWorker
 import com.bahoque.gastonomo.wiring.authDependencies
 import com.bahoque.gastonomo.wiring.categoriesDependencies
+import com.bahoque.gastonomo.wiring.dictationDependencies
 import com.bahoque.gastonomo.wiring.exportDependencies
 import com.bahoque.gastonomo.wiring.homeDependencies
 import com.bahoque.gastonomo.wiring.loansDependencies
@@ -74,6 +78,7 @@ class AppContainer(context: Context) {
         biometricLock = createBiometricLock(context) { currentActivity },
         clock = SystemClock,
         network = createNetworkMonitor(context),
+        speechToText = createSpeechToText(context),
     )
 
     private val apiClient = createApiClient(devices.sessionStore)
@@ -124,6 +129,7 @@ class AppContainer(context: Context) {
         settings = offlineSettingsGateway(createSettingsGateway(apiClient), store, refresh),
         currencies = offlineCurrencyGateway(createCurrencyGateway(apiClient), store, refresh),
         pending = offlinePendingWrites(store, uploader),
+        dictation = createDictationGateway(apiClient),
     )
 
     /**
@@ -165,4 +171,5 @@ class AppContainer(context: Context) {
         settingsDependencies(useCases, resyncAccount, store.sync)
     val categories: CategoriesDependencies = categoriesDependencies(useCases)
     val export: ExportDependencies = exportDependencies(useCases)
+    val dictation: DictationDependencies = dictationDependencies(useCases)
 }

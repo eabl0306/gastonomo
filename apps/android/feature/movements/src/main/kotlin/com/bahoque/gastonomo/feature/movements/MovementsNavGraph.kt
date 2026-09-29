@@ -24,6 +24,8 @@ fun NavGraphBuilder.movementsNavGraph(
             onNewMovement = {
                 actions.navigateTo(GastonomoRoute.NewMovement(MovementKind.OUT.wire))
             },
+            onNewLoan = { actions.navigateTo(GastonomoRoute.NewLoan()) },
+            onDictate = { actions.navigateTo(GastonomoRoute.Dictate) },
         )
     }
     composable<GastonomoRoute.NewMovement> { entry ->
@@ -32,6 +34,7 @@ fun NavGraphBuilder.movementsNavGraph(
             dependencies = dependencies,
             kind = MovementKind.fromWire(route.kind) ?: MovementKind.OUT,
             onClose = { actions.back() },
+            prefill = MovementPrefill.of(route),
         )
     }
 }

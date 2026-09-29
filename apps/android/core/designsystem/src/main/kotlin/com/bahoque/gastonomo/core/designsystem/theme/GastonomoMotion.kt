@@ -48,6 +48,34 @@ class GastonomoMotion(val enabled: Boolean = true) {
     /** Standard de M3, para lo que se mueve dentro de la pantalla sin entrar ni salir. */
     val standard: Easing = CubicBezierEasing(0.2f, 0.0f, 0.0f, 1.0f)
 
+    /**
+     * Lo que tarda cada opcion del menu radial en salir del boton.
+     *
+     * Es mas larga que el resto a proposito: la curva se pasa de largo y vuelve, y con menos
+     * tiempo el rebote no se ve, solo se nota un tiron.
+     */
+    val radialMillis: Int = millis(RADIAL_MILLIS)
+
+    /**
+     * El retraso entre una opcion y la siguiente al abrir.
+     *
+     * Al **cerrar no se escalona**: salen en abanico y vuelven juntas. Escalonar el cierre hace
+     * que el menu parezca pegajoso justo cuando el usuario ya decidio irse.
+     */
+    val radialStaggerMillis: Int = millis(RADIAL_STAGGER_MILLIS)
+
+    /**
+     * La curva del menu radial, que se pasa de largo y vuelve.
+     *
+     * Es la unica de la aplicacion que no es de Material: viene del prototipo, y ese rebote es
+     * lo que hace que las opciones se lean como si salieran despedidas del boton.
+     */
+    val overshoot: Easing = CubicBezierEasing(0.3f, 1.35f, 0.5f, 1.0f)
+
+    /** El spec de una opcion del menu radial, con su retraso. */
+    fun <T> radialSpec(delayMillis: Int = 0): FiniteAnimationSpec<T> =
+        tween(radialMillis, delayMillis = delayMillis, easing = overshoot)
+
     /** El spec de lo que entra. */
     fun <T> enterSpec(): FiniteAnimationSpec<T> = tween(enterMillis, easing = entering)
 
@@ -63,6 +91,12 @@ class GastonomoMotion(val enabled: Boolean = true) {
         const val ENTER_MILLIS = 240
         const val EXIT_MILLIS = 180
         const val SELECTION_MILLIS = 170
+
+        /** Lo que tarda una opcion del menu radial en salir del boton. */
+        const val RADIAL_MILLIS = 240
+
+        /** El retraso entre una opcion y la siguiente al abrir. */
+        const val RADIAL_STAGGER_MILLIS = 35
     }
 }
 

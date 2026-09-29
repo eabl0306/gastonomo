@@ -15,7 +15,7 @@ import androidx.navigation.NavOptionsBuilder
  *
  * ```
  * navController.switchTab(TopLevelDestination.LOANS)       // desde la tab bar
- * navController.navigate(GastonomoRoute.NewLoan)           // desde el FAB de Prestamos
+ * navController.navigate(GastonomoRoute.NewLoan())           // desde el FAB de Prestamos
  * navController.replaceWith(GastonomoRoute.Home)           // al entrar, quitando Login
  * ```
  */
@@ -40,5 +40,22 @@ fun NavController.replaceWith(route: GastonomoRoute, builder: NavOptionsBuilder.
         popUpTo(0) { inclusive = true }
         launchSingleTop = true
         builder()
+    }
+}
+
+/**
+ * Cambia la pantalla actual por [route], sin dejarla en la pila.
+ *
+ * Lo usa el dictado al pasar al formulario para corregir lo que se entendio: volver atras desde el
+ * formulario tiene que llevar a la pantalla desde la que se dicto, no a un borrador que ya no vale.
+ *
+ * Si no hay pantalla actual, que solo puede pasar antes de la primera composicion, se apila sin
+ * mas: quitar nada de una pila vacia no significa nada.
+ */
+fun NavController.replaceCurrent(route: GastonomoRoute) {
+    val current = currentBackStackEntry?.destination?.id
+    navigate(route) {
+        current?.let { popUpTo(it) { inclusive = true } }
+        launchSingleTop = true
     }
 }

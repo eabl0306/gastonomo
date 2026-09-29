@@ -76,7 +76,7 @@ class LoansScreenshotTest {
         }
     }
 
-    private fun noopLoansActions() = LoansActions({}, {}, {}, {}, {})
+    private fun noopLoansActions() = LoansActions.NONE
 
     private fun noopDetailActions() = LoanDetailActions({}, {}, {})
 

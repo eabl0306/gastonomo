@@ -18,7 +18,7 @@ class NavigationTest {
             GastonomoRoute.NewMovement("out"),
             GastonomoRoute.Loans,
             GastonomoRoute.LoanDetail("l1"),
-            GastonomoRoute.NewLoan,
+            GastonomoRoute.NewLoan(),
             GastonomoRoute.Settings,
             GastonomoRoute.Categories,
             GastonomoRoute.Export,
@@ -30,6 +30,10 @@ class NavigationTest {
     @Test
     fun `a route with arguments carries them`() {
         assertEquals("out", GastonomoRoute.NewMovement("out").kind)
+        // Los campos de relleno son opcionales por separado: solo el dictado los manda.
+        assertEquals("", GastonomoRoute.NewMovement("out").categoryId)
+        assertEquals("Rosa", GastonomoRoute.NewLoan(person = "Rosa").person)
+        assertEquals("", GastonomoRoute.NewLoan().direction)
         assertEquals("l1", GastonomoRoute.LoanDetail("l1").loanId)
         assertEquals("camilo@correo.com", GastonomoRoute.ForgotPassword("camilo@correo.com").email)
         assertEquals("", GastonomoRoute.ForgotPassword().email)
@@ -60,13 +64,21 @@ class NavigationTest {
             switchTab = { visited += "tab:${it.name}" },
             back = { visited += "back" },
             replaceWith = { visited += "replace:$it" },
+            replaceCurrent = { visited += "replaceCurrent:$it" },
         )
-        actions.navigateTo(GastonomoRoute.NewLoan)
+        actions.navigateTo(GastonomoRoute.NewLoan())
         actions.switchTab(TopLevelDestination.LOANS)
         actions.back()
         actions.replaceWith(GastonomoRoute.Login)
+        actions.replaceCurrent(GastonomoRoute.Home)
         assertEquals(
-            listOf("navigate:NewLoan", "tab:LOANS", "back", "replace:Login"),
+            listOf(
+                "navigate:${GastonomoRoute.NewLoan()}",
+                "tab:LOANS",
+                "back",
+                "replace:Login",
+                "replaceCurrent:Home",
+            ),
             visited,
         )
     }

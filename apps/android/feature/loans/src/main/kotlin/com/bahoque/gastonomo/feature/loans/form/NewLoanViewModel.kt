@@ -23,14 +23,25 @@ import java.time.LocalDate
  * Pantalla 10. Crea el prestamo con un solo POST: la API escribe tambien su movimiento
  * ("Prestamo - {persona}", gasto si preste e ingreso si me prestaron), asi que el cliente no
  * crea ningun movimiento por su cuenta.
+ *
+ * [prefill] solo trae algo cuando se llega desde el dictado, que abre el formulario con lo que se
+ * entendio para corregirlo.
  */
 class NewLoanViewModel(
     private val createLoan: CreateLoan,
     private val contextLoader: MoneyContextLoader,
     clock: Clock,
+    private val prefill: LoanPrefill = LoanPrefill.NONE,
 ) : ViewModel() {
 
-    private val mutable = MutableStateFlow(NewLoanUiState(date = clock.today()))
+    private val mutable = MutableStateFlow(
+        NewLoanUiState(
+            direction = prefill.direction ?: LoanDirection.LENT,
+            person = prefill.person,
+            note = prefill.note,
+            date = prefill.openedOn ?: clock.today(),
+        ),
+    )
 
     val state: StateFlow<NewLoanUiState> = mutable.asStateFlow()
 
@@ -38,7 +49,14 @@ class NewLoanViewModel(
         viewModelScope.launch {
             val context = contextLoader.load()
             mutable.update {
-                it.copy(context = context, entry = MoneyEntryState.of(context.display, context.canConvert))
+                it.copy(
+                    context = context,
+                    // La moneda del relleno manda sobre la principal: lo dictado pudo ser en otra.
+                    entry = MoneyEntryState.of(
+                        prefill.currency ?: context.display,
+                        context.canConvert,
+                    ).withAmount(prefill.amount),
+                )
             }
         }
     }

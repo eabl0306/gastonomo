@@ -3,6 +3,7 @@ package com.bahoque.gastonomo
 import com.bahoque.gastonomo.core.application.port.AuthGateway
 import com.bahoque.gastonomo.core.application.port.CategoryGateway
 import com.bahoque.gastonomo.core.application.port.CurrencyGateway
+import com.bahoque.gastonomo.core.application.port.DictationGateway
 import com.bahoque.gastonomo.core.application.port.LoanGateway
 import com.bahoque.gastonomo.core.application.port.MovementGateway
 import com.bahoque.gastonomo.core.application.port.PendingWritesGateway
@@ -16,6 +17,12 @@ internal data class Gateways(
     val categories: CategoryGateway,
     val settings: SettingsGateway,
     val currencies: CurrencyGateway,
+
+    /**
+     * El dictado. No pasa por la base local: un borrador no es un registro y no tiene por que
+     * sobrevivir a cerrar la hoja.
+     */
+    val dictation: DictationGateway,
 
     /** La cola de lo que se escribio sin conexion, para la pantalla que la ensena. */
     val pending: PendingWritesGateway,
