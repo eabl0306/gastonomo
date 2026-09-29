@@ -11,6 +11,7 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import kotlin.test.assertEquals
+import kotlin.test.assertSame
 
 /**
  * Las dos reglas de navegacion del diseno, comprobadas sobre un NavController de verdad:
@@ -41,6 +42,22 @@ class NavControllerActionsTest {
         controller.switchTab(TopLevelDestination.LOANS)
         assertEquals(2, controller.currentBackStack.value.size)
         assertEquals(routeOf(GastonomoRoute.Loans), controller.currentDestination?.route)
+    }
+
+    /**
+     * Tocar el tab en el que ya se esta se veia: la pantalla parpadeaba porque se volvia a crear
+     * con su ViewModel de cero y pedia sus datos otra vez.
+     */
+    @Test
+    fun `switching to the tab we are already on leaves the screen untouched`() {
+        controller.switchTab(TopLevelDestination.LOANS)
+        val entry = controller.currentBackStackEntry
+        val stack = controller.currentBackStack.value.size
+
+        controller.switchTab(TopLevelDestination.LOANS)
+
+        assertSame(entry, controller.currentBackStackEntry, "la pantalla se volvio a crear")
+        assertEquals(stack, controller.currentBackStack.value.size)
     }
 
     @Test
